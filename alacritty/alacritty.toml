@@ -1,0 +1,14 @@
+# This is my alacritty config
+# author: Bruno de Lima <github.com/brunodles>
+
+import = [
+	"~/.config/alacritty/env.toml",
+	"~/.config/alacritty/colors.toml",
+	"~/.config/alacritty/keyboard.toml",
+	"~/.config/alacritty/window.toml",
+]
+
+shell = { program = "/bin/zsh", args = ["-l"] }
+
+live_config_reload = true
+
