@@ -10,8 +10,8 @@ blur = true
 startup_mode = "Windowed"
 decorations = "None"
 class = { instance = "Alacritty", general = "Alacritty" }
-#decoration_theme_variant = "Dark"
-#option_as_default = "OnlyLefty"
+decorations_theme_variant = "Dark"
+option_as_alt = "OnlyLeft"
 
 [cursor]
 style = { shape = "Block", blinking = "On" }

@@ -9,6 +9,5 @@ import = [
 ]
 
 shell = { program = "/bin/zsh", args = ["-l"] }
-
 live_config_reload = true
 
