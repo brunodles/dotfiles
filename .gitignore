@@ -1,2 +1,7 @@
+# Linux
 pulse
 systemd
+# Mac
+.DS_Store
+github-copilot/
+iterm2/
