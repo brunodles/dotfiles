@@ -108,5 +108,7 @@ source $ZSH/oh-my-zsh.sh
 # Import configuraion form other files
 source ~/.config/zsh/env
 source ~/.config/zsh/alias
+
+# Override previous configurations for work
 source ~/.config/zsh/work
 
