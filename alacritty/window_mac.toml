@@ -1,0 +1,26 @@
+# This is my alacritty config
+# author: Bruno de Lima <github.com/brunodles>
+
+
+[window]
+padding = { x = 8, y = 8 }
+dynamic_padding = true
+opacity = 0.7
+blur = true
+startup_mode = "Windowed"
+decorations = "Full"
+class = { instance = "Alacritty", general = "Alacritty" }
+decorations_theme_variant = "Dark"
+option_as_alt = "OnlyLeft"
+
+[cursor]
+style = { shape = "Block", blinking = "On" }
+
+[font]
+normal = { family = "monospace", style = "Regular" }
+size = 12
+
+[terminal]
+osc52 = "CopyPaste"
+
+

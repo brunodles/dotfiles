@@ -5,7 +5,8 @@ import = [
 	"~/.config/alacritty/env.toml",
 	"~/.config/alacritty/colors.toml",
 	"~/.config/alacritty/keyboard.toml",
-	"~/.config/alacritty/window.toml",
+#	"~/.config/alacritty/window_linux.toml",
+#	"~/.config/alacritty/window_mac.toml",
 ]
 
 shell = { program = "/bin/zsh", args = ["-l"] }

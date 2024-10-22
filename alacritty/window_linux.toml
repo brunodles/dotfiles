@@ -8,7 +8,7 @@ dynamic_padding = true
 opacity = 0.7
 blur = true
 startup_mode = "Windowed"
-decorations = "None"
+decorations = "Full"
 class = { instance = "Alacritty", general = "Alacritty" }
 decorations_theme_variant = "Dark"
 option_as_alt = "OnlyLeft"
@@ -18,7 +18,7 @@ style = { shape = "Block", blinking = "On" }
 
 [font]
 normal = { family = "monospace", style = "Regular" }
-size = 10
+size = 12
 
 [terminal]
 osc52 = "CopyPaste"
