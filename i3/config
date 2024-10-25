@@ -212,6 +212,15 @@ bar {
 	font -misc-fixed-medium-r-normal--13-120-75-75-C-70-iso10646-1
     	font pango:DejaVu Sans Mono 10
 	separator_symbol " | "
+
+  colors {
+      background $bg-color
+      separator #757575
+        #                  border             background         text
+        focused_workspace  $bg-color          $bg-color          $text-color
+        inactive_workspace $inactive-bg-color $inactive-bg-color $inactive-text-color
+        urgent_workspace   $urgent-bg-color   $urgent-bg-color   $text-color
+  }
 }
 
 default_border pixel 1
