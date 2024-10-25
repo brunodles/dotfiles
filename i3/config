@@ -63,8 +63,11 @@ floating_modifier $mod
 tiling_drag modifier titlebar
 
 # start a terminal
-bindsym $mod+Return exec alacritty
+#bindsym $mod+Return exec alacritty
 #bindsym $mod+Return exec i3-sensible-terminal
+# brunodles: This script will open open of my favorite terminal emulators depending on their availability
+bindsym $mod+Return exec ~/.config/i3/openTerminal.sh
+
 
 # kill focused window
 bindsym $mod+Shift+q kill
