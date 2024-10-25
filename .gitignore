@@ -1,11 +1,60 @@
 # Shared
-backup
+!.gitignore
+!zsh
+!alacrity
 
 # Linux
-pulse
-systemd
+!i3
+!i3status
+!i3blocks
+!installScripts
+!wallpaper
 
-# Mac
+# Ignore Mac
 .DS_Store
 github-copilot/
 iterm2/
+
+# Ignored Linux
+.gsd-keyboard.settings-ported
+arduino-ide
+Arduino IDE
+cef_user_data
+Creality
+cura
+dconf
+enchant
+eog
+evince
+evolution
+GIMP
+gnome-initial-setup-done
+gnome-session
+GNOME-xdg-terminals.list
+goa-1.0
+Google
+google-chrome
+gtk-2.0
+gtk-3.0
+gtk-4.0
+ibus
+JetBrains
+kmidimon.sourceforge.net
+menus
+mimeapps.list
+nautilus
+procps
+PrusaSlicer
+pulse
+QtProject.conf
+systemd
+Thunar
+tiling-assistant
+totem
+transmission
+ubuntu-xdg-terminals.list
+update-notifier
+user-dirs.dirs
+user-dirs.locale
+xdg-terminals.list
+xfce4
