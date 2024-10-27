@@ -1,6 +1,12 @@
 # Setup environment variables
 
-export JAVA_HOME="$(/usr/libexec/java_home -v11)"
+if [ -e /usr/libexec/java_home ]; then
+  export JAVA_HOME="$(/usr/libexec/java_home -v11)"
+elif [ -e "/usr/lib/jvm/java-8-openjdk-amd64/" ]; then
+  export JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64/"
+elif [ ! -z "$(readlink -f /usr/bin/javac | sed 's:/bin/javac::')" ]; then
+  export JAVA_HOME="$(readlink -f /usr/bin/javac | sed "s:/bin/javac::")"
+fi
 export ANDROID_HOME=~/android-sdk
 export ANDROID_NDK=~/android-ndk
 export ANDROID_NDK_HOME=~/android-ndk
