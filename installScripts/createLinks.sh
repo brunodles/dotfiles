@@ -136,10 +136,10 @@ backupAndLinkConfig "zsh"
 link "~/.zshrc" "~/.config/zsh/zshrc"
 
 # Simple configurations that already remain in the '~/.config' dir
-#backupAndLinkConfig "i3"
-#backupAndLinkConfig "i3blocks"
-#backupAndLinkConfig "i3status"
-#backupAndLinkConfig "alacritty"
-#backupAndLinkConfig "compton.conf"
-#backupAndLinkConfig "wallpaper"
+backupAndLinkConfig "i3"
+backupAndLinkConfig "i3blocks"
+backupAndLinkConfig "i3status"
+backupAndLinkConfig "alacritty"
+backupAndLinkConfig "compton.conf"
+backupAndLinkConfig "wallpaper"
 
