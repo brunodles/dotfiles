@@ -110,5 +110,7 @@ source ~/.config/zsh/env
 source ~/.config/zsh/alias
 
 # Override previous configurations for work
-source ~/.config/zsh/work
+if [ -e $HOME/.config/zsh/work ]; then
+  source ~/.config/zsh/work
+fi
 
