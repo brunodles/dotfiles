@@ -1,0 +1,65 @@
+#!/bin/bash
+# Create the Pango Markup to be used with i3 blocks
+# Author: Bruno de Lima <github.com/brunodles>
+
+declare background
+declare foreground
+declare divider
+declare use
+declare spaces
+declare text
+declare label
+
+find() {
+  for i in "$@"
+  do
+    case "$i" in
+      --foreground=*|-f=*) foreground="${i#*=}" ; shift;;
+      --background=*|-b=*) background="${i#*=}" ; shift;;
+      --divider=*|-d=*) divider="${i#*=}" ; shift;;
+      --use=*|-u=*) use="${i#*=}" ; shift;;
+      --space=*|-s=*) spaces="${i#*=}" ; shift;;
+      --space|-s) spaces="1" ; shift;;
+      --label=*|-l=*) label="${i#*=}" ; shift;;
+      *) text+="$i "
+    esac
+    shift
+  done
+}
+
+fixText(){
+  text="${text::-1}"
+  if [ ! -z "$use" ] ; then
+    text=$(echo "$text" | awk "/.*/ { print \$$use }")
+  fi
+  if [ ! -z "$label" ] ; then
+    text="$label $text"
+  fi
+  if [ ! -z "$spaces" ] ; then
+    s=""
+    while [ ${#s} -lt $spaces ]; do
+      s="$s "
+    done
+    text="$s$text$s"
+  fi
+}
+
+main() {
+  output="<span size=\"large\""
+  if [ ! -z "$background" ] ; then
+    output+=" background=\"$background\""
+  fi
+  if [ ! -z "$divider" ] ; then
+    output+=" foreground=\"$divider\">${text}</span><span size=\"large\" background=\"$divider\""
+  fi
+  if [ ! -z "$foreground" ] ; then
+    output+=" foreground=\"$foreground\""
+  fi
+  output+=">${text}</span>"
+  echo $output
+}
+
+find $@
+fixText
+main
+

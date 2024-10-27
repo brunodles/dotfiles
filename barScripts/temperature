@@ -1,0 +1,24 @@
+#!/bin/bash
+# Print the temperature
+# Autor: Bruno de Lima <github.com/brunodles>
+
+temperature=$(cat /sys/class/thermal/thermal_zone*/temp | head -n 1 | grep -Po "\d+")
+# temperature=$(cat /sys/devices/platform/coretemp*/hwmon/hwmon*/temp*_input | head -n 1 | grep -Po "\d+")
+temperature=$(( $temperature / 1000 ))
+full_text=""
+
+if [ $temperature -lt 20 ]; then
+  full_text+="  ";
+elif [ $temperature -lt 40 ]; then
+  full_text+="  ";
+elif [ $temperature -lt 60 ]; then
+  full_text+="  ";
+elif [ $temperature -lt 80 ]; then
+  full_text+="  ";
+else #if [ $temperature < 100 ]
+  full_text+="  ";
+fi
+
+full_text+=" $temperature ºC "
+echo $full_text
+
