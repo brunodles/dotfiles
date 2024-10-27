@@ -61,13 +61,13 @@ remove() {
   log "remove $1"
   if [ -e $1 ]; then
     #run "rm -rd '$1'"
-    run rm -rd "$1"
+    run rm -rdf "$1"
   elif [ -f $1 ]; then
     #run "rm '$1'"
-    run rm "$1"
+    run rm -f "$1"
   elif [ -d $1 ]; then
     #run "rm -rd '$1'"
-    run rm -rd "$1"
+    run rm -rdf "$1"
   else
     log "  file not found in $1"
   fi
