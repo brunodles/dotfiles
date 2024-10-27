@@ -8,6 +8,25 @@ declare DOTFILES_DIR="$HOME/dotfiles"
 declare BACKUP_DIR="$HOME/dotfiles/backup/$(date +%Y-%m-%d_%H-%M-%S)"
 mkdir -p "$BACKUP_DIR"
 
+stack=""
+stackUp(){
+  stack="$stack  "
+}
+stackDown(){
+  stack=${stack::-2}
+}
+log() {
+  echo "#$stack $@"
+}
+logC() {
+  echo "$@"
+}
+
+run() {
+  logC "$@"
+  $@
+}
+
 # Fix paths by replacing '~' with $HOME
 fixPath() {
   echo ${1/#~\//$HOME/}
@@ -21,13 +40,15 @@ backup() {
     backup $(fixPath "$1")
     return
   fi
-  echo backup $1
+  stackUp
+  log "backup $1"
   if [ -e $1 ]; then
-    echo . cp -r "$1" "$BACKUP_DIR/${1##*/}"
-    cp -r "$1" "$BACKUP_DIR/${1##*/}"
+    #run "cp -r '$1' '$BACKUP_DIR/${1##*/}'"
+    run cp -r "$1" "$BACKUP_DIR/${1##*/}"
   else
-    echo . cannot backup, file or directory not found $1
+    log "  cannot backup, file or directory not found $1"
   fi
+  stackDown
 }
 
 # Delete file or directory
@@ -36,19 +57,21 @@ remove() {
     remove $(fixPath "$1")
     return
   fi
-  echo remove $1
+  stackUp
+  log "remove $1"
   if [ -e $1 ]; then
-    echo . rm rd "$1"
-    rm -rd "$1"
+    #run "rm -rd '$1'"
+    run rm -rd "$1"
   elif [ -f $1 ]; then
-    echo . rm "$1"
-    rm "$1"
+    #run "rm '$1'"
+    run rm "$1"
   elif [ -d $1 ]; then
-    echo . rm -rd "$1"
-    rm -rd "$1"
+    #run "rm -rd '$1'"
+    run rm -rd "$1"
   else
-    echo . file not found in $1
+    log "  file not found in $1"
   fi
+  stackDown
 }
 
 # Create a symbolic link
@@ -60,9 +83,11 @@ link() {
     link $(fixPath "$1") $(fixPath "$2")
     return
   fi
-  echo link $1 $2
-  echo . ln -s "$2" "$1"
-  ln -s "$2" "$1"
+  stackUp
+  log "link $1 $2"
+  #run "ln -s '$2' '$1'"
+  run ln -s "$2" "$1"
+  stackDown
 }
 
 # Copy the original content of configuration into backup folder
@@ -71,13 +96,15 @@ link() {
 #   1. The path of the configuration application
 #   2. The new configuration.
 backupAndLink() {
-  echo backupAndLink $1 $2
+  stackUp
+  log "backupAndLink $1 $2"
 #  cp "$1" "$BACKUP_DIR/${1:/}"
   backup "$1"
 #  rm "$1"
   remove "$1"
 #  ln -s "${DOTFILES_DIR}/$2" "$1"
   link "$1" "$2"
+  stackDown
 }
 
 # Copy the original content of configuration into backup folder
@@ -87,8 +114,10 @@ backupAndLink() {
 # Params:
 #   1. The name of whay should be linked
 backupAndLinkConfig() {
-  echo backupAndLinkConfig $1
+  stackUp
+  log "backupAndLinkConfig $1"
   backupAndLink "~/.config/$1" "${DOTFILES_DIR}/$1"
+  stackDown
 }
 
 # Sample of what will happen to link zsh
@@ -100,7 +129,7 @@ backupAndLinkConfig() {
 # zsh will be linked into the "~/.config/zsh". 
 # All configurations will still point into the '.config', 
 # but it will be linked back into this repo
-echo "zsh"
+log "zsh"
 backup "~/.zshrc"
 remove "~/.zshrc"
 backupAndLinkConfig "zsh"
