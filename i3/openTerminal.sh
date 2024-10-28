@@ -1,8 +1,8 @@
 #!/bin/bash
 # Open one of my prefered terminals
 
-if [ ! -z "$(where alacritty)" ] ; then
-  alacrity
+if [ ! -z "$(command -v alacritty)" ] ; then
+  alacritty
 else
   i3-sensible-terminal
 fi
