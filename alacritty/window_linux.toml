@@ -20,7 +20,5 @@ style = { shape = "Block", blinking = "On" }
 normal = { family = "monospace", style = "Regular" }
 size = 12
 
-[terminal]
-osc52 = "CopyPaste"
 
 
