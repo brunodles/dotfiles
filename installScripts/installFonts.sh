@@ -12,6 +12,8 @@ fi
 cd $font_dir
 curl -o FontAwesome-webfont-latest.ttf https://github.com/FortAwesome/Font-Awesome/raw/master/fonts/fontawesome-webfont.ttf
 
+cp "$(dirname "$(readlink -fm "$0")")/fontawesome-webfont.ttf" $font_dir
+
 mkdir $initialPath/customization
 cd $initialPath/customization/
 git clone https://github.com/powerline/fonts.git
