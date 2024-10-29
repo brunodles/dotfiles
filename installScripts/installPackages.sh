@@ -62,12 +62,17 @@ shared neovim
 #shared docker docker-compose-plugin
 #shared docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 lui firefox alacritty feh compton i3 i3blocks
+#servers
+## Android
+shared pidcat-git
+lui scrcpy
 #server ?
 
 # Mac
 brew vim curl git tmux zsh
 brew neovim
 brew docker docker-compose-plugin
+brew scrcpy pidcat
 cask alacritty
 
 declare uname=$(uname)
