@@ -85,9 +85,9 @@ executeInstall() {
 			else
 				tools+=(${_linux_server[@]})
 			fi
-			if [ -z "$(where docker)" ] || [ -z "$(where docker-compose)" ]; then
-				tools+=(docker docker-compose)
-			fi
+			#if [ -z "$(where docker)" ] || [ -z "$(where docker-compose)" ]; then
+			#	tools+=(docker docker-compose)
+			#fi
 			;;
 		"Darwin")
 			tools+=(${_brew[@]})
