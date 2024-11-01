@@ -3,6 +3,9 @@
 # The functions in this document will be used by another script.
 # Author: Bruno de Lima <github.com/brunodles>
 
+# These are constants
+declare DOTFILE_REPOS=~/dotfiles/repos
+
 # These variables will be used to accumulate the contents
 declare -a _linux_shared=()
 declare -a _linux_servers=()
