@@ -12,9 +12,11 @@ source installUtils.sh
 ## Docker - requires a custom instalation script
   #shared docker docker-compose-plugin
   #shared docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+  # disable because I need to think on how declare those custom install scripts
 
 ## UI customization / Desktop Environment
-  lui firefox alacritty feh compton i3 i3blocks
+  lui firefox feh compton i3 i3blocks
+  #lui alacritty # disable because I need to think on how declare those custom install scripts
 
 ## Servers 
   #servers ?
