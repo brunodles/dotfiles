@@ -58,6 +58,20 @@ linuxInstall() {
   fi
 }
 
+# Install Alacritty
+# Build from source is required for alacritty because the package systems are not consistent.
+# They don't have the same version available.
+# Build alacritty from source in a docker image. Compilation happens inside a docker container.
+# https://github.com/mdedonno1337/docker-alacritty
+installAlacritty() {
+	echo Install Alacritty
+	mkdir -p $DOTFILE_REPOS
+	cd $DOTFILE_REPOS
+	git clone git@github.com:mdedonno1337/docker-alacritty.git
+	cd docker-alacritty
+	make
+	sudo mv alacritty /usr/bin
+}
 
 executeInstall() {
 	declare uname=$(uname)
@@ -126,6 +140,11 @@ executeInstall() {
 		sudo apt-get update
 		sudo apt-get install /tmp/docker-desktop-amd64.deb
 		#rm -f /tmp/docker-desktop-amd64.deb
+	fi
+
+	# Alacritty
+	if [[ " ${tools[*]} " == *" alacritty "* ]]; then
+		installAlacritty
 	fi
 }
  
