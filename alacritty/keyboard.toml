@@ -1,6 +1,10 @@
 [keyboard]
 bindings = [
 
+  { key = "Slash", chars = "/" }, # / as / (Alacritty is not working well with this key)
+
+  { key = "Right", mods = "Shift", chars = "\u001BF" },
+  { key = "Left",  mods = "Shift", chars = "\u001BB" },
 #  { key = "Right", mods = "Alt", chars = "\u001BF" },
 #  { key = "Left",  mods = "Alt", chars = "\u001BB" }
 

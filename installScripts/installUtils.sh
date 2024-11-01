@@ -3,6 +3,9 @@
 # The functions in this document will be used by another script.
 # Author: Bruno de Lima <github.com/brunodles>
 
+# These are constants
+declare DOTFILE_REPOS=~/dotfiles/repos
+
 # These variables will be used to accumulate the contents
 declare -a _linux_shared=()
 declare -a _linux_servers=()
@@ -55,6 +58,20 @@ linuxInstall() {
   fi
 }
 
+# Install Alacritty
+# Build from source is required for alacritty because the package systems are not consistent.
+# They don't have the same version available.
+# Build alacritty from source in a docker image. Compilation happens inside a docker container.
+# https://github.com/mdedonno1337/docker-alacritty
+installAlacritty() {
+	echo Install Alacritty
+	mkdir -p $DOTFILE_REPOS
+	cd $DOTFILE_REPOS
+	git clone git@github.com:mdedonno1337/docker-alacritty.git
+	cd docker-alacritty
+	make
+	sudo mv alacritty /usr/bin
+}
 
 executeInstall() {
 	declare uname=$(uname)
@@ -68,9 +85,9 @@ executeInstall() {
 			else
 				tools+=(${_linux_server[@]})
 			fi
-			if [ -z "$(where docker)" ] || [ -z "$(where docker-compose)" ]; then
-				tools+=(docker docker-compose)
-			fi
+			#if [ -z "$(where docker)" ] || [ -z "$(where docker-compose)" ]; then
+			#	tools+=(docker docker-compose)
+			#fi
 			;;
 		"Darwin")
 			tools+=(${_brew[@]})
@@ -133,6 +150,11 @@ executeInstall() {
 	    sudo apt install $tempFile
 	    #rm -f $tempFile
 	  fi
+	fi
+
+	# Alacritty
+	if [[ " ${tools[*]} " == *" alacritty "* ]]; then
+		installAlacritty
 	fi
 }
  

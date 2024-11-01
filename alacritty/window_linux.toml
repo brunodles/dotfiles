@@ -5,7 +5,7 @@
 [window]
 padding = { x = 8, y = 8 }
 dynamic_padding = true
-opacity = 0.7
+opacity = 0.99
 blur = true
 startup_mode = "Windowed"
 decorations = "Full"
@@ -17,7 +17,7 @@ option_as_alt = "OnlyLeft"
 style = { shape = "Block", blinking = "On" }
 
 [font]
-normal = { family = "monospace", style = "Regular" }
+normal = { family = "Source Code Pro for Powerline", style = "Regular" }
 size = 12
 
 
