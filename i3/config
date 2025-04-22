@@ -292,4 +292,7 @@ bar {
   }
 }
 
+# Toggle bar visibility
+bindsym $mod+b bar mode toggle
+
 
