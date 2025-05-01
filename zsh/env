@@ -11,7 +11,8 @@ export ANDROID_HOME=~/android-sdk
 export ANDROID_NDK=~/android-ndk
 export ANDROID_NDK_HOME=~/android-ndk
 
-# Add env vars to PATH
-export PATH=$JAVA_HOME/bin:$ANDROID_HOME/emulator:$ANDROID_HOME/cmdline-tools/latest:$ANDROID_HOME/platform-tools:$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
+DOCKER_WRAPPER_DIR=~/dotfiles/docker_wrapper
 
+# Add env vars to PATH
+export PATH=$DOCKER_WRAPPER_DIR:$JAVA_HOME/bin:$ANDROID_HOME/emulator:$ANDROID_HOME/cmdline-tools/latest:$ANDROID_HOME/platform-tools:$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
 
