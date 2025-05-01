@@ -1,0 +1,32 @@
+#!bash
+# This is a wrapper for ollama runing on docker with a daemon.
+# Whenever this command is called it will start the ollama container.
+# To stop send the daemon call 'ollama --stop' to stop the container.
+# Ollama docker, forward the commands into docker
+
+# CONTAINER_NAME=ollama
+
+# start daemon
+IS_RUNNING="$(docker ps | grep ollama)"
+if [ -z "${IS_RUNNING}" ]; then
+  echo "Starting Ollama Docker Container"
+  docker start ollama || docker run -d -v ollama:/root/.ollama -p 11434:11434 --name ollama ollama/ollama 
+fi
+
+case "$@" in
+  *"--help"*|*"-h"*)
+    # Include a small instruction about the wrapper, warning the user about a "new" command
+    echo "Running inside Ollama Docker Container"
+    echo "  use 'ollama --stop' to stop the container"
+    ;;
+  *"--stop"*)
+    echo "Stopping Docker Container"
+    docker stop ollama
+    # stop the flow as the container is already stopped
+    exit 0
+    ;;
+esac
+
+# foraward command into container
+docker exec -it ollama ollama $@
+
