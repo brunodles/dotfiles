@@ -156,5 +156,13 @@ executeInstall() {
 	if [[ " ${tools[*]} " == *" alacritty "* ]]; then
 		installAlacritty
 	fi
+
+	# tmux
+	if [[ " ${tools[*]} " == *" tmux "* ]]; then
+	  install tmux
+	  git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+	fi
+
+	 
 }
  
