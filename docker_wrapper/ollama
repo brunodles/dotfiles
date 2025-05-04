@@ -19,6 +19,9 @@ case "$@" in
     echo "Running inside Ollama Docker Container"
     echo "  use 'ollama --stop' to stop the container"
     ;;
+  *"--start"*)
+    exit 0
+    ;;
   *"--stop"*)
     echo "Stopping Docker Container"
     docker stop ollama
