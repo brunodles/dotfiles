@@ -1,0 +1,30 @@
+#!/bin/bash
+# Setup session for working with Android
+
+SESH="android_dev"
+
+tmux has-session -t $SESH 2>/dev/null
+
+if [ $? != 0 ]; then
+  tmux new-session -d -s $SESH -n android
+
+  tmux new-window -n devices
+  tmux send-keys "watch -n 10 adb devices -v" C-m
+
+  tmux new-window -n log_errors
+  tmux send-keys "adb logcat -s *:E" C-m
+
+  tmux new-window -n others
+  #tmux send-keys "scrcpy &"
+
+  HIGHLIT_COLOR="CYAN"
+  BG_COLOR="black"
+  ACTIVE_COLOR="red"
+
+  #tmux set-option -t android status-style fg=white,bg=$BG_COLOR
+
+  tmux select-window android
+fi
+
+tmux attach-session -t $SESH
+

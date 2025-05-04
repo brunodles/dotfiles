@@ -4,9 +4,9 @@
 [general]
 import = [
 	"~/.config/alacritty/env.toml",
-	"~/.config/alacritty/colors.toml",
+#	"~/.config/alacritty/colors.toml",
 	"~/.config/alacritty/keyboard.toml",
-#	"~/.config/alacritty/window_linux.toml",
+	"~/.config/alacritty/window_linux.toml",
 #	"~/.config/alacritty/window_mac.toml",
 ]
 
@@ -16,4 +16,5 @@ live_config_reload = true
 [terminal]
 shell = { program = "/bin/zsh", args = ["-l"] }
 osc52 = "CopyPaste"
+
 

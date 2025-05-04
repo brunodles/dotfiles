@@ -135,6 +135,12 @@ remove "~/.zshrc"
 backupAndLinkConfig "zsh"
 link "~/.zshrc" "~/.config/zsh/zshrc"
 
+# Tmux configuration
+log "tmux"
+backup "~/.config/tmux/tmux.conf"
+remove "~/.config/tmux/tmux.conf"
+link "~/tmux/tmux.conf" "~/.config/tmux/tmux.conf"
+
 # Simple configurations that already remain in the '~/.config' dir
 backupAndLinkConfig "i3"
 backupAndLinkConfig "i3blocks"

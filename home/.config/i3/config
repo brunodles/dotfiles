@@ -258,7 +258,7 @@ hide_edge_borders both
 new_window none
 default_border pixel 0
 default_floating_border pixel 4
-gaps outer 2
+gaps outer 0
 gaps inner 4
 
 
@@ -295,4 +295,13 @@ bar {
 # Toggle bar visibility
 bindsym $mod+b bar mode toggle
 
+set $MENU "[A]ndroid Studio | [I]ntelliJ Idea | A[r]duino"
+bindsym $mod+Shift+d mode $MENU
+mode $MENU {
+  bindsym a exec /media/bruno/Backup/apps/android_studio/bin/studio.sh, mode "default"
+  bindsym r exec sudo arduino-1.6.4./arduino, mode "default"
+  bindsym i exec /media/bruno/Backup/apps/intelij/bin/idea.sh, mode "default"
+  bindsym Return mode "default"
+  bindsym Escape mode "default"
+}
 
