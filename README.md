@@ -27,3 +27,16 @@ Future scripts should take care of it.
 
 TBD
 
+### Fonts
+This repo also install custom fonts to be used for/with:
+* Status bar
+* Terminal / ZSH
+* Tmux
+
+The patched fonts downloaded from:
+* [FontAwesome](https://fontawesome.com/)
+* [PowerLine](https://github.com/powerline/fonts)
+* [NerdFonts](https://www.nerdfonts.com/font-downloads)
+
+Might merge into a single font.
+
