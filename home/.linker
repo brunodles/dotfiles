@@ -13,6 +13,7 @@ i .md
 i README*
 i LICENSE*
 
+f .zsh
 f .config/tmux/tmux.conf
 d .config/zsh
 d .config/i3
