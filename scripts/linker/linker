@@ -1,0 +1,64 @@
+#!/bin/bash
+# Linker
+# Utility to sync the Home Repo with actual Home
+# Author: brunodles <github.com/brunodles>
+
+LOCAL_CONFIG_FILE_NAME=".linker"
+REPO_HOME_DIR="$HOME/dotfiles/home/"
+
+configIgnoredFiles=""
+configSyncFiles=""
+configSyncDir=""
+
+configFilePath="$REPO_HOME_DIR/$LOCAL_CONFIG_FILE_NAME"
+
+# Read configuration file if exist
+if [ -f "$configFilePath" ]; then
+  while read p; do
+    case "$p" in
+      "i "*)
+        configIgnoredFiles+=" ${p#i }"
+        ;;
+      "f "*)
+        configSyncFiles+=" ${p#f }"
+        ;;
+      "d "*)
+        configSyncDir+=" ${p#d }"
+        ;;
+    esac
+  done <$configFilePath
+fi
+
+# Find the files by evaluating the find command
+#echo "Command: $fullFilesCommand"
+listFiles() {
+  fullFilesCommand="find $REPO_HOME_DIR -type f"
+  files=""
+
+  fullFilesCommand+=" -not -path \"*/$LOCAL_CONFIG_FILE_NAME\""
+  for p in $configIgnoredFiles; do
+    fullFilesCommand+=" -not -path \"*${p#i }\""
+  done
+  files=$(eval $fullFilesCommand)
+  for i in $files ; do
+    echo "* ${i#$REPO_HOME_DIR}"
+  done
+}
+
+listConfigResult() {
+  echo "Ignored Files:"
+  for i in $configIgnoredFiles; do
+    echo "* $i"
+  done
+  echo "Sync Files:"
+  for i in $configSyncFiles; do
+    echo "* $i"
+  done
+  echo "Sync Dirs:"
+  for i in $configSyncDir; do
+    echo "* $i"
+  done
+}
+
+# Forward the parameters into one function
+$@
