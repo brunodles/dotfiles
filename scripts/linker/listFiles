@@ -1,6 +1,10 @@
 #!/bin/bash
+# List the files that should be used to sync with home
+# Author: brunodles <github.com/brunodles>
+# Parameters:
 # 1 the path to sync with home
-CONFIG_FILE_NAME=".home-ignore"
+
+CONFIG_FILE_NAME=".linker"
 
 ignoredFiles=""
 initialDir="$(pwd)/$1/"
@@ -16,8 +20,8 @@ fi
 # Compose the full files command
 fullFilesCommand+=" -not -path \"*/$CONFIG_FILE_NAME\""
 while read p; do
-  if [[ "$p" != "#"* ]]; then
-    fullFilesCommand+=" -not -path \"$p\""
+  if [[ "$p" == "i "* ]]; then
+    fullFilesCommand+=" -not -path \"*${p#i }\""
   fi
 done <$configFilePath
 

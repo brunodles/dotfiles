@@ -1,7 +1,0 @@
-# This document is used by the home sync script.
-# The files here will be ignored for the sync
-*.git/* 
-*.md
-*/.gitignore
-*/.config/tmux/plugins/*
-*/.config/tmux/plugins/*
