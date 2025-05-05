@@ -1,0 +1,25 @@
+# Configuration file for sync project
+# The behavior would change depending on the starting letter of each lines.
+# f - sync will happen on the file level
+# d - sync will happen on the directory level
+# i - for ignored patterns
+# # - are ignored
+#   - empty lines are also ignored
+
+i .git/*
+i /.gitignore
+i /.gitmodules/*
+i .md
+i README*
+i LICENSE*
+
+f .config/tmux/tmux.conf
+d .config/zsh
+d .config/i3
+d .config/alacritty
+f .config/compton.conf
+d .config/i3blocks
+d shell_scripts
+
+i .config/tmux/plugins/*
+
