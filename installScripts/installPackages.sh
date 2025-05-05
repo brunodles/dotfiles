@@ -6,8 +6,8 @@ source installUtils.sh
 
 # Linux
   shared base-devel build-essential
-  shared vim curl git tmux zsh
-  shared neovim
+  shared vim curl git tmux zsh stow
+  shared neovim 
 
 ## Docker - requires a custom instalation script
   #shared docker docker-compose-plugin
@@ -26,7 +26,7 @@ source installUtils.sh
   lui scrcpy
 
 # Mac
-  brew vim curl git tmux zsh
+  brew vim curl git tmux zsh stow
   brew neovim
 #  brew docker docker-compose-plugin
   brew scrcpy pidcat
