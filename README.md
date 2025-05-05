@@ -1,3 +1,8 @@
+# Wip Notice!
+This is not fully compatible for auto install and sync.
+I'm working on it on my spare time, why I create a better/simplified way to install and sync the configuration files with the linux home. 
+I could use gnu/stow, but I'm exploring my own implementation. You might still be able to clone and run `stow home`.
+
 # My Dotfiles
 This repository contains my recent dotfiles setting thing up for Arch Linux, 
 but it also serves as a way to revisit what I've done for [my old dive into i3wm](https://github.com/brunodles/i3wm-conf).
