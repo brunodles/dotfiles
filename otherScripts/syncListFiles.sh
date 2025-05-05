@@ -1,0 +1,31 @@
+#!/bin/bash
+# 1 the path to sync with home
+CONFIG_FILE_NAME=".home-ignore"
+
+ignoredFiles=""
+initialDir="$(pwd)/$1/"
+configFilePath="$initialDir/$CONFIG_FILE_NAME"
+fullFilesCommand="find $initialDir -type f"
+files=""
+
+# Read configu files if they exist
+if [ -f "$configFilePath" ]; then
+  ignoredFiles=$(cat $configFilePath)
+fi
+
+# Compose the full files command
+fullFilesCommand+=" -not -path \"*/$CONFIG_FILE_NAME\""
+while read p; do
+  if [[ "$p" != "#"* ]]; then
+    fullFilesCommand+=" -not -path \"$p\""
+  fi
+done <$configFilePath
+
+# Find the files by evaluating the find command
+#echo "Command: $fullFilesCommand"
+files=$(eval $fullFilesCommand)
+
+for i in $files ; do
+  echo "* ${i#$initialDir}"
+done
+
