@@ -43,7 +43,7 @@ exec --no-startup-id xss-lock --transfer-sleep-lock -- i3lock --nofork
 exec --no-startup-id nm-applet
 
 # Custom. Add compton for X composition, transparency 
-exec --no-startup-id compton
+#exec --no-startup-id compton
 
 
 exec --no-startup-id ~/.config/wallpaper/dynamic_wallpaper.sh ~/background_images
@@ -268,9 +268,8 @@ bar {
   i3bar_command i3bar
 #  status_command i3status
 #  status_command SCRIPT_DIR="$HOME/.config/i3blocks/scripts" i3blocks -c ~/.config/i3blocks/top.conf
-  status_command PATH="$PATH:$HOME/dotfiles/barScripts" \
-    i3blocks -c ~/.config/i3blocks/top.conf 
-#   status_command sh -c $HOME/dotfiles/i3limabar 
+  status_command PATH="$PATH:$HOME/.config/i3blocks/scripts" i3blocks -c ~/.config/i3blocks/top.conf 
+#   status_command sh -c $HOME/.config/i3/i3limabar 
 
   tray_output primary
   padding 0px 8px

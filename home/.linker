@@ -17,9 +17,10 @@ f .zshrc
 f .config/tmux/tmux.conf
 d .config/zsh
 d .config/i3
-d .config/alacritty
-f .config/compton.conf
 d .config/i3blocks
+d .config/i3status
+f .config/compton.conf
+d .config/alacritty
 d shell_scripts
 
 i .config/tmux/plugins/*
