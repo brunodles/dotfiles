@@ -7,13 +7,13 @@
 #   - empty lines are also ignored
 
 i .git/*
-i /.gitignore
-i /.gitmodules/*
+i .gitignore
+i .gitmodules/*
 i .md
 i README*
 i LICENSE*
 
-f .zsh
+f .zshrc
 f .config/tmux/tmux.conf
 d .config/zsh
 d .config/i3

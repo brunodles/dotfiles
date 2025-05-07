@@ -1,0 +1,250 @@
+#!/bin/bash
+help="""
+.____    .__        __                  
+|    |   |__| ____ |  | __ ___________  
+|    |   |  |/    \|  |/ // __ \_  __ \ 
+|    |___|  |   |  \    <\  ___/|  | \/ 
+|_______ \__|___|  /__|_ \\___  >__|    
+        \/       \/     \/    \/        
+  Linker is a tool to sync a directory with linux home folder.
+It is intent to be used with dotfiles, but can be used with anything.
+-----------------------
+"""
+# Author: brunodles <github.com/brunodles>
+
+# Disable expanding '*' into listing file
+set -f
+#set -o noglob
+
+declare LOCAL_CONFIG_FILE_NAME=".linker"
+declare DOTFILES_DIR="$HOME/dotfiles"
+declare REPO_HOME_DIR="$DOTFILES_DIR/home"
+declare BACKUP_DIR="$DOTFILES_DIR/backup/$(date +%Y-%m-%d_%H-%M-%S)"
+
+configIgnoredFiles=""
+configSyncFiles=""
+configSyncDirs=""
+
+mkdir -p "$BACKUP_DIR"
+
+
+# Read configuration file if exist
+# This function will read file line-by-line, using the first character as mapping for the target file/dir.
+# i - the file will be ignored
+# f - the file will be synced with home
+# d - the whole directory will be synced with home
+cd $REPO_HOME_DIR
+if [ -f "$LOCAL_CONFIG_FILE_NAME" ]; then
+  while read line; do
+    value=$line
+#    value=${value//\/\*/\/}
+#    value=${value//\*/ \*}
+    value=${value#[ifd] }
+    case "$line" in
+      "i "*)
+        configIgnoredFiles+=" $value"
+        ;;
+      "f "*)
+        configSyncFiles+=" $value"
+        ;;
+      "d "*)
+        configSyncDirs+=" $value"
+        ;;
+    esac
+  done <$LOCAL_CONFIG_FILE_NAME
+fi
+
+
+help+="""
+  listMappedFiles - Alias to List detected files. Same as: 'listFiles -i'.
+"""
+listMappedFiles() {
+  listFiles -i
+}
+
+help+="""
+  listUnmappedFiles - Alias to list unmapped files. Same as: 'listFiles -i -d -f'.
+                       Useful to detect new files.
+"""
+listUnmappedFiles() {
+  listFiles -idf
+}
+
+help+="""
+  listFiles [-i|-f|-d|+c] - List files in target dir.    
+    -i - remove ignored files
+    -f - remove mapped files
+    -d - remove mapped dirs
+    +c - print the command to list files
+    usage: linker listFiles -ifd +c
+"""
+# Find the files by evaluating the find command
+listFiles() {
+  fullFilesCommand="find $REPO_HOME_DIR -type f"
+  files=""
+
+  # Contains '-i' 
+  if [[ "$@" =~ ^.*?\s*(\-[a-zA-Z]*i)\s*.*?$ ]]; then	  
+    fullFilesCommand+=" -not -path \"*/$LOCAL_CONFIG_FILE_NAME\""
+    for p in $configIgnoredFiles; do
+      fullFilesCommand+=" -not -path \"*${p#i }\""
+    done
+  fi
+  # Contains '-f'
+  if [[ "$@" =~ ^.*?\s*(\-[a-zA-Z]*f)\s*.*?$ ]]; then	  
+    for p in $configSyncFiles; do
+      fullFilesCommand+=" -not -path \"*${p#f }*\""
+    done
+  fi
+  # Contains '-d'
+  if [[ "$@" =~ ^.*?\s*(\-[a-zA-Z]*d)\s*.*?$ ]]; then	  
+    for p in $configSyncDirs; do
+      fullFilesCommand+=" -not -path \"*${p#d }*\""
+    done
+  fi
+  # Contains '+c'
+  if [[ "$@" =~ ^.*?\s*(\+[a-zA-Z]*c)\s*.*?$ ]]; then	  
+    echo "Command: $fullFilesCommand"
+  fi
+  files=$(eval $fullFilesCommand)
+  # Contains '-*'
+  if [[ "$@" =~ ^.*?\s*(\-[a-zA-Z]*\*)\s*.*?$ ]]; then
+    # print without adding '* ' prefix
+    for i in $files ; do
+      echo "${i#$REPO_HOME_DIR\/}"
+    done
+  else
+    # print with '* ' prefix
+    for i in $files ; do
+      echo "* ${i#$REPO_HOME_DIR\/}"
+    done
+  fi
+}
+
+help+="""
+  listConfigResult - List how the configutation is evaluated.
+"""
+listConfigResult() {
+  echo "Ignored Files:"
+  for i in $configIgnoredFiles; do
+    echo "* ${i//\/\*/}"
+  done
+  echo "Sync Files:"
+  for f in $configSyncFiles; do
+    echo "* ${f//\/\*/}"
+  done
+  echo "Sync Dirs:"
+  for d in $configSyncDirs; do
+    echo "* ${d//\//}"
+  done
+}
+
+
+# Fix paths by replacing '~' with $HOME
+fixPath() {
+  echo ${@/#~\//$HOME/}
+}
+
+# Backup target folder into [$DOTFILES_DIR/backup]
+# Params:
+#   1. full file path of what needs to be saved
+__backup() {  
+  if [[ "$1" == *"~"* ]]; then
+    __backup $(fixPath "$1")
+    return
+  fi
+  if [ -e "$1" ]; then
+    cp -r "$1" "$BACKUP_DIR/${@##*/}"
+#  else
+#    echo "Cannot create backup - File (\"$1\") not found."
+  fi
+}
+
+# Delete file or directory
+# Params:
+#   1. file or directory to be removed
+__remove() {
+  if [[ "$@" == *"~"* ]]; then
+    __remove $(fixPath "$1")
+    return
+  fi
+  if [ -e "$1" ]; then
+    rm -rdf "$1"
+  elif [ -f "$1" ]; then
+    rm -f "$1"
+  elif [ -d "$1" ]; then
+    rm -rdf "$1" 
+#  else
+#    echo "Cannot delete - File (\"$1\") not found."
+  fi
+}
+
+# Create a symbolic link
+# Params:
+#   1. Source File. The new configuration file. The path to the actual file.
+#      In this utility, indicates the path with the real file, where the real configuration will remain.
+#      Files under the '~/dotfiles/home'.
+#   2. Destiny. The path of the configuration application. 
+#      A link will be generated in this path.
+#      This is the path whta the application will use by default, 
+#      In the context of this utility, usually placed at '~/' or '~/.config/'.
+__createLink() {
+  if [[ "$1" == *"~"* ]] || [[ "$2" == *"~"* ]]; then
+    __createLink $(fixPath "$1") $(fixPath "$2")
+    return
+  fi
+  parent=$(dirname "$2")
+  if [[ ! -e "$parent" ]]; then
+    mkdir -p "$parent"
+  fi
+  # 1 = Source file         - the actual file
+  # 2 = Link Name / Desnity - the path to generate a new link
+  ln -s "$1" "$2"
+}
+
+__linkFile() {
+  file=$1
+  cat <<TEXT
+
+$file
+  cp ~/$file $BACKUP_DIR/$file
+  rm ~/$file
+  ln -s $REPO_HOME_DIR/$file ~/$file
+TEXT
+  __backup "~/$file"
+  __remove "~/$file"
+  __createLink "$REPO_HOME_DIR/$file" "~/$file" 
+}
+
+link() {
+#  echo "Sync Dirs:"
+#  for d in $configSyncDirs; do
+#    echo "* ${d//\//}"
+#  done
+#  echo "Link Files:"
+#  for file in $(listFiles -i*); do
+#  done
+
+  for file in $configSyncFiles; do
+    __linkFile $file
+  done
+
+  for file in $configSyncDirs; do
+    __linkFile $file
+  done
+
+  if [ -z "$(ls -A $BACKUP_DIR)" ];then
+    echo "Backup folder is empty, deleting it"
+    rm -d $BACKUP_DIR
+  fi
+}
+
+# Forward the parameters into one function
+if [[ -z "$@" || "$@" == *"help"* ]]; then
+  cat <<-HELP 
+$help
+HELP
+else
+  $@
+fi
+
