@@ -25,8 +25,6 @@ configIgnoredFiles=""
 configSyncFiles=""
 configSyncDirs=""
 
-mkdir -p "$BACKUP_DIR"
-
 
 # Read configuration file if exist
 # This function will read file line-by-line, using the first character as mapping for the target file/dir.
@@ -141,85 +139,40 @@ listConfigResult() {
 
 
 # Fix paths by replacing '~' with $HOME
-fixPath() {
+__fixPath() {
   echo ${@/#~\//$HOME/}
 }
 
-# Backup target folder into [$DOTFILES_DIR/backup]
-# Params:
-#   1. full file path of what needs to be saved
-__backup() {  
-  if [[ "$1" == *"~"* ]]; then
-    __backup $(fixPath "$1")
-    return
-  fi
-  if [ -L "$1" ]; then
-    # do not backup symbolic links
-    return
-  elif [ -e "$1" ]; then
-    cp -r "$1" "$BACKUP_DIR/${@##*/}"
-#  else
-#    echo "Cannot create backup - File (\"$1\") not found."
-  fi
-}
-
-# Delete file or directory
-# Params:
-#   1. file or directory to be removed
-__remove() {
-  if [[ "$@" == *"~"* ]]; then
-    __remove $(fixPath "$1")
-    return
-  fi
-  if [ -e "$1" ]; then
-    rm -rdf "$1"
-  elif [ -f "$1" ]; then
-    rm -f "$1"
-  elif [ -d "$1" ]; then
-    rm -rdf "$1" 
-#  else
-#    echo "Cannot delete - File (\"$1\") not found."
-  fi
-}
-
-# Create a symbolic link
-# Params:
-#   1. Source File. The new configuration file. The path to the actual file.
-#      In this utility, indicates the path with the real file, where the real configuration will remain.
-#      Files under the '~/dotfiles/home'.
-#   2. Destiny. The path of the configuration application. 
-#      A link will be generated in this path.
-#      This is the path whta the application will use by default, 
-#      In the context of this utility, usually placed at '~/' or '~/.config/'.
-__createLink() {
-  if [[ "$1" == *"~"* ]] || [[ "$2" == *"~"* ]]; then
-    __createLink $(fixPath "$1") $(fixPath "$2")
-    return
-  fi
-  parent=$(dirname "$2")
-  if [[ ! -e "$parent" ]]; then
-    mkdir -p "$parent"
-  fi
-  # 1 = Source file         - the actual file
-  # 2 = Link Name / Desnity - the path to generate a new link
-  ln -s "$1" "$2"
-}
-
+# Run the linking process
+# This function will
+#  * backup the existing path
+#  * remove target path
+#  * create a symbolic link between dofiles/home with actual home
+# Parameter
+#  1. the relative path to both home folders
 __linkFile() {
-  file=$1
-  cat <<TEXT
-
-$file
-  cp ~/$file $BACKUP_DIR/$file
-  rm ~/$file
-  ln -s $REPO_HOME_DIR/$file ~/$file
-TEXT
-  __backup "~/$file"
-  __remove "~/$file"
-  __createLink "$REPO_HOME_DIR/$file" "~/$file" 
+  file="$1"
+  targetFile=$(__fixPath "~/$1")
+  echo 
+  echo "# $file"
+  if [ -e "$targetFile" ] || [ -L "$targetFile" ]; then
+    # backup if is not a link
+    if [ ! -L "$targetFile" ]; then
+      backupPath=$(__fixPath \"$BACKUP_DIR/$file\")
+      echo "  cp $targetFile $backupPath"
+      cp $targetFile $backupPath
+    fi
+    # remove
+    echo "  rm -rd $targetFile"
+    rm -rd $targetFile
+  fi
+  echo "  ln -s $(__fixPath \"$REPO_HOME_DIR/$file\") $targetFile"
+  ln -s $(__fixPath "$REPO_HOME_DIR/$file") $targetFile
 }
 
 link() {
+  mkdir -p "$BACKUP_DIR"
+
 #  echo "Sync Dirs:"
 #  for d in $configSyncDirs; do
 #    echo "* ${d//\//}"
