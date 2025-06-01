@@ -16,3 +16,6 @@ DOCKER_WRAPPER_DIR=~/dotfiles/docker_wrapper
 # Add env vars to PATH
 export PATH=$DOCKER_WRAPPER_DIR:$JAVA_HOME/bin:$ANDROID_HOME/emulator:$ANDROID_HOME/cmdline-tools/latest:$ANDROID_HOME/platform-tools:$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
 
+# Add shell scripts into the PATH
+export PATH=$PATH:/home/bruno/shell_scripts
+
