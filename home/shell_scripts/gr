@@ -1,0 +1,122 @@
+#!/usr/bin/env python3
+
+import os
+import sys
+import subprocess
+import re
+from pathlib import Path
+
+CONFIG_FILE = Path.home() / ".bd"
+
+def find_project_root():
+    current = Path.cwd()
+    for parent in [current] + list(current.parents):
+        if (parent / "gradlew").exists():
+            return parent
+    return None
+
+def load_config():
+    config = {}
+    if CONFIG_FILE.exists():
+        with open(CONFIG_FILE) as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#'):
+                    key, sep, value = line.partition('=')
+                    if sep:
+                        config[key.strip()] = value.strip()
+    return config
+
+def run_gradle_command(root, args):
+    gradlew_path = root / "gradlew"
+    cmd = [str(gradlew_path)] + args
+    try:
+        subprocess.run(cmd, cwd=root, check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Execution failed: {e}")
+        sys.exit(e.returncode)
+
+def print_help():
+    print("""
+Usage: bd [project] [task] [--args]
+
+This is a wrapper for executing gradle tasks via ./gradlew from any subfolder.
+    """)
+
+def list_projects(root):
+    try:
+        result = subprocess.run([
+            str(root / "gradlew"), "--quiet", "projects"
+        ], cwd=root, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
+        lines = result.stdout
+        regex = r"[Pp]roject '(.*?)'"
+        matches = re.finditer(regex, lines, re.MULTILINE)
+        return [m.group(1) for m in matches]
+#        return [line.split()[0] for line in lines if line and not line.startswith(" ") and not line.startswith("BUILD")]
+ #       return [p for line in lines if "Project \':" in line]
+    except Exception:
+        return []
+
+def list_tasks(root, project):
+    try:
+        result = subprocess.run([
+            str(root / "gradlew"), f"{project}:tasks", "--all"
+        ], cwd=root, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
+        lines = result.stdout.splitlines()
+        return [line.split()[0] for line in lines if line and not line.startswith(" ") and not line.startswith("BUILD")]
+    except Exception:
+        return []
+
+def __completionProjectsFromSettings__(root):
+    settings_file = root / "settings.gradle"
+    if not settings_file.exists():
+        print("settings does not exist")
+        return []
+    with open(settings_file) as f:
+        lines = f.readlines()
+    return [line.split("'")[1] for line in lines if line.strip().startswith("include")]
+    
+
+def main():
+    if len(sys.argv) == 1 or sys.argv[1] in ('-h', '--help', 'help'):
+        print_help()
+        return
+
+    root = find_project_root()
+    if sys.argv[1] == "__completion":
+        commonTasks=[
+          'assemble',
+          'build',
+          'clean',
+          'compile',
+          'test',
+          'install',
+          'publish',
+          'lint'
+        ]
+        projects=[p.replace(":", "\\:") for p in list_projects(root)]
+#        result=[p+"\\:"+t for p in projects for t in commonTasks]
+
+        print("\n".join(projects))
+        #print_zsh_completion()
+        return
+
+    if not root:
+        print("Could not locate 'gradlew' in any parent directory.")
+        sys.exit(1)
+
+    if sys.argv[1] == "--list-projects":
+        print("\n".join(list_projects(root)))
+        return
+
+    if sys.argv[1] == "--list-tasks" and len(sys.argv) > 2:
+        print("\n".join(list_tasks(root, sys.argv[2])))
+        return
+
+    args = sys.argv[1:]
+    run_gradle_command(root, args)
+
+
+if __name__ == '__main__':
+    main()
+
