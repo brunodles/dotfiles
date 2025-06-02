@@ -14,8 +14,20 @@ export ANDROID_NDK_HOME=~/android-ndk
 DOCKER_WRAPPER_DIR=~/dotfiles/docker_wrapper
 
 # Add env vars to PATH
-export PATH=$DOCKER_WRAPPER_DIR:$JAVA_HOME/bin:$ANDROID_HOME/emulator:$ANDROID_HOME/cmdline-tools/latest:$ANDROID_HOME/platform-tools:$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
+PATH+=:$DOCKER_WRAPPER_DIR
+PATH+=:$JAVA_HOME/bin
+PATH+=:$ANDROID_HOME/emulator
+PATH+=:$ANDROID_HOME/cmdline-tools/latest
+PATH+=:$ANDROID_HOME/platform-tools
+PATH+=:$ANDROID_HOME/cmdline-tools/latest/bin
 
 # Add shell scripts into the PATH
-export PATH=$PATH:/home/bruno/shell_scripts
+MY_SCRIPTS=/home/bruno/shell_scripts
+PATH+=:$MY_SCRIPTS
 
+export PATH
+
+fpath+=${ZSH_CUSTOM:-${ZSH:-~/.oh-my-zsh}/custom}/plugins/zsh-completions/src 
+fpath+=$MY_SCRIPTS 
+
+export fpath

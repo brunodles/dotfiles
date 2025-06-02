@@ -66,7 +66,8 @@ ZSH_THEME="agnoster"
 # Would you like to use another custom folder than $ZSH/custom?
 # ZSH_CUSTOM=/path/to/new-custom-folder
 
-fpath+=${ZSH_CUSTOM:-${ZSH:-~/.oh-my-zsh}/custom}/plugins/zsh-completions/src
+# import zsh eng file
+source ~/.config/zsh/env
 autoload -U compinit && compinit
 
 # Which plugins would you like to load?
@@ -75,7 +76,6 @@ autoload -U compinit && compinit
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(
-  git
   zsh-autosuggestions
   fast-syntax-highlighting
 )
@@ -112,8 +112,7 @@ source $ZSH/oh-my-zsh.sh
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
 
-# Import configuraion form other files
-source ~/.config/zsh/env
+# Import aliases
 source ~/.config/zsh/alias
 
 # Override previous configurations for work
