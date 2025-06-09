@@ -1,9 +1,13 @@
 
+# Navigation
+alias workspace='cd ~/workspace'
+alias cd..='cd ..'
 
 # Git
+alias g='git'
 alias gs='git status'
 alias gt='git tag'
-alias gl='git log --all --graph --oneline --decorate'
+alias gl='git log --graph --oneline --decorate'
 alias gc='git commit -m'
 alias gclean='git reset HEAD && git checkout . && git clean -fd'
 alias gb='git branch'
@@ -12,13 +16,13 @@ alias gd='git diff'
 alias gdc='git diff --cached'
 alias gmt='git merge --no-ff --no-commit'
 
-# Navigation
-alias gowork='cd ~/workspace'
-
-alias cd..='cd ..'
-
 # zsh
 alias reload='. ~/.zshrc'
+
+# Date
+alias @today='date +"%Y-%m-%d"'
+alias @time='date +"%H:%M:%S"'
+alias @now='date +"%Y-%m-%d %H:%M:%S"'
 
 # Docker
 alias dc='docker-compose'
@@ -30,12 +34,16 @@ alias drm='docker rmi $(docker images -q -f dangling=true)'
 alias heroku="touch ~/.netrc && docker run --rm -it -v ~/.netrc:/root/.netrc -v $(pwd):/app -w /app brunodles/alpine-heroku-cli"
 
 # Editors
-alias as='sh android-studio/bin/studio.sh'
-alias idea='sh intellij-idea/bin/idea.sh'
+alias as='nohup ~/ide/android-studio/bin/studio.sh &'
+alias idea='nohup ~/ide/idea-IC-*/bin/idea.sh &'
 alias nvim="docker run -it --rm -v ${PWD}:/workspace -v ~/.SpaceVim.d:/home/spacevim/.SpaceVim.d spacevim/spacevim nvim /workspace"
 
 # Wrappers
 alias buck='./buckw'
 alias gradle='./gradlew'
 alias bazel='./bazelw'
+
+# Remote
+## yt-dlp at docker at home server. Useful for grabing metadatas.
+alias yt-dlp='ssh -t 192.168.15.254 sudo -S docker run -it --rm --entrypoint "yt-dlp" ghcr.io/alexta69/metube'
 
