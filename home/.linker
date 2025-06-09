@@ -22,6 +22,7 @@ d .config/i3status
 f .config/compton.conf
 d .config/alacritty
 d shell_scripts
+f .vimrc
 
 i .config/tmux/plugins/*
 
