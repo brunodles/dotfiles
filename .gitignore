@@ -3,6 +3,9 @@
 !zsh
 !alacrity
 
+# backups from linker
+backup/*
+
 # Linux
 !i3
 !i3status

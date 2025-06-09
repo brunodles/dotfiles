@@ -12,8 +12,16 @@
 #
 # Usage: $ dynamic_wallpaper "~/Downloads/backgroundImages"
 #####################################################################
-
-images_dir=$1
+declare images_dir
+if [[ ! -z "$1" ]]; then
+  images_dir=$1
+elif [ -d "~/wallpapers" ]; then
+  images_dir="~/wallpapers"
+elif [ -d "~/Pictures" ]; then
+  images_dir="~/Pictures"
+else
+  images_dir="~/Downloads"
+fi
 images=($(find $images_dir -type f -name '*' | grep -E "je?pg|png" ))
 images_c="${#images[*]}"
 image_r=$(( RANDOM % images_c ))

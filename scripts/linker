@@ -170,6 +170,9 @@ __linkFile() {
   ln -s $(__fixPath "$REPO_HOME_DIR/$file") $targetFile
 }
 
+help+="""
+  link - Link the 'configuration home' folder with the actual home folder.
+"""
 link() {
   mkdir -p "$BACKUP_DIR"
 
