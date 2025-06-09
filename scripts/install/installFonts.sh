@@ -24,6 +24,7 @@ cd fonts/
 ./install.sh
 
 # Install NerdFont from zip files
+# https://github.com/ryanoasis/nerd-fonts/releases/download/v3.4.0/JetBrainsMono.zip
 cd $initialPath/fonts
 unzip *.zip -d $font_dir
 
