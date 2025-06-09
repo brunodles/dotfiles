@@ -22,12 +22,12 @@ PATH+=:$ANDROID_HOME/platform-tools
 PATH+=:$ANDROID_HOME/cmdline-tools/latest/bin
 
 # Add shell scripts into the PATH
-MY_SCRIPTS=/home/bruno/shell_scripts
+MY_SCRIPTS=~/shell_scripts
 PATH+=:$MY_SCRIPTS
 
 export PATH
 
+fpath+=$MY_SCRIPTS
 fpath+=${ZSH_CUSTOM:-${ZSH:-~/.oh-my-zsh}/custom}/plugins/zsh-completions/src 
-fpath+=$MY_SCRIPTS 
 
 export fpath
