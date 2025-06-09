@@ -7,9 +7,21 @@ elif [ -e "/usr/lib/jvm/java-8-openjdk-amd64/" ]; then
 elif [ ! -z "$(readlink -f /usr/bin/javac | sed 's:/bin/javac::')" ]; then
   export JAVA_HOME="$(readlink -f /usr/bin/javac | sed "s:/bin/javac::")"
 fi
-export ANDROID_HOME=~/android-sdk
-export ANDROID_NDK=~/android-ndk
-export ANDROID_NDK_HOME=~/android-ndk
+
+ANDROID_HOME=~/android-sdk
+ANDROID_NDK=~/android-ndk
+
+if [ ! -e "$ANDROID_HOME" ]; then
+  ANDROID_HOME=~/Android/Sdk
+fi
+if [ ! -e "$ANDROID_NDK" ]; then
+  ANDROID_NDK=~/Android/Ndk
+fi
+
+export ANDROID_HOME
+export ANDROID_SDK_ROOT=$ANDROID_HOME
+export ANDROID_NDK_HOME=$ANDROID_NDK
+
 
 DOCKER_WRAPPER_DIR=~/dotfiles/docker_wrapper
 
