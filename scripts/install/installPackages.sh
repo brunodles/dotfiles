@@ -15,7 +15,10 @@ source installUtils.sh
   # disable because I need to think on how declare those custom install scripts
 
 ## UI customization / Desktop Environment
+### i3wm
   lui firefox feh compton i3 i3blocks
+### hyprland
+  lui hyprland wofi dolphin hyprpaper
   #lui alacritty # disable because I need to think on how declare those custom install scripts
 
 ## Servers 
