@@ -30,7 +30,8 @@
 
 # base
 *   | base-devel build-essential
-*   | vim curl git tmux zsh stow
+*   | vim curl git tmux
+*   | zsh oh-my-zsh
 aum | neovim
 
 
@@ -42,9 +43,23 @@ aum | neovim
 
 # UI customization / Desktop Environment
 ## i3wm
-au | firefox feh compton i3 i3blocks
+au  | firefox feh compton i3 i3blocks
+## File namanager
+au  | thunar thunar-volman
 ## hyprland
-au | hyprland wofi dolphin hyprpaper
+au  | hyprland wofi dolphin hyprpaper
+## Unzip tool
+au  | unzip
+## Usb + Disk Management
+au  | udisks2
+au  | usbutils
+au  | gvfs
+## Network and Bluetooth Managers and Applets
+au  | networkmanager blueman
+## Monitor/Display manager
+au  | xorg-xrandr
+## Graphical Library
+au  | glu webkit2gtk-4.1
 #au | alacritty # disable because I need to think on how declare those custom install scripts
 
 # Servers 
