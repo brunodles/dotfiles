@@ -9,10 +9,10 @@
 #
 # Each system is defined by the following characters
 #   * - All Systems
-#   a - Arch Linux
-#   u - Ubuntu Desktp
+#   a - Arch Linux + UI
+#   u - Ubuntu + UI
 #   s - Server / Ubuntu Server
-#   p - Raspiberry Pi
+#   p - Raspiberry Pi + UI
 #   m - MacOs
 #
 # Mac Os configuration
@@ -29,11 +29,46 @@
 # Mc  | allacrity      # configure allacrity to use 'cask'
 #
 #
+#
 
 readonly CONFIG_FILE="$(dirname $0)/.install"
 readonly RECIPE_DIR="$(dirname $0)/rcp"
+readonly UNAME="$(uname)"
 
+declare -a SYSTEMS=()
 declare -a PACKAGES=()
+declare INSTALL_COMMAND=""
+
+case "${UNAME}" in
+  "Linux")
+    if [ -z "$XDG_CURRENT_DESKTOP" ]; then
+      SYSTEMS+=("s")
+      INSTALL_COMMAND="apt install"
+    else
+      linux_id=$(awk -F= '/^ID/{print $2}' /etc/os-release)
+      case "$linux_id" in
+        "arch")
+          SYSTEMS+=("a")
+          INSTALL_COMMAND="pacman -S"
+          ;;
+        "ubuntu")
+          SYSTEMS+=("u")
+          INSTALL_COMMAND="apt install"
+          ;;
+        "raspbian")
+          SYSTEMS+=("p")
+          INSTALL_COMMAND="apt install"
+          ;;
+      esac
+    fi
+    ;;
+    "Darwin")
+      SYSTEMS+=("m" "Mc" "Mb")
+      ;;
+esac
+
+
+#echo "Reading config file:"
 while IFS=$'\n' read -r line; do
   system=$(echo "${line%|*}" | xargs -0)
   packages=$(echo "${line#*|}" | xargs -0)
@@ -41,32 +76,41 @@ while IFS=$'\n' read -r line; do
     "#"*|" "*|"")
       continue
       ;;
-    *)
+    "* "*)
       PACKAGES+=($packages)
-      echo "$system > $packages" 
+#      echo "    $system > $packages" 
+      continue
       ;;
   esac
+  for s in "${SYSTEMS[@]}"; do
+    if [[ "$system" == *"$s"* ]]; then
+      PACKAGES+=($packages)
+#      echo "    $system > $packages" 
+      break
+    fi
+  done
 done <"$CONFIG_FILE"
 
+echo "This device was detected as \"${SYSTEMS[@]}\"."
 echo "This script will install: \"${PACKAGES[@]}\"."
 read -p ":: Continue install? (Y/N): " confirm && [[ $confirm == [yY] || $confirm == [yY][eE][sS] ]] || exit 1
 
-declare -a INSTALL_COMMAND=()
+declare -a INSTALL_COMMAND_PACKAGES=()
 declare -a INSTALL_RECIPIES=()
 for (( i=0; i<${#PACKAGES[@]}; i++ )); do
   package="${PACKAGES[$i]}"
-  # TODO: if the 'package' exist into the 'rcp' folder it should install from there.
-  # Otherwise add the package into the install command package.
+  # If the 'package' exist into the 'rcp' folder it should install from there.
+  # Otherwise add the package into the install command packages.
   if [ -e "$RECIPE_DIR/${package}.sh" ]; then
     INSTALL_RECIPIES+=($package)
   else
-    INSTALL_COMMAND+=($package)
+    INSTALL_COMMAND_PACKAGES+=($package)
   fi
 done
 
 # Install from package manager
-echo "Install ${INSTALL_COMMAND[@]}"
-# TODO: add execute command
+echo "Execute install command: \"${INSTALL_COMMAND} ${INSTALL_COMMAND_PACKAGES[@]}\"."
+eval "sudo ${INSTALL_COMMAND} ${INSTALL_COMMAND_PACKAGES[@]}"
 
 # Install from Recipies
 for (( i=0; i<${#INSTALL_RECIPIES[@]}; i++ )); do

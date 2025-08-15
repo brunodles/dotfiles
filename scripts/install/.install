@@ -29,7 +29,8 @@
 #
 
 # base
-*   | base-devel build-essential
+u   | build-essential
+a   | base-devel
 *   | vim curl git tmux
 *   | zsh oh-my-zsh
 aum | neovim
@@ -43,9 +44,10 @@ aum | neovim
 
 # UI customization / Desktop Environment
 ## i3wm
-au  | firefox feh compton i3 i3blocks
+au  | firefox feh i3 i3blocks
+#au  | compton
 ## File namanager
-au  | thunar thunar-volman
+au  | thunar thunar-volman thunar-shares-plugin thunar-archive-plugin
 ## hyprland
 au  | hyprland wofi dolphin hyprpaper
 ## Unzip tool
@@ -53,9 +55,10 @@ au  | unzip
 ## Usb + Disk Management
 au  | udisks2
 au  | usbutils
-au  | gvfs
+au  | gvfs sshfs gvfs-smb
 ## Network and Bluetooth Managers and Applets
-au  | networkmanager blueman
+au  | networkmanager network-manager-applet
+au  | blueman 
 ## Monitor/Display manager
 au  | xorg-xrandr
 ## Graphical Library
@@ -66,7 +69,8 @@ au  | glu webkit2gtk-4.1
   #servers ?
 
 ## Android
-aum | pidcat-git scrcpy
+#aum | pidcat-git
+aum | scrcpy
 
 # Mac
 
