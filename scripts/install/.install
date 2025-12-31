@@ -36,33 +36,44 @@ a   | base-devel
 aum | neovim
 
 
-# Docker - requires a custom instalation script
-# disable because I need to think on how declare those custom install scripts
+# Containers
+## Docker - requires a custom instalation script. 
+### Disable because I need to think on how declare those custom install scripts
+### Also have a complex installation process. Replaced by Podman
 # * | docker docker-compose-plugin
 # * | docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+## Podman
+au  | lxc arch-install-scripts
+au  | podman
 
 
 # UI customization / Desktop Environment
 ## i3wm
 au  | firefox feh i3 i3blocks
 #au  | compton
-## File namanager
+
+### File namanager
 au  | thunar thunar-volman thunar-shares-plugin thunar-archive-plugin
-## hyprland
-au  | hyprland wofi dolphin hyprpaper
-## Unzip tool
 au  | unzip
-## Usb + Disk Management
+
+### Network and Bluetooth Managers and Applets
+au  | networkmanager network-manager-applet
+au  | blueman 
+
+## hyprland
+#au  | hyprland wofi dolphin hyprpaper
+
+# Usb + Disk Management
 au  | udisks2
 au  | usbutils
 au  | gvfs sshfs gvfs-smb
-## Network and Bluetooth Managers and Applets
-au  | networkmanager network-manager-applet
-au  | blueman 
+
 ## Monitor/Display manager
 au  | xorg-xrandr
+
 ## Graphical Library
 au  | glu webkit2gtk-4.1
+
 #au | alacritty # disable because I need to think on how declare those custom install scripts
 
 # Servers 
