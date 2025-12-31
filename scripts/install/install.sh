@@ -31,7 +31,7 @@
 #
 #
 
-readonly CONFIG_FILE="$(dirname $0)/.install"
+readonly CONFIG_FILE="$(dirname $0)/install.config"
 readonly RECIPE_DIR="$(dirname $0)/rcp"
 readonly UNAME="$(uname)"
 
