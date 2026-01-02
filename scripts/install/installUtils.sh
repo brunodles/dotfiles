@@ -58,19 +58,7 @@ linuxInstall() {
   fi
 }
 
-# Install Alacritty
-# Build from source is required for alacritty because the package systems are not consistent.
-# They don't have the same version available.
-# Build alacritty from source in a docker image. Compilation happens inside a docker container.
-# https://github.com/mdedonno1337/docker-alacritty
 installAlacritty() {
-	echo Install Alacritty
-	mkdir -p $DOTFILE_REPOS
-	cd $DOTFILE_REPOS
-	git clone git@github.com:mdedonno1337/docker-alacritty.git
-	cd docker-alacritty
-	make
-	sudo mv alacritty /usr/bin
 }
 
 executeInstall() {
@@ -126,48 +114,6 @@ executeInstall() {
 			;;
 	esac
 	#install ${tools[@]}
-
-	# Zsh
-	if [[ " ${tools[*]} " == *" oh-my-zsh "* ]]; then
-		echo install oh-my-zsh
-		sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)
-		# install zsh-autosuggestions
-		git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
-		git clone https://github.com/zsh-users/zsh-completions.git ${ZSH_CUSTOM:-${ZSH:-~/.oh-my-zsh}/custom}/plugins/zsh-completions
-		git clone https://github.com/zdharma-continuum/fast-syntax-highlighting.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/fast-syntax-highlighting
-                git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k"
-	fi
-
-	# Docker, DockerCompose
-	# Install using the suggested scripts at docker page.
-	if [[ " ${tools[*]} " == *" docker "* ]]; then
-	  echo Installl docker
-	  if [ ! -z "$(where pacman)" ]; then
-	    wget https://download.docker.com/linux/static/stable/x86_64/docker-27.2.1.tgz -qO- | tar xvfz - docker/docker --strip-components=1
-	    sudo mv ./docker /usr/local/bin
-	    curl -O https://desktop.docker.com/linux/main/amd64/172550/docker-desktop-x86_64.pkg.tar.zst
-	    sudo pacman -U ./docker-desktop-x86_64.pkg.tar.zst
-	  else
-	    local tempFile="/tmp/docker-desktop-amd64.deb"
-	    if [ -e "$tempFile" ]; then
-	      curl -o $tempFile https://desktop.docker.com/linux/main/amd64/docker-desktop-amd64.deb
-	    fi
-	    sudo apt install $tempFile
-	    #rm -f $tempFile
-	  fi
-	fi
-
-	# Alacritty
-	if [[ " ${tools[*]} " == *" alacritty "* ]]; then
-		installAlacritty
-	fi
-
-	# tmux
-	if [[ " ${tools[*]} " == *" tmux "* ]]; then
-	  install tmux
-	  git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
-	fi
-
 	 
 }
- 
+
