@@ -1,4 +1,4 @@
-#!./install_interpreter.sh --dry
+#!./install_interpreter.sh
 # Platforms
 # key, System
 #  Ar,       Arch Linux
@@ -21,11 +21,13 @@
 # base
 UdUs i build-essential
 Ar   i base-devel
-*    i vim curl git tmux
-*    i zsh oh-my-zsh
+*    i curl wget git
+*    i vim
 *    i neovim
 M cask neovim
 
+*    i tmux tmux-plugins
+*    i oh-my-zsh
 
 
 # Containers
@@ -65,6 +67,7 @@ ArUd  i xorg-xrandr
 
 ## Graphical Library
 ArUd  i glu webkit2gtk-4.1
+ArUd  i fonts
 
 #au i alacritty # disable because I need to think on how declare those custom install scripts
 
@@ -76,5 +79,3 @@ ArUd  i glu webkit2gtk-4.1
 ArUd i scrcpy
 
 # Mac
-
-* bash echo something else

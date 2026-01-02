@@ -2,12 +2,15 @@
 
 zsh_version=$(zsh --version)
 if [[ -z "$zsh_version" ]]; then
-  echo "Zsh is not installed"
-  return 1
+  echo "Zsh is not installed" >&2
+  exit 1
 fi
 
-# Oh Zsh
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+if [ -d "$HOME/.oh-my-zsh" ]; then
+  echo "oh-my-zsh is installed at \"$HOME/.oh-my-zsh\"" >&2
+else
+  sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+fi
 
 # Suggestion, completion and syntax-highlighting
 git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
