@@ -7,8 +7,8 @@ if [ "$(uname)" == "Darwin" ]; then
   font_dir="$HOME/Library/Fonts"
 else
   font_dir="$HOME/.local/share/fonts"
-  mkdir -p $font_dir
 fi
+mkdir -p $font_dir
 
 # Install single font from font-awesome
 #  This font file will be used for the i3 Bar

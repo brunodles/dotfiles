@@ -1,4 +1,4 @@
-#!./install_interpreter.sh
+#!./install/interpreter.sh
 # Platforms
 # key, System
 #  Ar,       Arch Linux

@@ -7,7 +7,8 @@ import sys
 import platform
 from pathlib import Path
 
-RECIPE_PATH="./rcp"
+script_dir = Path(__file__).resolve().parent
+RECIPE_PATH=f"{script_dir}/recipe"
 
 class RecipeProvider:
   def __init__(self, recipe_folder_path=RECIPE_PATH):
@@ -106,7 +107,7 @@ class FileEvaluator:
   def __register_package__(self, command, package):
     if package in self.recipes:
       self.__perform_aggregation__()
-      self.__register_output_command__(f"./{self.recipes[package]}")
+      self.__register_output_command__(f"sh {self.recipes[package]}")
       return
     if package in self.install_packages[Command.brew_cask]:
       return
