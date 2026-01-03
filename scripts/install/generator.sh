@@ -1,4 +1,8 @@
-#!/bin/env python
+#!/usr/bin/env python3
+# This script will read each line of the configuration script to translate into performable commands.
+# It is also responsible replacing the install command by the recipe or add the post-install into the final script.
+# Author: Bruno de Lima <github.com/brunodles>
+
 from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum
@@ -7,20 +11,24 @@ import sys
 import platform
 from pathlib import Path
 
-script_dir = Path(__file__).resolve().parent
-RECIPE_PATH=f"{script_dir}/recipe"
+SCRIPT_DIR = Path(__file__).resolve().parent
 
 class RecipeProvider:
-  def __init__(self, recipe_folder_path=RECIPE_PATH):
-    self.recipe_folder = Path(recipe_folder_path)
+  def __init__(self, install_scripts_path: Path = SCRIPT_DIR):
+    self.install_script_folder = install_scripts_path
+    self.recipe_folder = install_scripts_path / "recipe"
+    self.post_install_folder = install_scripts_path / "post_install"
 
-  def findRecipes(self):
-    self.recipes = {
+  def load_files(self):
+    self.recipes = self.__find_files_on_folder(self.recipe_folder)
+    self.post_install = self.__find_files_on_folder(self.post_install_folder)
+
+  def __find_files_on_folder(self, folder:Path): #-> dict[str,Path]
+    return {
       p.stem.lower(): p
-      for p in self.recipe_folder.iterdir()
+      for p in folder.iterdir()
       if p.is_file()
     }
-    return self.recipes
 
 class Command(str, Enum):
   pacman    = ("sudo pacman -S")
@@ -70,51 +78,51 @@ class OsDataProvider:
     return current_os_data
 
 class FileEvaluator:
-  def __init__(self, script_file, os_data=OsDataEnum.Default, recipes=defaultdict(str)):
+  def __init__(self, script_file, os_data=OsDataEnum.Default, recipe_provider:RecipeProvider=RecipeProvider()):
     self.script_file = script_file
     self.install_packages = defaultdict(list)
     # self.output_commands = list()
     self.os_data = os_data
-    self.recipes = list()
     self.command_order = list()
-    self.recipes = recipes
+    self.recipe_provider = recipe_provider
 
 
-  def __register_output_command__(self, command, aggregate=True):
+  def __register_output_command(self, command, aggregate=True):
     if aggregate and len(self.command_order) > 0:
-      self.__perform_aggregation__()
+      self.__perform_aggregation()
     self.output_commands.append(command)
 
-  def __perform_aggregation__(self):
+  def __perform_aggregation(self):
     for install_command in self.command_order:
       package_list=self.install_packages[install_command]
       if len(package_list) > 0:
-        self.__register_output_command__(f"{install_command.value} {" ".join(package_list)}", False)
+        self.__register_output_command(f"{install_command.value} {" ".join(package_list)}", False)
         package_list.clear()
     self.install_packages.clear()
     self.command_order.clear()
 
-  def __remove_package_from_previous_commands__(self, package):
+  def __remove_package_from_previous_commands(self, package):
     for install_command in self.install_packages:
       package_list=self.install_packages[install_command]
       if package in package_list:
         package_list.remove(package)
 
-  def __register_package_list__(self, command, package_list):
+  def __register_package_list(self, command, package_list):
     for package in package_list:
-      self.__register_package__(command, package)
+      self.__register_package(command, package)
           
-  def __register_package__(self, command, package):
-    if package in self.recipes:
-      self.__perform_aggregation__()
-      self.__register_output_command__(f"sh {self.recipes[package]}")
+  def __register_package(self, command, package):
+    if package in self.recipe_provider.recipes:
+      self.__register_output_command(f"sh {self.recipe_provider.recipes[package]}")
       return
     if package in self.install_packages[Command.brew_cask]:
       return
     if command == Command.brew_cask:
-      self.__remove_package_from_previous_commands__(package)
+      self.__remove_package_from_previous_commands(package)
     self.install_packages[command].append(package)
     self.command_order.append(command)
+    if package in self.recipe_provider.post_install:
+      self.__register_output_command(f"sh {self.recipe_provider.post_install[package]}")
 
   def evaluateCommandsFromFile(self):
     self.output_commands = list()
@@ -133,15 +141,15 @@ class FileEvaluator:
 
         line_command = split_line[0]
         if line_command == "i":
-          self.__register_package_list__(self.os_data.installCommand, split_line[1:])
+          self.__register_package_list(self.os_data.installCommand, split_line[1:])
           continue
         if line_command == "cask":
-          self.__register_package_list__(Command.brew_cask, split_line[1:])
+          self.__register_package_list(Command.brew_cask, split_line[1:])
           continue
 
-        self.__register_output_command__(" ".join(split_line))
+        self.__register_output_command(" ".join(split_line))
 
-    self.__perform_aggregation__()
+    self.__perform_aggregation()
     # for line in self.output_commands:
     #   print(line)
 
@@ -153,10 +161,11 @@ class FileEvaluator:
 last_argument = sys.argv[-1]
 current_os_data = OsDataProvider.findPlatform()
 recipe_provider = RecipeProvider()
+recipe_provider.load_files()
 evaluator = FileEvaluator(
   script_file=last_argument,
   os_data=current_os_data,
-  recipes=recipe_provider.findRecipes(),
+  recipe_provider=recipe_provider,
 )
 
 print(f"# Detected: {current_os_data.fullName} ({current_os_data.key})")

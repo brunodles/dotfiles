@@ -1,5 +1,17 @@
 #!./install/interpreter.sh
-# Platforms
+# Install configuration script
+# This script is executed by a custom script interpreter that will perform the correct install script depending on the
+# platform and if it desired for that platform.
+# Author: Bruno de Lima <github.com/brunodles>
+
+# The configuration is both a script and a 3 column table,
+# where each column represents the platform, the command and the package
+# 1 - the platform key alias. Eg.: Ar for Arch Linux, Ud for Ubuntu Desktop.
+# 2 - the command. Some commands are aliased but any command can be performed
+# 3 - the packages or parameters. What would be passed into the command being performed
+# See the platform and examples bellow
+
+# Platforms configuration keys
 # key, System
 #  Ar,       Arch Linux
 #  Ap,     Alpine Linux
@@ -25,8 +37,7 @@ Ar   i base-devel
 *    i vim
 *    i neovim
 M cask neovim
-
-*    i tmux tmux-plugins
+*    i tmux
 *    i oh-my-zsh
 
 
@@ -37,8 +48,8 @@ M cask neovim
 # * i docker docker-compose-plugin
 # * i docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 ## Podman
-Ar i arch-install-scripts
-ArUd  i lxc podman
+Ar   i arch-install-scripts
+ArUd i lxc podman
 
 
 # UI customization / Desktop Environment
