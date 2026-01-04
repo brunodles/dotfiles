@@ -24,6 +24,10 @@ alias @today='date +"%Y-%m-%d"'
 alias @time='date +"%H:%M:%S"'
 alias @now='date +"%Y-%m-%d %H:%M:%S"'
 
+# container Podman
+alias docker=podman
+alias docker-compose='podman compose'
+
 # Docker
 alias dc='docker-compose'
 alias dcu='dc up'
