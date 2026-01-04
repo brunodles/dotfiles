@@ -13,3 +13,7 @@ theme="Detuned"
 #theme="Wryan"
 
 window-decoration = none
+
+# Key Bindings
+keybind = alt+v=paste_from_clipboard
+keybind = alt+c=copy_to_clipboard
