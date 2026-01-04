@@ -33,10 +33,11 @@ class RecipeProvider:
 # Data representation of command
 @dataclass(frozen=True)
 class CommandData:
-  key: str
+  alias: str
   command: str
   install: str
   require_sudo: bool
+  override: bool
 
   def build_install(self, *parameters):
     result=""
@@ -47,28 +48,28 @@ class CommandData:
       result += " " + " ".join(parameters)
     return result
 
-# Might read this from a config file.
+# todo: might be good to read this from a csv file? or use the csv file to expand this list
 class CommandEnum(CommandData, Enum):
-  pacman    = ("pacman", "pacman",             "-S",  True)
-  yay       = (   "yay",    "yay",             "-S",  True)
-  apk       = (   "apk",    "apk",            "add",  True)
-  apt       = (   "apt",    "apt",        "install",  True)
-  brew      = (  "brew",   "brew",        "install",  True)
-  brew_cask = (  "cask",   "brew", "install --cask",  True)
-  snap      = (  "snap",   "snap",        "install",  True)
-  zypper    = ("zypper", "zypper",        "install",  True)
-  echo      = (  "echo",   "echo",       "install?", False)
+  pacman    = ("pacman", "pacman",             "-S",  True, False)
+  yay       = (   "yay",    "yay",             "-S",  True, False)
+  apk       = (   "apk",    "apk",            "add",  True, False)
+  apt       = (   "apt",    "apt",        "install",  True, False)
+  brew      = (  "brew",   "brew",        "install",  True, False)
+  brew_cask = (  "cask",   "brew", "install --cask",  True,  True)
+  snap      = (  "snap",   "snap",        "install",  True,  True)
+  zypper    = ("zypper", "zypper",        "install",  True, False)
+  echo      = (  "e",   "echo",                  "", False, False)
 
 @dataclass
 class OsData:
-  key: str
+  alias: str
   fullName: str
   uname: str
   release: str
   desktop: bool
   command: CommandData
 
-# Might read this from a config file?
+# todo: might be good to read this from a csv file? or use the csv file to expand this list
 class OsDataEnum(OsData, Enum):
   Arch_Linux        = ( "Ar",        "Arch Linux",  "Linux",      "arch",  True, CommandEnum.pacman)
   Alpine_Desktop    = ("Ald",    "Alpine Desktop",  "Linux",    "alpine",  True, CommandEnum.apk) # to be checked
@@ -102,12 +103,12 @@ class OsDataProvider:
 class FileEvaluator:
   def __init__(self, script_file, os_data=OsDataEnum.Default, recipe_provider:RecipeProvider=RecipeProvider()):
     self.script_file = script_file
-    self.install_packages :dict[CommandData,list[str]] = defaultdict(list)
+    self.install_packages: dict[CommandData, list[str]] = defaultdict(list)
     self.output_commands = list()
     self.os_data = os_data
     self.command_order: list[CommandData] = list()
     self.recipe_provider = recipe_provider
-
+    self.overriden_packages: list[str] = list()
 
   def __register_output_command(self, command:str, aggregate=True):
     if aggregate and len(self.command_order) > 0:
@@ -137,9 +138,10 @@ class FileEvaluator:
     if package in self.recipe_provider.recipes:
       self.__register_output_command(f"sh {self.recipe_provider.recipes[package]}")
       return
-    if package in self.install_packages[CommandEnum.brew_cask]:
+    if package in self.overriden_packages:
       return
-    if command == CommandEnum.brew_cask:
+    if command.override:
+      self.overriden_packages.append(package)
       self.__remove_package_from_previous_commands(package)
     self.install_packages[command].append(package)
     self.command_order.append(command)
@@ -158,17 +160,21 @@ class FileEvaluator:
 
         split_line = line.split()
         line_systems = split_line.pop(0)
-        if ("*" not in line_systems) and (self.os_data.key not in line_systems):
+        if ("*" not in line_systems) and (self.os_data.alias not in line_systems):
           continue
 
         line_command = split_line[0]
         if line_command == "i":
           self.__register_package_list(self.os_data.command, split_line[1:])
           continue
-        if line_command == "cask":
-          self.__register_package_list(CommandEnum.brew_cask, split_line[1:])
+        found_command = False
+        for command in CommandEnum:
+          if line_command == command.alias:
+            self.__register_package_list(command, split_line[1:])
+            found_command = True
+            break
+        if found_command:
           continue
-
         self.__register_output_command(" ".join(split_line))
 
     self.__perform_aggregation()
@@ -181,7 +187,7 @@ class FileEvaluator:
 
 # global vars
 last_argument = sys.argv[-1]
-current_os_data = OsDataProvider.findPlatform()
+current_os_data = OsDataProvider.findPlatform() # todo: add a way to override for testing purposes
 recipe_provider = RecipeProvider()
 recipe_provider.load_files()
 evaluator = FileEvaluator(
@@ -190,7 +196,7 @@ evaluator = FileEvaluator(
   recipe_provider=recipe_provider,
 )
 
-print(f"# Detected: {current_os_data.fullName} ({current_os_data.key})")
+print(f"# Detected: {current_os_data.fullName} ({current_os_data.alias})")
 commands = evaluator.evaluateCommandsFromFile()
 for command in commands:
   print(command)
