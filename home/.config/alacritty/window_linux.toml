@@ -17,10 +17,10 @@ option_as_alt = "OnlyLeft"
 style = { shape = "Block", blinking = "On" }
 
 [font]
+#normal = { family = "monospace", style = "Regular" }
 #normal = { family = "RobotoMono Nerd Font", style = "Regular" }
 #normal = { family = "Terminess Nerd Font Mono", style = "Regular" }
 normal = { family = "JetBrainsMono Nerd Font", style = "Regular" }
-size = 12
-
-
+#normal = { family = "Ubuntu Mono derivative Powerline", style = "Regular" }
+size = 10
 
