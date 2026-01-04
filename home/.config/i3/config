@@ -40,7 +40,7 @@ exec --no-startup-id xss-lock --transfer-sleep-lock -- i3lock --nofork
 
 # NetworkManager is the most popular way to manage wireless networks on Linux,
 # and nm-applet is a desktop environment-independent system tray GUI for it.
-exec --no-startup-id nm-applet
+exec --no-startup-id nm-applet blueman-applet
 
 # Custom. Add compton for X composition, transparency 
 #exec --no-startup-id compton
@@ -266,12 +266,13 @@ gaps inner 4
 # finds out, if available)
 bar {
   i3bar_command i3bar
-#  status_command i3status
+  status_command i3status
 #  status_command SCRIPT_DIR="$HOME/.config/i3blocks/scripts" i3blocks -c ~/.config/i3blocks/top.conf
   status_command PATH="$PATH:$HOME/.config/i3blocks/scripts" i3blocks -c ~/.config/i3blocks/top.conf 
 #   status_command sh -c $HOME/.config/i3/i3limabar 
 
   tray_output primary
+  tray_padding 0
   padding 0px 8px
   position top
   font -misc-fixed-medium-r-normal--13-120-75-75-C-70-iso10646-1
