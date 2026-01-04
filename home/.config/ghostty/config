@@ -1,1 +1,15 @@
+
+#theme="Atom One Dark"
+theme="Detuned"
+#theme="Earthsong"
+#theme="Elementary"
+#theme="Everblush"
+#theme="Fahrenheit"
+#theme="Forest End Delight"
+#theme="Hacktober"
+#theme="Srcery"
+#theme="Treehouse"
+#theme="Ubuntu"
+#theme="Wryan"
+
 window-decoration = none
