@@ -18,16 +18,17 @@ if [ ! -f "$font_dir/fontawesome-webfont.ttf" ]; then
   cp "$(dirname "$(readlink -fm "$0")")/fontawesome-webfont.ttf" $font_dir
 fi
 
+tmp_font="/tmp/fonts"
 # Install powerline fonts
-mkdir $initialPath/customization
-cd $initialPath/customization/
+mkdir $tmp_font/customization
+cd $tmp_font/customization/
 git clone https://github.com/powerline/fonts.git
 cd fonts/
 ./install.sh
 
 # Install NerdFont from zip files
-# https://github.com/ryanoasis/nerd-fonts/releases/download/v3.4.0/JetBrainsMono.zip
-cd $initialPath/fonts
+curl -o https://github.com/ryanoasis/nerd-fonts/releases/download/v3.4.0/JetBrainsMono.zip
+cd $tmp_font/fonts
 unzip *.zip -d $font_dir
 
 # Refresh font cache
