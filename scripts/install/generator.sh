@@ -30,13 +30,34 @@ class RecipeProvider:
       if p.is_file()
     }
 
-class Command(str, Enum):
-  pacman    = ("sudo pacman -S")
-  apk       = ("sudo apk add")
-  apt       = ("sudo apt install")
-  brew      = ("sudo brew install")
-  brew_cask = ("sudo brew install --cask")
-  echo      = ("echo install?")
+# Data representation of command
+@dataclass(frozen=True)
+class CommandData:
+  key: str
+  command: str
+  install: str
+  require_sudo: bool
+
+  def build_install(self, *parameters):
+    result=""
+    if self.require_sudo:
+      result += "sudo "
+    result += f"{self.command} {self.install}"
+    if len(parameters) > 0:
+      result += " " + " ".join(parameters)
+    return result
+
+# Might read this from a config file.
+class CommandEnum(CommandData, Enum):
+  pacman    = ("pacman", "pacman",             "-S",  True)
+  yay       = (   "yay",    "yay",             "-S",  True)
+  apk       = (   "apk",    "apk",            "add",  True)
+  apt       = (   "apt",    "apt",        "install",  True)
+  brew      = (  "brew",   "brew",        "install",  True)
+  brew_cask = (  "cask",   "brew", "install --cask",  True)
+  snap      = (  "snap",   "snap",        "install",  True)
+  zypper    = ("zypper", "zypper",        "install",  True)
+  echo      = (  "echo",   "echo",       "install?", False)
 
 @dataclass
 class OsData:
@@ -45,18 +66,19 @@ class OsData:
   uname: str
   release: str
   desktop: bool
-  installCommand: str
+  command: CommandData
 
+# Might read this from a config file?
 class OsDataEnum(OsData, Enum):
-  Arch_Linux        = ( "Ar",        "Arch Linux",  "Linux",      "arch",  True, Command.pacman)
-  Alpine_Desktop    = ("Ald",    "Alpine Desktop",  "Linux",    "alpine",  True, Command.apk) # to be checked
-  Alpine_Server     = ("Als",    "Alpine Server" ,  "Linux",    "alpine", False, Command.apt) # to be checked
-  Ubuntu_Desktop    = ( "Ud",    "Ubuntu Desktop",  "Linux",    "ubuntu",  True, Command.apt)
-  Ubuntu_Server     = ( "Us",    "Ubuntu Server" ,  "Linux",    "ubuntu", False, Command.apt)
-  Raspberry_Desktop = ( "Rd", "Raspberry Desktop",  "Linux", "raspibian",  True, Command.apt)
-  Raspberry_Server  = ( "Rs", "Raspberry Server" ,  "Linux", "raspibian", False, Command.apt)
-  Mac_Os            = (  "M", "Mac Os (brew)"    , "Darwin",          "",  True, Command.brew)
-  Default           = (  "",           "Test"    ,       "",          "",  True, Command.echo)
+  Arch_Linux        = ( "Ar",        "Arch Linux",  "Linux",      "arch",  True, CommandEnum.pacman)
+  Alpine_Desktop    = ("Ald",    "Alpine Desktop",  "Linux",    "alpine",  True, CommandEnum.apk) # to be checked
+  Alpine_Server     = ("Als",    "Alpine Server" ,  "Linux",    "alpine", False, CommandEnum.apt) # to be checked
+  Ubuntu_Desktop    = ( "Ud",    "Ubuntu Desktop",  "Linux",    "ubuntu",  True, CommandEnum.apt)
+  Ubuntu_Server     = ( "Us",    "Ubuntu Server" ,  "Linux",    "ubuntu", False, CommandEnum.apt)
+  Raspberry_Desktop = ( "Rd", "Raspberry Desktop",  "Linux", "raspibian",  True, CommandEnum.apt)
+  Raspberry_Server  = ( "Rs", "Raspberry Server" ,  "Linux", "raspibian", False, CommandEnum.apt)
+  Mac_Os            = (  "M", "Mac Os (brew)"    , "Darwin",          "",  True, CommandEnum.brew)
+  Default           = (  "",           "Test"    ,       "",          "",  True, CommandEnum.echo)
 
 class OsDataProvider:
   @staticmethod
@@ -80,14 +102,14 @@ class OsDataProvider:
 class FileEvaluator:
   def __init__(self, script_file, os_data=OsDataEnum.Default, recipe_provider:RecipeProvider=RecipeProvider()):
     self.script_file = script_file
-    self.install_packages = defaultdict(list)
-    # self.output_commands = list()
+    self.install_packages :dict[CommandData,list[str]] = defaultdict(list)
+    self.output_commands = list()
     self.os_data = os_data
-    self.command_order = list()
+    self.command_order: list[CommandData] = list()
     self.recipe_provider = recipe_provider
 
 
-  def __register_output_command(self, command, aggregate=True):
+  def __register_output_command(self, command:str, aggregate=True):
     if aggregate and len(self.command_order) > 0:
       self.__perform_aggregation()
     self.output_commands.append(command)
@@ -96,28 +118,28 @@ class FileEvaluator:
     for install_command in self.command_order:
       package_list=self.install_packages[install_command]
       if len(package_list) > 0:
-        self.__register_output_command(f"{install_command.value} {" ".join(package_list)}", False)
+        self.__register_output_command(f"{install_command.value.build_install(" ".join(package_list))}", False)
         package_list.clear()
     self.install_packages.clear()
     self.command_order.clear()
 
-  def __remove_package_from_previous_commands(self, package):
+  def __remove_package_from_previous_commands(self, package:str):
     for install_command in self.install_packages:
       package_list=self.install_packages[install_command]
       if package in package_list:
         package_list.remove(package)
 
-  def __register_package_list(self, command, package_list):
+  def __register_package_list(self, command:CommandData, package_list: list[str]):
     for package in package_list:
       self.__register_package(command, package)
           
-  def __register_package(self, command, package):
+  def __register_package(self, command:CommandData, package: str):
     if package in self.recipe_provider.recipes:
       self.__register_output_command(f"sh {self.recipe_provider.recipes[package]}")
       return
-    if package in self.install_packages[Command.brew_cask]:
+    if package in self.install_packages[CommandEnum.brew_cask]:
       return
-    if command == Command.brew_cask:
+    if command == CommandEnum.brew_cask:
       self.__remove_package_from_previous_commands(package)
     self.install_packages[command].append(package)
     self.command_order.append(command)
@@ -141,10 +163,10 @@ class FileEvaluator:
 
         line_command = split_line[0]
         if line_command == "i":
-          self.__register_package_list(self.os_data.installCommand, split_line[1:])
+          self.__register_package_list(self.os_data.command, split_line[1:])
           continue
         if line_command == "cask":
-          self.__register_package_list(Command.brew_cask, split_line[1:])
+          self.__register_package_list(CommandEnum.brew_cask, split_line[1:])
           continue
 
         self.__register_output_command(" ".join(split_line))
