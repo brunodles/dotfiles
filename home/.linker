@@ -21,6 +21,7 @@ d .config/i3blocks
 d .config/i3status
 f .config/compton.conf
 d .config/alacritty
+d .config/ghostty
 d shell_scripts
 f .vimrc
 
