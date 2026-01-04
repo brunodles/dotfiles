@@ -30,6 +30,13 @@
 #    *, any other command will be executed as command line
 #    ?, custom recipies at 'recipies/' folder might override the install command
 
+# Pre install
+UdUs sudo apt update
+Ud   i snapd
+Ud   snap snap-store
+Ud   echo "Snap store installed"
+
+
 # base
 UdUs i build-essential
 Ar   i base-devel
@@ -40,6 +47,9 @@ M cask neovim
 *    i tmux
 *    i oh-my-zsh
 
+Ar pacman ghostty
+M  cask ghostty
+Ud snap ghostty --classic
 
 # Containers
 ## Docker - requires a custom install script.
