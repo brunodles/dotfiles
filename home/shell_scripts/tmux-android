@@ -8,13 +8,13 @@ tmux has-session -t $SESH 2>/dev/null
 if [ $? != 0 ]; then
   tmux new-session -d -s $SESH -n android
 
-  tmux new-window -n devices
-  tmux send-keys "watch -n 10 adb devices -v" C-m
+  tmux new-window -t "$SESH" -n devices
+  tmux send-keys  -t "$SESH:devices" "watch -n 10 adb devices -l" C-m
 
-  tmux new-window -n log_errors
-  tmux send-keys "adb logcat -s *:E" C-m
+  tmux new-window -t "$SESH" -n "log_errors"
+  tmux send-keys  -t "$SESH:log_errors" "adb logcat -s \*:E" C-m
 
-  tmux new-window -n others
+  tmux new-window -t "$SESH" -n others
   #tmux send-keys "scrcpy &"
 
   HIGHLIT_COLOR="CYAN"
@@ -23,7 +23,7 @@ if [ $? != 0 ]; then
 
   #tmux set-option -t android status-style fg=white,bg=$BG_COLOR
 
-  tmux select-window android
+  tmux select-window devices
 fi
 
 tmux attach-session -t $SESH
