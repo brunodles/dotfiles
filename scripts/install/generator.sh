@@ -53,7 +53,7 @@ class CommandEnum(CommandData, Enum):
   pacman    = ("pacman", "pacman",             "-S",  True, False)
   yay       = (   "yay",    "yay",             "-S",  True, False)
   apk       = (   "apk",    "apk",            "add",  True, False)
-  apt       = (   "apt",    "apt",        "install",  True, False)
+  apt       = (   "apt",    "apt",        "install --ignore-missing -y",  True, False)
   brew      = (  "brew",   "brew",        "install",  True, False)
   brew_cask = (  "cask",   "brew", "install --cask",  True,  True)
   snap      = (  "snap",   "snap",        "install",  True,  True)

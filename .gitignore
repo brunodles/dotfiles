@@ -13,3 +13,5 @@ backup/*
 !installScripts
 !wallpaper
 
+# editor
+.idea

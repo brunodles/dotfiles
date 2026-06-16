@@ -37,7 +37,7 @@ Ud   snap snap-store
 Ud   echo "Snap store installed"
 
 
-# base
+# Terminal shell
 UdUs i build-essential
 Ar   i base-devel
 *    i curl wget git
@@ -45,8 +45,21 @@ Ar   i base-devel
 *    i neovim
 M cask neovim
 *    i tmux
+*    i zsh
 *    i oh-my-zsh
+* echo "Terminal shell installed"
 
+# File System
+ArApUdUs i samba
+ArApUdUs i unzip
+# Usb + Disk Management
+ArUd  i udisks2
+ArUd  i usbutils
+ArUd  i sshfs
+Ar    i gvfs gvfs-smb
+*  echo "File system" 
+
+# Ghostty
 Ar pacman ghostty
 M  cask ghostty
 Ud snap ghostty --classic
@@ -61,33 +74,28 @@ Ud snap ghostty --classic
 Ar   i arch-install-scripts
 ArUd i lxc podman
 
-
 # UI customization / Desktop Environment
 ## i3wm
 ArUd  i firefox feh i3 i3blocks
 #au  i compton
 
 ### File namanager
-ArUd  i thunar thunar-volman thunar-shares-plugin thunar-archive-plugin
-ArUd  i unzip
+ArUd  i thunar thunar-volman thunar-archive-plugin
 
 ### Network and Bluetooth Managers and Applets
-ArUd  i networkmanager network-manager-applet
+ArUd  i network-manager network-manager-applet
 ArUd  i blueman
 
 ## hyprland
-#au  i hyprland wofi dolphin hyprpaper
-
-# Usb + Disk Management
-ArUd  i udisks2
-ArUd  i usbutils
-ArUd  i gvfs sshfs gvfs-smb
+Ud  i hyprland wofi dolphin hyprpaper
 
 ## Monitor/Display manager
-ArUd  i xorg-xrandr
+Ar i xorg-xrandr
+Ud i x11-xserver-utils 
 
 ## Graphical Library
-ArUd  i glu webkit2gtk-4.1
+Ar    i glu webkit2gtk-4.1
+Ud    i libglu1-mesa libwebkit2gtk-4.1-dev
 ArUd  i fonts
 
 #au i alacritty # disable because I need to think on how declare those custom install scripts

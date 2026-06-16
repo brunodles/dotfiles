@@ -31,7 +31,7 @@ configSyncDirs=""
 # i - the file will be ignored
 # f - the file will be synced with home
 # d - the whole directory will be synced with home
-cd $REPO_HOME_DIR
+# c - custom link, target at home and source
 if [ -f "$LOCAL_CONFIG_FILE_NAME" ]; then
   while read line; do
     value=$line
@@ -48,8 +48,21 @@ if [ -f "$LOCAL_CONFIG_FILE_NAME" ]; then
       "d "*)
         configSyncDirs+=" $value"
         ;;
+#      "f "*)
+#        configSyncFiles+=" $value"
+#        ;;
     esac
   done <$LOCAL_CONFIG_FILE_NAME
+
+help+="""
+  success: \`.link\` file found in \`$PWD\`.
+-----------------------
+"""
+else
+help+="""
+  warning: \`.link\` file not found in \`$PWD\`.
+-----------------------
+"""
 fi
 
 
@@ -120,7 +133,7 @@ listFiles() {
 }
 
 help+="""
-  listConfigResult - List how the configutation is evaluated.
+  listConfigResult - List how the configuration is evaluated.
 """
 listConfigResult() {
   echo "Ignored Files:"
@@ -133,7 +146,8 @@ listConfigResult() {
   done
   echo "Sync Dirs:"
   for d in $configSyncDirs; do
-    echo "* ${d//\//}"
+#    echo "* ${d//\//}"
+    echo "* ${d}"
   done
 }
 
