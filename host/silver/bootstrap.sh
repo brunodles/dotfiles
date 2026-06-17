@@ -1,4 +1,4 @@
-install_path="/home/$USER/dotfiles/install"
+install_path="$HOME/dotfiles/install"
 install_ubuntu="$install_path/ubuntu"
 
 # Install common
@@ -23,31 +23,31 @@ $install_path/_tmux.post-install.sh
 # linker
 #~/dotfiles/scripts/linker link
 # ~/dotfiles/tmux/tmux.conf
-rm -rd "/home/$USER/.config/tmux/tmux.conf"
-rm -rd "/home/$USER/.config/compton.conf"
-rm -rd "/home/$USER/.config/home/.vimrc"
-rm -rd "/home/$USER/.config/zsh"
-rm -rd "/home/$USER/.config/i3"
-rm -rd "/home/$USER/.config/i3blocks"
-rm -rd "/home/$USER/.config/i3status"
-rm -rd "/home/$USER/.config/alacritty"
-rm -rd "/home/$USER/.config/ghostty"
-
+home_config="$HOME/.config"
+rm -rd "$home_config/tmux/tmux.conf"
+rm -rd "$home_config/compton.conf"
+rm -rd "$home_config/home/.vimrc"
+rm -rd "$home_config/zsh"
+rm -rd "$home_config/i3"
+rm -rd "$home_config/i3blocks"
+rm -rd "$home_config/i3status"
+rm -rd "$home_config/alacritty"
+rm -rd "$home_config/ghostty"
 
 #ln -s <SOURCE> <TARGET>
-ln -s "/home/$USER/dotfiles/dotfiles/tmux/tmux.conf" "/home/$USER/.config/tmux/tmux.conf"
-ln -s "/home/$USER/dotfiles/dotfiles/compton.conf" "/home/$USER/.config/compton.conf"
-ln -s "/home/$USER/dotfiles/dotfiles/home/.vimrc" "/home/bruno/.vimrc"
-ln -s "/home/$USER/dotfiles/dotfiles/zsh" "/home/$USER/.config/zsh"
-ln -s "/home/$USER/dotfiles/dotfiles/i3" "/home/$USER/.config/i3"
-ln -s "/home/$USER/dotfiles/dotfiles/i3blocks" "/home/$USER/.config/i3blocks"
-ln -s "/home/$USER/dotfiles/dotfiles/i3status" "/home/$USER/.config/i3status"
-ln -s "/home/$USER/dotfiles/dotfiles/alacritty" "/home/$USER/.config/alacritty"
-ln -s "/home/$USER/dotfiles/dotfiles/ghostty" "/home/$USER/.config/ghostty"
+repo_config="$HOME/dotfiles/dotfiles"
+ln -s "$repo_config/.vimrc" "$HOME/.vimrc"
+ln -s "$repo_config/tmux/tmux.conf" "$home_config/tmux/tmux.conf"
+ln -s "$repo_config/zsh" "$home_config/zsh"
+ln -s "$repo_config/i3" "$home_config/i3"
+ln -s "$repo_config/i3blocks" "$home_config/i3blocks"
+ln -s "$repo_config/i3status" "$home_config/i3status"
+ln -s "$repo_config/compton.conf" "$home_config/compton.conf"
+ln -s "$repo_config/alacritty" "$home_config/alacritty"
+ln -s "$repo_config/ghostty" "$home_config/ghostty"
 
-mkdir "/home/$USER/.local"
-ln -s "./home/.local/bin" "/home/$USER/.local/bin"
-ln -s "./home/.local/fbin" "/home/$USER/.local/fbin"
-ln -s "/home/$USER/.config/zsh/zshrc" "/home/$USER/.zshrc"
+mkdir "$HOME/.local"
+ln -s "./home/.local/bin" "$HOME/.local/bin"
+ln -s "./home/.local/fbin" "$HOME/.local/fbin"
+ln -s "$home_config/zsh/zshrc" "$HOME/.zshrc"
 
-compaudit
