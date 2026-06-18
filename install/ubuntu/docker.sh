@@ -106,9 +106,30 @@ echo "==> Enabling Docker"
 sudo systemctl enable docker
 sudo systemctl start docker
 
-echo "==> Adding current user to docker group"
+echo "==> Post-install: allow running Docker without sudo"
 
-sudo usermod -aG docker "$USER"
+# Determine the non-root user who initiated the install. Prefer SUDO_USER when running via sudo.
+INSTALL_USER="${SUDO_USER:-$USER}"
+
+# Create the docker group if it doesn't exist, then add the user to it.
+sudo groupadd docker 2>/dev/null || true
+sudo usermod -aG docker "$INSTALL_USER"
+
+# Ensure the docker socket is owned by root:docker and has correct permissions.
+if [ -S /var/run/docker.sock ]; then
+  sudo chown root:docker /var/run/docker.sock || true
+  sudo chmod 660 /var/run/docker.sock || true
+fi
+
+# Advise how to activate new group membership.
+# Note: newgrp only affects the current shell; a full logout/login is the most reliable method.
+
+echo
+echo "Post-install completed for user: $INSTALL_USER"
+echo "To apply the new group membership either:"
+echo "  - Log out and log back in, OR"
+echo "  - Run: newgrp docker (in each active shell), OR"
+echo "  - Reboot"
 
 echo "==> Configuring log rotation"
 

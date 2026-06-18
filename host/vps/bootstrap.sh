@@ -13,11 +13,13 @@ $install_path/_tmux.post-install.sh
 # Dockge
 dockge_path="$HOME/dotfiles/host/vps/dockge"
 mkdir -p /opt
-ln -s "$dockge_path/stacks" /opt/stacks
-ln -s "$dockge_path/dockage" /opt/self
+sudo ln -s "$dockge_path/stacks" /opt/stacks
+sudo ln -s "$dockge_path/self" /opt/self
+sudo chown $USER "$dockge_path/stacks"
+sudo chown $USER "$dockge_path/self"
 
 # Traefik: Create docker proxy network
-docker network create proxy
+sudo docker network create proxy
 
 # Hermes:
 mkdir -p "$HOME/workspace"
