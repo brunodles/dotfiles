@@ -1,4 +1,5 @@
 #!/bin/bash
+# install tmux plugins
 
 tmux_location=$(command -v tmux)
 if [[ -z "$tmux_location" ]];then 

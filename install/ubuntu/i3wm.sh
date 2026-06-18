@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 
 sudo apt install -y feh i3 i3blocks
 sudo apt install -y thunar thunar-volman thunar-archive-plugin
