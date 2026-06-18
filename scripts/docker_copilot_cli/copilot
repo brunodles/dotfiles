@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+# 1. Global paths and names configuration
+CONFIG_DIR="$HOME/.copilot-cli-docker"
+WORKSPACE_DIR="$(pwd)"
+IMAGE_NAME="local/copilot-cli:latest"
+CONTAINER_NAME="copilot-cli-global"
+
+# Ensure host persistence directories exist
+mkdir -p "$CONFIG_DIR/auth"
+mkdir -p "$CONFIG_DIR/config"
+
+# 2. Automated image build (runs only if the local image is missing)
+if [ ! "$(docker images -q $IMAGE_NAME 2> /dev/null)" ]; then
+    docker build -t "$IMAGE_NAME" - <<EOF
+FROM node:lts-slim
+RUN apt-get update && apt-get install -y git curl && rm -rf /var/lib/apt/lists/*
+RUN npm install -g @github/copilot
+WORKDIR /workspace
+ENTRYPOINT ["copilot"]
+EOF
+fi
+
+# 3. Clean up any previous stale container instance with the same name
+docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1
+
+# 4. Execute GitHub Copilot CLI as a native local binary
+# --rm: Destroys the container instantly upon execution exit
+# "$@": Forwards user arguments dynamically (e.g. --help, /model, /review)
+docker run -it --rm \
+  --name "$CONTAINER_NAME" \
+  -v "$WORKSPACE_DIR:/workspace" \
+  -v "$CONFIG_DIR/auth:/root/.config" \
+  -v "$CONFIG_DIR/config:/root/.copilot" \
+  -e GH_TOKEN="$GH_TOKEN" \
+  -e GITHUB_TOKEN="$GITHUB_TOKEN" \
+  "$IMAGE_NAME" "$@"

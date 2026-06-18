@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+
+# 1. Core Configurations
+CONFIG_DIR="$HOME/.hermes"
+WORKSPACE_DIR="$(pwd)"
+OLLAMA_MODEL="qwen2.5-coder:7b" # Change to llama3.1 or qwen2.5-coder:32b if desired
+
+mkdir -p "$CONFIG_DIR"
+
+# 2. Check and start Ollama Container
+if [ ! "$(docker ps -q -f name=ollama-local)" ]; then
+    if [ "$(docker ps -aq -f status=exited -f name=ollama-local)" ]; then
+        docker start ollama-local > /dev/null
+    else
+        # Detect GPU support (Nvidia) for Linux systems
+        GPU_FLAG=""
+        if command -v nvidia-smi &> /dev/null; then
+            GPU_FLAG="--gpus all"
+        fi
+
+        docker run -d $GPU_FLAG \
+          --name ollama-local \
+          -v "$HOME/.ollama:/root/.ollama" \
+          -p 11434:11434 \
+          --restart unless-stopped \
+          ollama/ollama:latest > /dev/null
+
+        # Give Ollama a brief moment to initialize its internal API server
+        sleep 2
+    fi
+fi
+
+# 3. Ensure the requested model is downloaded inside Ollama
+docker exec -it ollama-local ollama run "$OLLAMA_MODEL" "" > /dev/null 2>&1
+
+# 4. Launch Hermes Agent
+# We use --add-host to cleanly route "host.docker.internal" directly to your machine's gateway
+docker run -it --rm \
+  --name "hermes-terminal-agent-$(basename "$WORKSPACE_DIR" | tr -cd '[:alnum:]')" \
+  --add-host=host.docker.internal:host-gateway \
+  -v "$CONFIG_DIR:/opt/data" \
+  -v "$WORKSPACE_DIR:/workspace" \
+  -w /workspace \
+  -e OPENAI_BASE_URL="http://docker.internal" \
+  -e OPENAI_API_KEY="ollama-local-token" \
+  nousresearch/hermes-agent:latest \
+  /opt/hermes/.venv/bin/hermes --tui "$@"

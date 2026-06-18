@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+# 1. Global paths and names configuration
+CONFIG_DIR="$HOME/.claude-code-docker"
+WORKSPACE_DIR="$(pwd)"
+IMAGE_NAME="local/claude-code:latest"
+CONTAINER_NAME="claude-code-global"
+
+# Ensure host persistence directories exist
+mkdir -p "$CONFIG_DIR/auth"
+mkdir -p "$CONFIG_DIR/cache"
+
+# 2. Automated image build (runs only if the local image is missing)
+if [ ! "$(docker images -q $IMAGE_NAME 2> /dev/null)" ]; then
+    docker build -t "$IMAGE_NAME" - <<EOF
+FROM node:lts-slim
+RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+RUN npm install -g @anthropic-ai/claude-code
+WORKDIR /workspace
+ENTRYPOINT ["claude"]
+EOF
+fi
+
+# 3. Clean up any previous stale container instance with the same name
+docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1
+
+# 4. Execute Claude Code as a native local binary
+# --rm: Destroys the container container instantly upon execution exit
+# "$@": Forwards user arguments dynamically (e.g. --print, doctor, keys)
+docker run -it --rm \
+  --name "$CONTAINER_NAME" \
+  -v "$WORKSPACE_DIR:/workspace" \
+  -v "$CONFIG_DIR/auth:/root/.anthropic" \
+  -v "$CONFIG_DIR/auth:/root/.config" \
+  -v "$CONFIG_DIR/cache:/root/.claude" \
+  -e ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
+  "$IMAGE_NAME" --dangerously-skip-permissions "$@"

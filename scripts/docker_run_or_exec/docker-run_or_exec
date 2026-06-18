@@ -1,0 +1,112 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# Script Name:  docker-run_or_exec
+# Description:  Seamlessly merges 'docker run', 'docker start', and 'docker exec'.
+#               - If container is RUNNING: Executes the command inside it.
+#               - If container is STOPPED and --rm is set: Deletes it and runs fresh.
+#               - If container is STOPPED and --rm not set: Restarts and attaches.
+#               - If container does NOT EXIST: Launches a brand new container.
+#
+# Usage:        ./docker-run_or_exec --name <name> <image> [command] [args...]
+#               (Accepts standard 'docker run' flags automatically)
+#
+# Overlaps:     When switching to 'docker exec', the script automatically maps
+#               overlapping flags (--user, --workdir, --env) and discards
+#               run-only flags (--name, -v, -p, --rm, -d) to avoid errors.
+# ==============================================================================
+
+set -e
+
+usage() {
+    echo "Error: Missing required --name parameter."
+    echo "Usage: $0 --name <container_name> [docker_run_flags] <image> [command]"
+    exit 1
+}
+
+CONTAINER_NAME=""
+IMAGE=""
+COMMAND_ARGS=()
+RUN_ARGS=()
+EXEC_ARGS=()
+HAS_RM=false
+
+RUN_ARGS+=("-it")
+EXEC_ARGS+=("-it")
+
+# ------------------------------------------------------------------------------
+# 1. Parse Arguments & Separate Overlapping Flags
+# ------------------------------------------------------------------------------
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --name)
+            CONTAINER_NAME="$2"
+            shift 2
+            ;;
+        --rm)
+            HAS_RM=true
+            RUN_ARGS+=("$1")
+            shift 1
+            ;;
+        -u|--user|-w|--workdir|-e|--env)
+            RUN_ARGS+=("$1" "$2")
+            EXEC_ARGS+=("$1" "$2")
+            shift 2
+            ;;
+            # Run-only flags with arguments (or standalone like -d)
+        -v|--volume|-p|--publish|-d|--detach|--network)
+            if [[ "$1" == "-d" || "$1" == "--detach" ]]; then
+                RUN_ARGS+=("$1")
+                shift 1
+            else
+                RUN_ARGS+=("$1" "$2")
+                shift 2
+            fi
+            ;;
+        -*)
+            RUN_ARGS+=("$1")
+            shift 1
+            ;;
+        *)
+            if [ -z "$IMAGE" ]; then
+                IMAGE="$1"
+            else
+                COMMAND_ARGS+=("$1")
+            fi
+            shift 1
+            ;;
+    esac
+done
+
+if [ -z "$CONTAINER_NAME" ]; then
+    usage
+fi
+
+if [ ${#COMMAND_ARGS[@]} -eq 0 ]; then
+    COMMAND_ARGS+=("bash")
+fi
+
+# ------------------------------------------------------------------------------
+# 2. Execution Logic Lifecycle Matrix
+# ------------------------------------------------------------------------------
+
+# Inspect container status safely
+CONTAINER_STATUS=$(docker inspect -f '{{.State.Status}}' "$CONTAINER_NAME" 2>/dev/null || echo "not_found")
+
+if [ "$CONTAINER_STATUS" = "running" ]; then
+    # CASE 1: Container is running -> Execute inside it
+    exec docker exec "${EXEC_ARGS[@]}" "$CONTAINER_NAME" "${COMMAND_ARGS[@]}"
+
+elif [ "$CONTAINER_STATUS" = "exited" ] || [ "$CONTAINER_STATUS" = "created" ]; then
+    if [ "$HAS_RM" = true ]; then
+        # CASE 2: Container is stopped + --rm flag -> Remove and recreate fresh
+        docker rm "$CONTAINER_NAME" > /dev/null
+        exec docker run "${RUN_ARGS[@]}" --name "$CONTAINER_NAME" "$IMAGE" "${COMMAND_ARGS[@]}"
+    else
+        # CASE 3: Container is stopped without --rm -> Restart and exec command
+        docker start "$CONTAINER_NAME" > /dev/null
+        exec docker exec "${EXEC_ARGS[@]}" "$CONTAINER_NAME" "${COMMAND_ARGS[@]}"
+    fi
+else
+    # CASE 4: Container does not exist -> Run fresh
+    exec docker run "${RUN_ARGS[@]}" --name "$CONTAINER_NAME" "$IMAGE" "${COMMAND_ARGS[@]}"
+fi
