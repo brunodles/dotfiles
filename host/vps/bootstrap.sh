@@ -16,3 +16,8 @@ mkdir -p /opt
 ln -s "$dockge_path/stacks" /opt/stacks
 ln -s "$dockge_path/dockage" /opt/self
 
+# Traefik: Create docker proxy network
+docker network create proxy
+
+# Hermes:
+mkdir -p "$HOME/workspace"

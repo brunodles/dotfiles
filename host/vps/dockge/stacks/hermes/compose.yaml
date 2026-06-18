@@ -3,6 +3,7 @@ services:
     image: nousresearch/hermes-agent:latest
     container_name: hermes
     restart: unless-stopped
+    working_dir: /workspace
     command: gateway run
     ports:
       - "8642:8642"   # gateway API
