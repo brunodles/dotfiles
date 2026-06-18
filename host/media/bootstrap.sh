@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 install_path="$HOME/dotfiles/install"
 install_ubuntu="$install_path/ubuntu"
 
