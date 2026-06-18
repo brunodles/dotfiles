@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# Run hermes_local complely local
+CONFIG_DIR="$HOME/.hermes"
+WORKSPACE_DIR="$(pwd)"
+OLLAMA_MODEL="qwen2.5-coder:7b"
+
+mkdir -p "$CONFIG_DIR"
+
+if [ "$(docker ps -q -f name=^ollama-local$)" ]; then
+    # Container is running
+    :
+elif [ "$(docker ps -aq -f name=^ollama-local$)" ]; then
+    # restat
+    docker start ollama-local > /dev/null
+else
+    # create Container
+    docker run -d \
+      --gpus all \
+      --name ollama-local \
+      -v "$HOME/.ollama:/root/.ollama" \
+      -p 11434:11434 \
+      -e OLLAMA_HOST="0.0.0.0" \
+      -e OLLAMA_CONTEXT_LENGTH="65536" \
+      --restart unless-stopped \
+      ollama/ollama:latest > /dev/null
+    sleep 3
+fi
+
+docker exec -it ollama-local ollama run "$OLLAMA_MODEL" ""
+
+docker-run_or_exec -it --rm \
+  --name "hermes-terminal-agent" \
+  --add-host=docker.internal:host-gateway \
+  -v "$CONFIG_DIR:/opt/data" \
+  -v "$WORKSPACE_DIR:/workspace" \
+  -w /workspace \
+  -e OPENAI_BASE_URL="http://docker.internal:11434/v1/" \
+  -e OPENAI_API_KEY="ollama-gpu-token" \
+  -e HERMES_FORCE_CONTEXT_LENGTH="65536" \
+  -e OLLAMA_NUM_CTX="65536" \
+  nousresearch/hermes_local-agent:latest \
+  /opt/hermes_local/.venv/bin/hermes_local --tui "$@"
