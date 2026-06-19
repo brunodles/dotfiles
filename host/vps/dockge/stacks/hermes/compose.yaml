@@ -11,6 +11,7 @@ services:
     volumes:
       - ~/.hermes_local:/opt/data
       - ~/workspace:/workspace
+      - ./.gitconfig:/root/.gitconfig
     environment:
       - HERMES_DASHBOARD=1
       # Uncomment to forward specific env vars instead of using .env file:
