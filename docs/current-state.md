@@ -14,7 +14,9 @@ dotfiles/
 ├── .gitignore
 │
 ├── docs/
-│   └── repository-structure.md
+│   ├── current-state.md                     # ← this file
+│   ├── networking.md                        # network topology & connectivity
+│   └── repository-structure.md              # aspirational layout
 │
 ├── dotfiles/                  # Workstation configuration files
 │   ├── .vimrc
@@ -52,7 +54,7 @@ dotfiles/
 │       └── zshrc
 │
 ├── host/                      # Host-specific configurations
-│   ├── android/               # Android/Termux device
+│   ├── android/               # Android/Termux device (always-on server)
 │   │   ├── README.md
 │   │   ├── bootstrap.sh
 │   │   ├── home/.local/bin/
@@ -68,20 +70,29 @@ dotfiles/
 │   ├── media/                 # Media server
 │   │   └── bootstrap.sh
 │   │
+│   ├── pi/                    # Raspberry Pi (Pi-hole)
+│   │   ├── README.md
+│   │   ├── bootstrap.sh
+│   │   └── pihole/
+│   │       ├── extracted/     # future: exported configs
+│   │       └── scripts/
+│   │           ├── extract-config.sh   # SSH-based config pull
+│   │           └── restore-config.sh   # apply saved config locally
+│   │
 │   ├── silver/                # Desktop (Ubuntu, silver PC)
 │   │   ├── README.md
 │   │   ├── bootstrap.sh
-│   │   └── home/.local/bin/
-│   │       ├── font_install.sh
-│   │       ├── font_list.sh
-│   │       ├── formatAsJson.py
-│   │       ├── gr
-│   │       ├── network_interface.sh
-│   │       ├── ollama
-│   │       ├── terminal_colors.sh
-│   │       ├── tmux-android
-│   │       ├── tmux-sample
-│   │       └── wallpaper_dynamic.sh
+│   │   ├── home/.local/bin/
+│   │   │   ├── font_install.sh
+│   │   │   ├── font_list.sh
+│   │   │   ├── formatAsJson.py
+│   │   │   ├── gr
+│   │   │   ├── network_interface.sh
+│   │   │   ├── ollama
+│   │   │   ├── terminal_colors.sh
+│   │   │   ├── tmux-android
+│   │   │   ├── tmux-sample
+│   │   │   └── wallpaper_dynamic.sh
 │   │   └── home/.local/fbin/
 │   │       └── _gr
 │   │
@@ -94,6 +105,11 @@ dotfiles/
 │               ├── hermes/
 │               │   ├── .gitconfig
 │               │   └── compose.yaml
+│               ├── tailscale/          # Tailscale sidecar
+│               │   ├── README.md
+│               │   ├── .env.example
+│               │   ├── compose.yaml
+│               │   └── config/
 │               └── traefik/
 │                   ├── compose.yaml
 │                   └── config/
@@ -101,13 +117,15 @@ dotfiles/
 │                       ├── dynamic/.keep
 │                       └── traefik.yml
 │
-├── install/                   # Install scripts (used by bootstrap.sh)
+├── install/                   # Install scripts (called by bootstrap.sh)
 │   ├── _claudeCode.sh
 │   ├── _fonts.sh
 │   ├── _hermesAgent.sh
 │   ├── _oh-my-zsh.sh
 │   ├── _ollama.sh
+│   ├── _pihole.sh             # Pi-hole installer wrapper
 │   ├── _samba.post-install.sh
+│   ├── _tailscale.sh          # Tailscale (Linux + Termux)
 │   ├── _tmux.post-install.sh
 │   ├── _xiaomi_mimo.sh
 │   ├── arch/
@@ -149,45 +167,67 @@ dotfiles/
 
 | Item | Value |
 |------|-------|
+| Location | Home LAN |
 | OS | Android + Termux |
 | Package manager | `pkg` |
 | Service manager | `termux-services` (runit/sv) |
 | Shell | Zsh + Oh My Zsh + Powerlevel10k |
 | SSH port | 8022 |
+| Connectivity | Wi-Fi + Tailscale |
+| Purpose | Always-on Android server (SSH tunnel, tailnet node) |
 
 ### media
 
 | Item | Value |
 |------|-------|
+| Location | Home LAN |
 | OS | Ubuntu |
+| Connectivity | Wired Ethernet + Tailscale |
 | Status | Only bootstrap.sh exists — no stacks yet |
+
+### pi
+
+| Item | Value |
+|------|-------|
+| Location | Home LAN |
+| OS | Raspberry Pi OS (Debian-based) |
+| Connectivity | Wired Ethernet + Tailscale |
+| Services | Pi-hole (DNS sinkhole, local DNS) |
+| DNS role | Primary DNS for the tailnet |
+| Status | Placeholder — Pi not yet on the same network |
+| Scripts | `extract-config.sh` (SSH pull), `restore-config.sh` (local apply) |
 
 ### silver
 
 | Item | Value |
 |------|-------|
+| Location | Home LAN |
 | OS | Ubuntu |
 | Desktop | HyperLand (primary), i3wm (legacy) |
 | Shell | Zsh + Oh My Zsh |
+| Connectivity | Wired Ethernet + Tailscale |
 | Custom scripts | Network, wallpaper, terminal, Ollama, font management |
 
 ### vps
 
 | Item | Value |
 |------|-------|
+| Location | Cloud (public IP) |
 | OS | Ubuntu (server) |
+| Connectivity | Public internet + Tailscale |
 | Proxy | Traefik v3 (Docker provider + file provider) |
 | SSL | Let's Encrypt (ACME) |
-| Stacks | Dockge, Traefik, Hermes Agent |
+| Stacks | Dockge, Traefik, Hermes Agent, Tailscale |
 | Hermes | Docker container, git identity mounted from stack |
-| Docker network | `proxy` (external) |
+| Docker network | `proxy` (external, shared across stacks) |
 
 ---
 
-## Observações
+## Notes
 
-- **`install/`** contém os scripts de instalação. Cada host referencia esses scripts no seu `bootstrap.sh`.
-- **Nenhum host** segue ainda o padrão completo com `host.env`, `configs/` e `stacks/` — a estrutura atual é mais simples.
-- **`scripts/`** contém wrappers Docker (Claude, Copilot CLI, Hermes) e o utilitário `link` para criar symlinks.
-- **`dotfiles/`** cobre apenas os config files que estão ativamente em uso.
-- **Não há** `projects/`, `bootstrap/`, nem scripts de backup/restore ainda.
+- **`install/`** contains reusable install scripts. Each host's `bootstrap.sh` references them by path.
+- **No host** yet follows the full documented pattern with `host.env`, `configs/` and `stacks/` — the current structure is simpler.
+- **`scripts/`** contains Docker wrappers (Claude, Copilot CLI, Hermes) and the `link` utility for symlinks.
+- **`dotfiles/`** only covers config files currently in active use.
+- **`projects/`**, **`bootstrap/`**, and backup/restore scripts do not exist yet.
+- **Docs** are evolving: `networking.md` and `repository-structure.md` exist alongside this file.
