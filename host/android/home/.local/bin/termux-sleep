@@ -1,0 +1,16 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# termux-sleep — Release a wakelock
+# Usage: termux-sleep [lock_name]
+# Default lock name: "homelab"
+
+set -euo pipefail
+
+LOCK_NAME="${1:-homelab}"
+
+if ! command -v termux-wake-unlock &>/dev/null; then
+  echo "Error: termux-wake-unlock not found. Install termux-api: pkg install termux-api" >&2
+  exit 1
+fi
+
+termux-wake-unlock "$LOCK_NAME"
+echo "✅ Wakelock released: $LOCK_NAME"

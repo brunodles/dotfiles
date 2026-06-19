@@ -1,0 +1,48 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# termux-ip — Show local and public IP addresses
+# Usage: termux-ip [-4|-6] [--public] [--local]
+
+set -euo pipefail
+
+SHOW_PUBLIC=true
+SHOW_LOCAL=true
+IP_VERSION=""
+
+usage() {
+  cat <<EOF
+Usage: $(basename "$0") [options]
+
+Options:
+  -4         Only IPv4
+  -6         Only IPv6
+  --public   Only public IP
+  --local    Only local IP
+  -h         Help
+EOF
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -4) IP_VERSION="-4"; shift ;;
+    -6) IP_VERSION="-6"; shift ;;
+    --public) SHOW_LOCAL=false; shift ;;
+    --local) SHOW_PUBLIC=false; shift ;;
+    -h|--help) usage; exit 0 ;;
+    *) echo "Unknown: $1"; usage; exit 1 ;;
+  esac
+done
+
+if $SHOW_LOCAL; then
+  echo "🏠 Local IPs:"
+  ip ${IP_VERSION} -o addr show | awk '/inet/{print "  " $2 ": " $4}' | sed 's|/.*||' 2>/dev/null \
+    || ifconfig | grep inet | head -5
+fi
+
+if $SHOW_PUBLIC; then
+  echo "🌍 Public IP:"
+  if [[ "$IP_VERSION" == "-6" ]]; then
+    curl -6 -s https://api6.ipify.org 2>/dev/null && echo || echo "  (IPv6 not available)"
+  else
+    echo "  $(curl -4 -s https://api.ipify.org 2>/dev/null || curl -s https://ifconfig.me 2>/dev/null || echo 'unavailable')"
+  fi
+fi

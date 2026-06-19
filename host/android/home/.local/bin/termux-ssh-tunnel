@@ -1,0 +1,81 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# termux-ssh-tunnel — Create reverse SSH tunnel to homelab gateway
+# Usage: termux-ssh-tunnel [--user USER] [--host HOST] [--port PORT] [--remote-port RPORT] [--local-port LPORT] [--key KEY]
+# Defaults:
+#   user:       termux
+#   host:       (required)
+#   port:       22
+#   remote-port: 8022
+#   local-port:  8022
+#   key:        ~/.ssh/id_ed25519
+
+set -euo pipefail
+
+USER="termux"
+HOST=""
+PORT="22"
+REMOTE_PORT="8022"
+LOCAL_PORT="8022"
+KEY="$HOME/.ssh/id_ed25519"
+
+usage() {
+  cat <<EOF
+Usage: $(basename "$0") --host GATEWAY [options]
+
+Create a persistent reverse SSH tunnel so the homelab can reach this
+device even when it's on a different network (NAT traversal).
+
+Options:
+  --host HOST         Gateway / jump host IP or domain (required)
+  --user USER         SSH user (default: termux)
+  --port PORT         Gateway SSH port (default: 22)
+  --remote-port RPORT Port on the gateway (default: 8022)
+  --local-port LPORT  Local SSH port (default: 8022)
+  --key PATH          SSH key path (default: ~/.ssh/id_ed25519)
+  -h, --help          Show help
+EOF
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --host) HOST="$2"; shift 2 ;;
+    --user) USER="$2"; shift 2 ;;
+    --port) PORT="$2"; shift 2 ;;
+    --remote-port) REMOTE_PORT="$2"; shift 2 ;;
+    --local-port) LOCAL_PORT="$2"; shift 2 ;;
+    --key) KEY="$2"; shift 2 ;;
+    -h|--help) usage; exit 0 ;;
+    *) echo "Unknown: $1"; usage; exit 1 ;;
+  esac
+done
+
+if [[ -z "$HOST" ]]; then
+  echo "Error: --host is required" >&2
+  usage
+  exit 1
+fi
+
+if [[ ! -f "$KEY" ]]; then
+  echo "Error: SSH key not found at $KEY" >&2
+  echo "Generate one with: ssh-keygen -t ed25519 -f $KEY" >&2
+  exit 1
+fi
+
+echo "🔗 Creating reverse tunnel: localhost:$LOCAL_PORT -> $HOST:$REMOTE_PORT"
+echo "   User: $USER | Host: $HOST | Port: $PORT"
+echo ""
+echo "   On the gateway, connect with: ssh -p $REMOTE_PORT $USER@localhost"
+echo ""
+echo "   Press Ctrl+C to stop the tunnel."
+echo ""
+
+# -N = no remote commands, -R = reverse tunnel, -o ServerAliveInterval=60 keep alive
+ssh -N -R "${REMOTE_PORT}:localhost:${LOCAL_PORT}" \
+  -p "$PORT" \
+  -i "$KEY" \
+  -o "ServerAliveInterval=60" \
+  -o "ServerAliveCountMax=3" \
+  -o "ExitOnForwardFailure=yes" \
+  "${USER}@${HOST}"
+
+echo "⏹️  Tunnel closed."

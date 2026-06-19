@@ -1,0 +1,43 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# termux-battery-status — Show battery level and health
+# Usage: termux-battery-status [--alert-threshold N] [--alert-below]
+#   --alert-threshold N    Alert when battery is at N% or below (default: 20)
+#   --alert-below          Only check if battery is below threshold, exit 0/1
+
+set -euo pipefail
+
+ALERT_THRESHOLD=20
+ALERT_BELOW=false
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --alert-threshold) ALERT_THRESHOLD="$2"; shift 2 ;;
+    --alert-below) ALERT_BELOW=true; shift ;;
+    -h|--help)
+      echo "Usage: $(basename "$0") [--alert-threshold N] [--alert-below]"
+      exit 0 ;;
+    *) echo "Unknown: $1"; exit 1 ;;
+  esac
+done
+
+if ! command -v termux-battery-status &>/dev/null; then
+  echo "Error: termux-battery-status not found. Install termux-api: pkg install termux-api" >&2
+  exit 1
+fi
+
+status=$(termux-battery-status)
+
+percentage=$(echo "$status" | python3 -c "import sys,json; print(json.load(sys.stdin)['percentage'])")
+plugged=$(echo "$status" | python3 -c "import sys,json; print(json.load(sys.stdin)['plugged'])")
+health=$(echo "$status" | python3 -c "import sys,json; print(json.load(sys.stdin)['health'])")
+temperature=$(echo "$status" | python3 -c "import sys,json; print(json.load(sys.stdin)['temperature'])")
+
+if $ALERT_BELOW; then
+  if (( $(echo "$percentage <= $ALERT_THRESHOLD" | bc -l) )); then
+    exit 0  # true — below threshold
+  else
+    exit 1  # false — above threshold
+  fi
+fi
+
+echo "🔋 Battery: ${percentage}% | Plugged: ${plugged} | Health: ${health} | Temp: ${temperature}°C"
