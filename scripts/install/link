@@ -1,13 +1,101 @@
 #!/usr/bin/env bash
-# Link files
-source=$1
-target=$2
-if [ -f "$target" ]; then
-  # if parameter contains '--no-bak'
-  rm $target
-  # else
-  mv "$target" "$target.bak"
-  # done
+# Link files safely: capture arguments, allow removing or backing up existing target
+set -euo pipefail
+trap 'echo "Error on line ${LINENO}" >&2' ERR
+
+usage() {
+  cat <<EOF
+Usage: $(basename "$0") [--remove] [--verbose] <source> <target>
+
+Creates a symlink at <target> pointing to <source>.
+If <target> exists:
+  --remove   remove the existing target (no backup)
+  (default)  move existing target to <target>.bak (adds timestamp if .bak exists)
+
+--verbose    Show informational messages (default: quiet)
+
+EOF
+}
+
+REMOVE=false
+VERBOSE=0
+SOURCE=""
+TARGET=""
+
+info() {
+  if [ "$VERBOSE" -eq 1 ]; then
+    printf "%s\n" "$*"
+  fi
+}
+
+err() {
+  printf "%s\n" "$*" >&2
+}
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --remove)
+      REMOVE=true; shift ;;
+    --verbose)
+      VERBOSE=1; shift ;;
+    -h|--help)
+      usage; exit 0 ;;
+    --)
+      shift; break ;;
+    *)
+      if [ -z "$SOURCE" ]; then
+        SOURCE="$1"
+      elif [ -z "$TARGET" ]; then
+        TARGET="$1"
+      else
+        err "Unexpected argument: $1"
+        usage; exit 1
+      fi
+      shift ;;
+  esac
+done
+
+if [ -z "$SOURCE" ] || [ -z "$TARGET" ]; then
+  usage
+  exit 1
 fi
-mkdir -p $(dirname "$target")
-ln -s $source $target
+
+# Ensure source exists (file or directory)
+if [ ! -e "$SOURCE" ]; then
+  err "Warning: source does not exist: $SOURCE"
+fi
+
+# If target is a symlink pointing to the same resolved source, do nothing
+if [ -L "$TARGET" ]; then
+  current=$(readlink -f "$TARGET" || true)
+  src_resolved=$(readlink -f "$SOURCE" || true)
+  if [ "$current" = "$src_resolved" ] && [ -n "$current" ]; then
+    info "Target already correct: $TARGET -> $current"
+    exit 0
+  else
+    info "Removing existing symlink: $TARGET"
+    rm -f "$TARGET"
+  fi
+fi
+
+# If target exists (file or dir), either remove or move to backup
+if [ -e "$TARGET" ]; then
+  if [ "$REMOVE" = true ]; then
+    info "Removing existing target: $TARGET"
+    rm -rf "$TARGET"
+  else
+    # Always save backups with a timestamp: <target>.<YYYYmmddHHMMSS>.bak
+    ts=$(date +%Y%m%d%H%M%S)
+    bak="$TARGET.$ts.bak"
+    info "Moving existing target to backup: $TARGET -> $bak"
+    mv "$TARGET" "$bak"
+  fi
+fi
+
+# Ensure parent directory exists
+mkdir -p "$(dirname "$TARGET")"
+
+# Create symlink
+ln -s "$SOURCE" "$TARGET"
+
+info "Linked: $TARGET -> $SOURCE"

@@ -23,12 +23,9 @@ $install_path/_oh-my-zsh.sh
 $install_path/_tmux.post-install.sh
 
 
-link() {
-  source=$1
-  target=$2
-  rm $target
-  ln -s $source $target
-}
+# dotfile links
+link="$HOME/dotfiles/scripts/install/link"
+# link source target
 home_local="$HOME/.local"
 home_config="$HOME/.config"
 repo_config="$HOME/dotfiles/dotfiles"
