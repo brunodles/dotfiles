@@ -166,17 +166,20 @@ Pi-hole is the central DNS for the entire homelab:
 
 ## Port Summary
 
-| Host | Service | Port |
-|------|---------|------|
-| VPS | HTTP / HTTPS (Traefik) | `80`, `443` |
-| VPS | SSH | `22` (or restrict to Tailscale) |
-| VPS | Hermes Gateway | `8642` |
-| VPS | Hermes Dashboard | `9119` |
-| Android | SSH | `8022` |
-| Pi | Pi-hole DNS | `53` UDP |
-| Pi | Pi-hole Admin | `80` or `8080` |
-| Media | Jellyfin / Plex / *arr | Various (LAN only) |
-| Apps | Gitea / Postgres / Redis | Various (LAN only) |
+| Host | Service | Port | Access |
+|------|---------|------|--------|
+| VPS | HTTP / HTTPS (Traefik) | `80`, `443` | Public |
+| VPS | SSH | `22` | Restrict to known IPs or use Tailscale |
+| VPS | Hermes Gateway | `8642` | Known IPs only |
+| VPS | Hermes Dashboard | `9119` | Known IPs only |
+| VPS | Gitea | `3000` | Tailscale only |
+| VPS | Dockge | `5001` | Tailscale only |
+| VPS | Tailscale | `UDP 41641` | Tailscale wireguard |
+| Android | SSH | `8022` | LAN + Tailscale |
+| Pi | Pi-hole DNS | `53` UDP | LAN + Tailscale |
+| Pi | Pi-hole Admin | `80` or `8080` | LAN + Tailscale |
+| Media | Jellyfin / Plex / *arr | Various | LAN only |
+| Apps | Gitea / Postgres / Redis | Various | LAN only |
 
 ---
 
@@ -188,9 +191,14 @@ Pi-hole is the central DNS for the entire homelab:
 Allow:  80/tcp, 443/tcp          (Traefik — public web traffic)
 Allow:  22/tcp                    (SSH — restrict to your IP or use Tailscale SSH)
 Allow:  8642/tcp, 9119/tcp       (Hermes — restrict to known IPs)
-Deny:   all other inbound
+Deny:   all other inbound        (Gitea 3000, Dockge 5001 blocked from internet)
 Allow:  all outbound
 ```
+
+Gitea (3000) and Dockge (5001) are **not exposed to the internet**.
+They are reachable only via:
+- **Tailscale** — from any device on the tailnet
+- **Docker internal** — between containers on the `proxy` network
 
 ### Home LAN hosts
 
