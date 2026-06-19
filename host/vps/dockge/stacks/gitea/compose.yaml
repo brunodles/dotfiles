@@ -1,0 +1,52 @@
+services:
+  gitea-db:
+    image: postgres:16-alpine
+    container_name: gitea-db
+    restart: unless-stopped
+    volumes:
+      - gitea-db-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=gitea
+      - POSTGRES_USER=gitea
+      - POSTGRES_PASSWORD=${GITEA_DB_PASSWORD:?}
+    networks:
+      - gitea-internal
+
+  gitea:
+    image: gitea/gitea:latest
+    container_name: gitea
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - gitea-data:/data
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - GITEA__database__DB_TYPE=postgres
+      - GITEA__database__HOST=gitea-db:5432
+      - GITEA__database__NAME=gitea
+      - GITEA__database__USER=gitea
+      - GITEA__database__PASSWD=${GITEA_DB_PASSWORD:?}
+      - GITEA__server__HTTP_PORT=3000
+      - GITEA__server__ROOT_URL=http://localhost:3000
+      - GITEA__server__DOMAIN=localhost
+      - GITEA__server__DISABLE_SSH=true
+      - GITEA__server__START_SSH_SERVER=false
+      - GITEA__security__INSTALL_LOCK=true
+      - GITEA__service__DISABLE_REGISTRATION=true
+    depends_on:
+      - gitea-db
+    networks:
+      - gitea-internal
+      - proxy
+
+volumes:
+  gitea-db-data:
+  gitea-data:
+
+networks:
+  gitea-internal:
+  proxy:
+    name: proxy
+    external: true
