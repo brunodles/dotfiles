@@ -1,0 +1,146 @@
+#!/usr/bin/env bash
+# stacks-up — Bring Docker Compose stacks online
+#
+# Usage:
+#   ./stacks-up [--proxy] <dir> [dir...]
+#
+# Each <dir> should contain subdirectories with compose.yaml files.
+# Scans immediate subdirectories and runs `docker compose up -d` in each.
+#
+# Examples:
+#   ./stacks-up host/vps/dockge/stacks          # VPS stacks
+#   ./stacks-up --proxy host/vps/dockge/stacks  # + create proxy network
+#   ./stacks-up host/*/dockge/stacks            # all hosts
+#
+# Designed for first-time startup and recovery after a reboot.
+# Idempotent — safe to run multiple times.
+
+set -euo pipefail
+trap 'echo "❌ Error on line ${LINENO}" >&2' ERR
+
+# ── Parse flags ───────────────────────────────────────────────
+CREATE_PROXY=false
+DIRS=()
+
+for arg in "$@"; do
+  case "$arg" in
+    --proxy)
+      CREATE_PROXY=true
+      ;;
+    -*)
+      echo "Unknown flag: $arg" >&2
+      echo "Usage: $0 [--proxy] <dir> [dir...]" >&2
+      exit 1
+      ;;
+    *)
+      DIRS+=("$arg")
+      ;;
+  esac
+done
+
+if [[ ${#DIRS[@]} -eq 0 ]]; then
+  # Auto-detect: look for host/*/dockge/ directories in the repo
+  SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+  if [[ "$(basename "$SCRIPT_DIR")" == "scripts" ]]; then
+    REPO="$(dirname "$SCRIPT_DIR")"
+  else
+    REPO="$SCRIPT_DIR"
+  fi
+
+  for host_dir in "$REPO"/host/*/; do
+    dockge_dir="${host_dir}dockge"
+    if [[ -d "$dockge_dir" ]]; then
+      DIRS+=("$dockge_dir")
+    fi
+  done
+
+  if [[ ${#DIRS[@]} -eq 0 ]]; then
+    echo "Error: no directories provided and no host/*/dockge/ found in $REPO" >&2
+    echo "Usage: $0 [--proxy] <dir> [dir...]" >&2
+    exit 1
+  fi
+
+  echo "📁 Auto-detected stacks:"
+  for d in "${DIRS[@]}"; do
+    echo "   • $d"
+  done
+  echo ""
+fi
+
+# ── Pre-flight ────────────────────────────────────────────────
+echo "🔍 Checking prerequisites..."
+
+if ! command -v docker &>/dev/null; then
+  echo "❌ Docker is not installed." >&2
+  exit 1
+fi
+
+if ! docker info &>/dev/null; then
+  echo "❌ Docker daemon is not running." >&2
+  exit 1
+fi
+echo "   ✅ Docker is running"
+
+# ── Proxy network (optional) ──────────────────────────────────
+if $CREATE_PROXY; then
+  echo ""
+  echo "🌐 Ensuring proxy network..."
+  if docker network ls --format '{{.Name}}' | grep -q '^proxy$'; then
+    echo "   ✅ proxy network already exists"
+  else
+    docker network create proxy
+    echo "   ✅ proxy network created"
+  done
+fi
+
+# ── Start stacks ──────────────────────────────────────────────
+start_stack() {
+  local stack_dir="$1"
+  local stack_name
+  stack_name="$(basename "$stack_dir")"
+
+  if [[ ! -f "$stack_dir/compose.yaml" ]]; then
+    echo "   ⏭️  $stack_name — no compose.yaml"
+    return
+  fi
+
+  echo "   🔄 $stack_name..."
+  (cd "$stack_dir" && docker compose up -d 2>&1) | sed 's/^/     /'
+  echo "   ✅ $stack_name is up"
+}
+
+for dir in "${DIRS[@]}"; do
+  # The dir may point directly to a stacks/ dir or to a dockge/ dir
+  stacks_paths=()
+
+  if [[ -d "$dir/stacks" ]]; then
+    # Pattern: host/<name>/dockge/ — looks for dockge/ itself + stacks/
+    stacks_paths+=("$dir/stacks"/*/)
+    if [[ -f "$dir/dockge/compose.yaml" ]]; then
+      stacks_paths+=("$dir/dockge")
+    fi
+  else
+    # Treat the dir itself as a collection of stacks
+    for sub in "$dir"/*/; do
+      stacks_paths+=("$sub")
+    done
+  fi
+
+  host_name="$(basename "$(dirname "$dir")")"
+  echo ""
+  echo "━━━ $host_name stacks ━━━"
+
+  for stack in "${stacks_paths[@]}"; do
+    start_stack "$stack"
+  done
+done
+
+# ── Summary ───────────────────────────────────────────────────
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  ✅ All stacks started"
+echo ""
+docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" \
+  | grep -v "^NAMES" \
+  | sed 's/^/  /'
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
