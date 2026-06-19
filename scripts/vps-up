@@ -1,0 +1,117 @@
+#!/usr/bin/env bash
+# vps-up — Bring all VPS Docker stacks online
+#
+# Usage:
+#   ./vps-up                          # auto-detect repo root from cwd
+#   ./vps-up /path/to/dotfiles        # explicit repo root
+#
+# Designed for first-time startup and recovery after a VPS reboot.
+# Idempotent — safe to run multiple times.
+
+set -euo pipefail
+trap 'echo "❌ Error on line ${LINENO}" >&2' ERR
+
+# ── Locate repo root ──────────────────────────────────────────
+if [[ $# -ge 1 ]]; then
+  REPO="$1"
+else
+  SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+  # Walk up from scripts/ to find repo root
+  if [[ "$(basename "$SCRIPT_DIR")" == "scripts" ]]; then
+    REPO="$(dirname "$SCRIPT_DIR")"
+  else
+    REPO="$SCRIPT_DIR"
+  fi
+fi
+
+STACKS_DIR="$REPO/host/vps/dockge/stacks"
+DOCKGE_DIR="$REPO/host/vps/dockge/dockge"
+
+if [[ ! -d "$STACKS_DIR" ]]; then
+  echo "Error: stacks directory not found at $STACKS_DIR" >&2
+  echo "Make sure the repo is cloned and this script is run from within it." >&2
+  exit 1
+fi
+
+echo "🚀 VPS stack startup"
+echo "   Repo root: $REPO"
+echo ""
+
+# ── Stage 0: Pre-flight checks ────────────────────────────────
+echo "🔍 Checking prerequisites..."
+
+if ! command -v docker &>/dev/null; then
+  echo "❌ Docker is not installed. Run install/ubuntu/docker.sh first." >&2
+  exit 1
+fi
+
+if ! docker info &>/dev/null; then
+  echo "❌ Docker daemon is not running." >&2
+  exit 1
+fi
+echo "   ✅ Docker is running"
+
+# ── Stage 1: Create the proxy network (if missing) ────────────
+echo ""
+echo "🌐 Ensuring proxy network..."
+
+if docker network ls --format '{{.Name}}' | grep -q '^proxy$'; then
+  echo "   ✅ proxy network already exists"
+else
+  docker network create proxy
+  echo "   ✅ proxy network created"
+fi
+
+# ── Stage 2: Start stacks in order ─────────────────────────────
+start_stack() {
+  local stack_dir="$1"
+  local stack_name
+  stack_name="$(basename "$stack_dir")"
+
+  if [[ ! -f "$stack_dir/compose.yaml" ]]; then
+    echo "   ⏭️  $stack_name — no compose.yaml found"
+    return
+  fi
+
+  echo "   🔄 $stack_name..."
+  cd "$stack_dir"
+  docker compose up -d 2>&1 | sed 's/^/     /'
+  echo "   ✅ $stack_name is up"
+}
+
+echo ""
+echo "📦 Starting stacks..."
+
+# Traefik first — other stacks may depend on the proxy network
+# (the network already exists, but Traefik needs to serve as the router)
+for stack in "$STACKS_DIR"/*/; do
+  start_stack "$stack"
+done
+
+# Dockge second — it's a management layer, not a dependency for others
+if [[ -f "$DOCKGE_DIR/compose.yaml" ]]; then
+  echo ""
+  echo "📊 Starting Dockge..."
+  cd "$DOCKGE_DIR"
+  docker compose up -d 2>&1 | sed 's/^/   /'
+  echo "   ✅ Dockge is up"
+fi
+
+# ── Stage 3: Summary ──────────────────────────────────────────
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  ✅ All VPS stacks started"
+echo ""
+docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" \
+  | grep -v "^NAMES" \
+  | sed 's/^/  /'
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "Access points:"
+echo "  Dockge UI   → http://$(hostname -I | awk '{print $1}'):5001"
+echo "  Traefik     → http://$(hostname -I | awk '{print $1}') (port 80)"
+echo "  Hermes API  → http://$(hostname -I | awk '{print $1}'):8642"
+echo ""
+echo "Next:"
+echo "  sudo tailscale up          # authenticate (if first time)"
+echo "  Check Dockge for logs      → http://$(hostname -I | awk '{print $1}'):5001"
