@@ -1,23 +1,58 @@
 # Pi — Raspberry Pi (Pi-hole)
 
-Raspberry Pi running Pi-hole for DNS-level ad blocking on the homelab network.
-
-## Status
-
-The Pi is not yet on the same network. Configuration will be extracted
-once it becomes reachable via SSH.
+Raspberry Pi running Pi-hole for DNS-level ad blocking,
+connected to the homelab via Tailscale.
 
 ## Services
 
-- **Pi-hole** — DNS sinkhole (blocklist-based ad blocking)
-- **DNS** — Local DNS resolution for homelab services
+| Service | Role |
+|---------|------|
+| **Pi-hole** | DNS sinkhole — blocklist-based ad blocking + local DNS |
+| **Tailscale** | Mesh VPN — reach the Pi from anywhere via 100.x.x.x |
+| **DNS** | Local DNS resolution for the entire tailnet |
+
+## Setup
+
+```bash
+git clone https://github.com/brunodles/dotfiles.git
+cd dotfiles
+bash host/pi/bootstrap.sh
+```
+
+After bootstrap completes:
+
+```bash
+sudo tailscale up              # Authenticate to tailnet
+pihole -a -p                   # Set admin password
+```
+
+## Tailnet DNS
+
+Once the Pi is on Tailscale, set the Pi-hole IP as the tailnet's
+global nameserver in the Tailscale admin console. Every device on
+the tailnet gets ad-blocking automatically — even phones on mobile
+data.
+
+## Recovery
+
+If the Pi needs to be rebuilt:
+
+```bash
+git clone <repo>
+bash host/pi/bootstrap.sh
+
+# Restore saved config
+host/pi/pihole/scripts/restore-config.sh
+```
 
 ## Extraction
 
-Run `pihole/scripts/extract-config.sh <user>@<pi-ip>` to pull the current
-configuration into `pihole/extracted/`.
+If you already have a running Pi-hole elsewhere:
 
-## Restore
+```bash
+host/pi/pihole/scripts/extract-config.sh pi@<ip>
+```
 
-Run `pihole/scripts/restore-config.sh` on a fresh Pi-hole install to
-reapply all DNS settings, blocklists, whitelists, and custom rules.
+This saves `setupVars.conf`, `adlists.list`, `whitelist.txt`,
+`blacklist.txt`, `regex.list`, and `custom.list` into
+`pihole/extracted/`.
