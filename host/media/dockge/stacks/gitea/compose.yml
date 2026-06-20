@@ -6,10 +6,25 @@ services:
     environment:
       USER_GID: "1000"
       USER_UID: "1000"
-    labels:
-      icon: https://cdn.jsdelivr.net/gh/IceWhaleTech/CasaOS-AppStore@main/Apps/Gitea/icon.png
-    ports:
-      - "3000:3000"
-      - "222:22"
+      #    ports:
+      #      - 3000:3000
+      #      - 222:22
     volumes:
-      - $HOME/data/gitea/data:/data
+      - /home/bruno/data/gitea/data:/data
+    networks:
+      - proxy
+    labels:
+      # Explicitly tells Traefik to expose this container
+      - traefik.enable=true 
+      # Routes traffic targeting this domain
+      - traefik.http.routers.gitea.rule=Host(`gitea.media.lab`) 
+      # Binds this route to the HTTP port
+      - traefik.http.routers.gitea.entrypoints=web 
+      # Container internal port
+      - traefik.http.services.gitea.loadbalancer.server.port=3000 
+
+networks:
+  proxy:
+    name: proxy
+    external: true
+    

@@ -2,25 +2,44 @@ services:
   jellyfin:
     devices:
       - /dev/dri:/dev/dri
-      - /dev/vcsm:/dev/vcsm
-      - /dev/vchiq:/dev/vchiq
-      - /dev/video10:/dev/video10
-      - /dev/video11:/dev/video11
-      - /dev/video12:/dev/video12
+        #- /dev/vcsm:/dev/vcsm
+        #- /dev/vchiq:/dev/vchiq
+        #- /dev/video10:/dev/video10
+        #- /dev/video11:/dev/video11
+        #- /dev/video12:/dev/video12
     environment:
       PGID: "1000"
       PUID: "1000"
       TZ: Etc/UTC
     hostname: jellyfin
     image: linuxserver/jellyfin:10.10.7
-    ports:
-      - "8096:8096"
-      - "8920:8920"
-      - "7359:7359"
-      - "1900:1900"
+      #ports:
+      #- "8096:8096"
+      #- "8920:8920"
+      #- "7359:7359"
+      #- "1900:1900"
     restart: unless-stopped
     volumes:
       - $HOME/data/jellyfin/config:/config
       - /opt/vc/lib:/opt/vc/lib
       - /DATA/Media:/Media
-      - /media/data:/DataHd
+      - /mnt/backup_media/backups:/DataHd
+
+    networks:
+      - proxy
+    labels:
+      # Explicitly tells Traefik to expose this container
+      - "traefik.enable=true"
+      # Routes traffic targeting this domain
+      - "traefik.http.routers.jellyfin.rule=Host(`jellyfin.lab`) || Host(`jf.lab`) || Host(`jellyfin.media.lab`)"
+      # Binds this route to the HTTP port
+      - "traefik.http.routers.jellyfin.entrypoints=web"
+      # Container internal port
+      - "traefik.http.services.jellyfin.loadbalancer.server.port=8096"
+
+networks:
+  proxy:
+    name: proxy
+    external: true
+    
+

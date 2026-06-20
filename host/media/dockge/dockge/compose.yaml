@@ -2,14 +2,29 @@ services:
   dockge:
     image: louislam/dockge:1
     restart: unless-stopped
-    ports:
-      - 5001:5001
+      #    ports:
+      #      - 5001:5001
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./data:/app/data
       # Stacks Directory
-      - /home/bruno/dotfiles/host/media/dockge/stacks:/opt/stacks
+      - ../stacks:/opt/stacks
     environment:
       # Tell Dockge where to find the stacks
       - DOCKGE_STACKS_DIR=/opt/stacks
       - DOCKGE_ENABLE_CONSOLE=true
+    networks:
+      - proxy
+    labels:
+      # Explicitly tells Traefik to expose this container
+      - traefik.enable=true 
+      # Routes traffic targeting this domain
+      - traefik.http.routers.dockge.rule=Host(`dockge.media.lab`) 
+      # Binds this route to the HTTP port
+      - traefik.http.routers.dockge.entrypoints=web 
+      # Container internal port
+      - traefik.http.services.dockge.loadbalancer.server.port=5001
+
+networks:
+  proxy:
+    external: true
