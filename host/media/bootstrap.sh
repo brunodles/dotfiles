@@ -15,6 +15,10 @@ $install_path/_samba.post-install.sh
 $install_path/_oh-my-zsh.sh
 $install_path/_tmux.post-install.sh
 
+
+# Traefik: Create docker proxy network
+sudo docker network create proxy
+
 # dotfile links
 link="$HOME/dotfiles/scripts/install/link"
 # link source target

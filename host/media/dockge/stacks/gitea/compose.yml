@@ -1,0 +1,15 @@
+services:
+  gitea:
+    image: gitea/gitea:1.22.4
+    hostname: gitea
+    restart: unless-stopped
+    environment:
+      USER_GID: "1000"
+      USER_UID: "1000"
+    labels:
+      icon: https://cdn.jsdelivr.net/gh/IceWhaleTech/CasaOS-AppStore@main/Apps/Gitea/icon.png
+    ports:
+      - "3000:3000"
+      - "22:222"
+    volumes:
+      - $HOME/data/gitea/data:/data

@@ -1,0 +1,26 @@
+services:
+  jellyfin:
+    devices:
+      - /dev/dri:/dev/dri
+      - /dev/vcsm:/dev/vcsm
+      - /dev/vchiq:/dev/vchiq
+      - /dev/video10:/dev/video10
+      - /dev/video11:/dev/video11
+      - /dev/video12:/dev/video12
+    environment:
+      PGID: "1000"
+      PUID: "1000"
+      TZ: Etc/UTC
+    hostname: jellyfin
+    image: linuxserver/jellyfin:10.10.7
+    ports:
+      - "8096:8096"
+      - "8920:8920"
+      - "7359:7359"
+      - "1900:1900"
+    restart: unless-stopped
+    volumes:
+      - $HOME/data/jellyfin/config:/config
+      - /opt/vc/lib:/opt/vc/lib
+      - /DATA/Media:/Media
+      - /media/data:/DataHd
