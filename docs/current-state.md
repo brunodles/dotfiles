@@ -53,10 +53,16 @@ dotfiles/
 │       ├── p10k.zsh
 │       └── zshrc
 │
-├── host/                      # Host-specific configurations
+├── hosts/                     # Host-specific configurations
 │   ├── android/               # Android/Termux device (always-on server)
 │   │   ├── README.md
-│   │   ├── bootstrap.sh
+│   │   ├── bootstrap/
+│   │   │   ├── install.sh
+│   │   │   ├── configure.sh
+│   │   │   ├── links.sh
+│   │   │   └── lib.sh
+│   │   ├── dns/
+│   │   │   └── unbound.conf
 │   │   ├── home/.local/bin/
 │   │   │   ├── termux-battery-status
 │   │   │   ├── termux-ip
@@ -68,54 +74,97 @@ dotfiles/
 │   │       └── termux.properties
 │   │
 │   ├── media/                 # Media server
-│   │   └── bootstrap.sh
+│   │   ├── bootstrap/
+│   │   │   ├── install.sh
+│   │   │   ├── configure.sh
+│   │   │   ├── links.sh
+│   │   │   └── lib.sh
+│   │   └── dockge/
+│   │       ├── dockge/
+│   │       │   └── compose.yaml
+│   │       └── stacks/
+│   │           ├── gitea/
+│   │           ├── jellyfin/
+│   │           ├── metube/
+│   │           ├── plex/
+│   │           ├── qbittorrent/
+│   │           ├── syncthing/
+│   │           ├── traefik/
+│   │           │   ├── compose.yaml
+│   │           │   └── config/traefik.yaml
+│   │           └── whoami/
 │   │
 │   ├── pi/                    # Raspberry Pi (Pi-hole)
 │   │   ├── README.md
-│   │   ├── bootstrap.sh
-│   │   └── pihole/
-│   │       ├── extracted/     # future: exported configs
-│   │       └── scripts/
-│   │           ├── extract-config.sh   # SSH-based config pull
-│   │           └── restore-config.sh   # apply saved config locally
+│   │   ├── bootstrap/
+│   │   │   ├── install.sh
+│   │   │   ├── configure.sh
+│   │   │   ├── links.sh
+│   │   │   └── lib.sh
+│   │   ├── pihole/
+│   │   │   ├── extracted/     # future: exported configs
+│   │   │   └── scripts/
+│   │   │       ├── extract-config.sh   # SSH-based config pull
+│   │   │       └── restore-config.sh   # apply saved config locally
+│   │   └── tailscale/
+│   │       ├── .env.example
+│   │       └── start.sh
 │   │
 │   ├── silver/                # Desktop (Ubuntu, silver PC)
 │   │   ├── README.md
-│   │   ├── bootstrap.sh
-│   │   ├── home/.local/bin/
-│   │   │   ├── font_install.sh
-│   │   │   ├── font_list.sh
-│   │   │   ├── formatAsJson.py
-│   │   │   ├── gr
-│   │   │   ├── network_interface.sh
-│   │   │   ├── ollama
-│   │   │   ├── terminal_colors.sh
-│   │   │   ├── tmux-android
-│   │   │   ├── tmux-sample
-│   │   │   └── wallpaper_dynamic.sh
-│   │   └── home/.local/fbin/
-│   │       └── _gr
+│   │   ├── bootstrap/
+│   │   │   ├── install.sh
+│   │   │   ├── links.sh
+│   │   │   └── lib.sh
+│   │   └── home/.local/bin/
+│   │       ├── font_install.sh
+│   │       ├── font_list.sh
+│   │       ├── formatAsJson.py
+│   │       ├── gr
+│   │       ├── network_interface.sh
+│   │       ├── ollama
+│   │       ├── terminal_colors.sh
+│   │       ├── tmux-android
+│   │       ├── tmux-sample
+│   │       └── wallpaper_dynamic.sh
 │   │
-│   └── vps/                   # Internet-facing VPS
-│       ├── bootstrap.sh
-│       └── dockge/
-│           ├── dockge/
-│           │   └── compose.yaml
-│           └── stacks/
-│               ├── hermes/
-│               │   ├── .gitconfig
-│               │   └── compose.yaml
-│               ├── tailscale/          # Tailscale sidecar
-│               │   ├── README.md
-│               │   ├── .env.example
-│               │   ├── compose.yaml
-│               │   └── config/
-│               └── traefik/
-│                   ├── compose.yaml
-│                   └── config/
-│                       ├── acme/.keep
-│                       ├── dynamic/.keep
-│                       └── traefik.yml
+│   ├── vps/                   # Internet-facing VPS
+│   │   ├── bootstrap/
+│   │   │   ├── install.sh
+│   │   │   ├── configure.sh
+│   │   │   ├── links.sh
+│   │   │   └── lib.sh
+│   │   └── dockge/
+│   │       ├── dockge/
+│   │       │   └── compose.yaml
+│   │       └── stacks/
+│   │           ├── hermes/
+│   │           │   ├── .gitconfig
+│   │           │   └── compose.yaml
+│   │           ├── tailscale/          # Tailscale sidecar
+│   │           │   ├── README.md
+│   │           │   ├── .env.example
+│   │           │   ├── compose.yaml
+│   │           │   └── config/
+│   │           ├── traefik/
+│   │           │   ├── compose.yaml
+│   │           │   └── config/
+│   │           │       ├── acme/.keep
+│   │           │       ├── dynamic/.keep
+│   │           │       └── traefik.yml
+│   │           └── gitea/
+│   │               ├── README.md
+│   │               ├── .env.example
+│   │               ├── compose.yaml
+│   │               └── config/
+│   │
+│   └── work/                  # macOS workstation (work)
+│       ├── README.md
+│       └── bootstrap/
+│           ├── install.sh
+│           ├── configure.sh
+│           ├── links.sh
+│           └── lib.sh
 │
 ├── install/                   # Install scripts (called by bootstrap.sh)
 │   ├── _claudeCode.sh
@@ -183,7 +232,7 @@ dotfiles/
 | Location | Home LAN |
 | OS | Ubuntu |
 | Connectivity | Wired Ethernet + Tailscale |
-| Status | Only bootstrap.sh exists — no stacks yet |
+|| Status | Dockge stacks ready (gitea, jellyfin, metube, plex, qbittorrent, syncthing, traefik, whoami) |
 
 ### pi
 
@@ -225,8 +274,8 @@ dotfiles/
 
 ## Notes
 
-- **`install/`** contains reusable install scripts. Each host's `bootstrap.sh` references them by path.
-- **No host** yet follows the full documented pattern with `host.env`, `configs/` and `stacks/` — the current structure is simpler.
+- **`install/`** contains reusable install scripts. Each host's bootstrap scripts under `bootstrap/install.sh` reference them by path.
+- **All hosts** now follow a consistent `bootstrap/{install,configure,links,lib}.sh` pattern instead of a single monolithic `bootstrap.sh`.
 - **`scripts/`** contains Docker wrappers (Claude, Copilot CLI, Hermes) and the `link` utility for symlinks.
 - **`dotfiles/`** only covers config files currently in active use.
 - **`projects/`**, **`bootstrap/`**, and backup/restore scripts do not exist yet.

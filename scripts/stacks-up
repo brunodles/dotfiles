@@ -8,9 +8,9 @@
 # Scans immediate subdirectories and runs `docker compose up -d` in each.
 #
 # Examples:
-#   ./stacks-up host/vps/dockge/stacks          # VPS stacks
-#   ./stacks-up --proxy host/vps/dockge/stacks  # + create proxy network
-#   ./stacks-up host/*/dockge/stacks            # all hosts
+#   ./stacks-up hosts/vps/dockge/stacks          # VPS stacks
+#   ./stacks-up --proxy hosts/vps/dockge/stacks  # + create proxy network
+#   ./stacks-up hosts/*/dockge/stacks            # all hosts
 #
 # Designed for first-time startup and recovery after a reboot.
 # Idempotent — safe to run multiple times.
@@ -39,7 +39,7 @@ for arg in "$@"; do
 done
 
 if [[ ${#DIRS[@]} -eq 0 ]]; then
-  # Auto-detect: look for host/*/dockge/ directories in the repo
+  # Auto-detect: look for hosts/*/dockge/ directories in the repo
   SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
   if [[ "$(basename "$SCRIPT_DIR")" == "scripts" ]]; then
     REPO="$(dirname "$SCRIPT_DIR")"
@@ -47,7 +47,7 @@ if [[ ${#DIRS[@]} -eq 0 ]]; then
     REPO="$SCRIPT_DIR"
   fi
 
-  for host_dir in "$REPO"/host/*/; do
+  for host_dir in "$REPO"/hosts/*/; do
     dockge_dir="${host_dir}dockge"
     if [[ -d "$dockge_dir" ]]; then
       DIRS+=("$dockge_dir")
@@ -55,7 +55,7 @@ if [[ ${#DIRS[@]} -eq 0 ]]; then
   done
 
   if [[ ${#DIRS[@]} -eq 0 ]]; then
-    echo "Error: no directories provided and no host/*/dockge/ found in $REPO" >&2
+    echo "Error: no directories provided and no hosts/*/dockge/ found in $REPO" >&2
     echo "Usage: $0 [--proxy] <dir> [dir...]" >&2
     exit 1
   fi
@@ -114,7 +114,7 @@ for dir in "${DIRS[@]}"; do
   stacks_paths=()
 
   if [[ -d "$dir/stacks" ]]; then
-    # Pattern: host/<name>/dockge/ — looks for dockge/ itself + stacks/
+    # Pattern: hosts/<name>/dockge/ — looks for dockge/ itself + stacks/
     stacks_paths+=("$dir/stacks"/*/)
     if [[ -f "$dir/dockge/compose.yaml" ]]; then
       stacks_paths+=("$dir/dockge")
