@@ -1,0 +1,86 @@
+#!/bin/bash
+# .git/hooks/pre-push — Enforce git-queue protocol for pushes
+#
+# This hook runs before every push. It verifies that the push is being
+# done within the context of a git-queue acquired task.
+#
+# To install, symlink or copy this file to .git/hooks/pre-push:
+#   ln -sf ../../scripts/git-queue-pre-push .git/hooks/pre-push
+#
+# Environment variables checked:
+#   GIT_QUEUE_AGENT   — Must be set (hermes, claude, copilot)
+#   GIT_QUEUE_TASK    — Must be set to a valid task ID
+
+set -euo pipefail
+
+AGENT_ID="${GIT_QUEUE_AGENT:-}"
+TASK_ID="${GIT_QUEUE_TASK:-}"
+
+# Allow bypass for git-queue internal operations
+if [ "${GIT_QUEUE_BYPASS:-}" = "1" ]; then
+    exit 0
+fi
+
+if [ -z "$AGENT_ID" ] || [ -z "$TASK_ID" ]; then
+    echo ""
+    echo "╔══════════════════════════════════════════════════════════════╗"
+    echo "║  ❌ PUSH REJECTED by git-queue pre-push hook                ║"
+    echo "║                                                              ║"
+    echo "║  This repository uses a queue-based coordination system.     ║"
+    echo "║  Direct pushes without queue context are not allowed.        ║"
+    echo "║                                                              ║"
+    echo "║  Set the following environment variables:                    ║"
+    echo "║    GIT_QUEUE_AGENT  — your agent name                        ║"
+    echo "║    GIT_QUEUE_TASK   — task ID from .git-queue/tasks/         ║"
+    echo "║                                                              ║"
+    echo "║  Or use: scripts/git-queue acquire                           ║"
+    echo "╚══════════════════════════════════════════════════════════════╝"
+    echo ""
+    exit 1
+fi
+
+# Verify task exists
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+TASK_FILE="$REPO_ROOT/.git-queue/tasks/${TASK_ID}.json"
+
+if [ ! -f "$TASK_FILE" ]; then
+    # Also check completed
+    TASK_FILE="$REPO_ROOT/.git-queue/completed/${TASK_ID}.json"
+fi
+
+if [ ! -f "$TASK_FILE" ]; then
+    echo ""
+    echo "╔══════════════════════════════════════════════════════════════╗"
+    echo "║  ❌ PUSH REJECTED                                            ║"
+    echo "║                                                              ║"
+    echo "║  Task $TASK_ID not found in .git-queue/tasks/ or             ║"
+    echo "║  .git-queue/completed/.                                      ║"
+    echo "║                                                              ║"
+    echo "║  Available tasks:                                            ║"
+    for tf in "$REPO_ROOT/.git-queue/tasks"/*.json; do
+        [ -f "$tf" ] || continue
+        local tid
+        tid=$(basename "$tf" .json)
+        local tstatus
+        tstatus=$(python3 -c "import json; print(json.load(open('$tf')).get('status','?'))" 2>/dev/null)
+        echo "║    • $tid ($tstatus)"
+    done
+    echo "╚══════════════════════════════════════════════════════════════╝"
+    exit 1
+fi
+
+# Verify agent ownership
+OWNER=$(python3 -c "import json; print(json.load(open('$TASK_FILE')).get('owner',''))" 2>/dev/null)
+if [ -n "$OWNER" ] && [ "$OWNER" != "$AGENT_ID" ]; then
+    echo ""
+    echo "╔══════════════════════════════════════════════════════════════╗"
+    echo "║  ❌ PUSH REJECTED                                            ║"
+    echo "║                                                              ║"
+    echo "║  Task $TASK_ID is claimed by '$OWNER', but                    ║"
+    echo "║  GIT_QUEUE_AGENT is set to '$AGENT_ID'.                       ║"
+    echo "╚══════════════════════════════════════════════════════════════╝"
+    exit 1
+fi
+
+echo "✅ git-queue: push allowed ($AGENT_ID / $TASK_ID)"
+exit 0

@@ -272,7 +272,7 @@ dotfiles/
 | Connectivity | Public internet + Tailscale |
 | Proxy | Traefik v3 (Docker provider + file provider) |
 | SSL | Let's Encrypt (ACME) |
-| Stacks | Dockge, Traefik, Hermes Agent, Tailscale |
+|| Stacks | Dockge, Traefik, Hermes Agent, Tailscale, Gitea |
 | Hermes | Docker container, git identity mounted from stack |
 | Docker network | `proxy` (external, shared across stacks) |
 
@@ -281,8 +281,8 @@ dotfiles/
 ## Notes
 
 - **`install/`** contains reusable install scripts. Each host's bootstrap scripts under `bootstrap/install.sh` reference them by path.
-- **All hosts** follow a `bootstrap.sh` → `bootstrap/{install,configure,links,lib}.sh` pattern. Run `bash hosts/<name>/bootstrap.sh` for the full setup.
-- **`scripts/`** contains Docker wrappers (Claude, Copilot CLI, Hermes) and the `link` utility for symlinks.
+- **Most hosts** follow a `bootstrap.sh` → `bootstrap/{install,configure,links,lib}.sh` pattern (silver omits `configure.sh`). Run `bash hosts/<name>/bootstrap.sh` for the full setup.
+- **`scripts/`** contains Docker wrappers (Claude, Copilot CLI, Hermes), the `link` utility for symlinks, plus VPN (`vpn/sshuttle.sh`), router DNS (`router/update-dns.sh`), stack orchestration (`stacks-up`), and agent skill installer (`install-skills.sh`).
 - **`dotfiles/`** only covers config files currently in active use.
 - **`projects/`**, **`bootstrap/`**, and backup/restore scripts do not exist yet.
-- **Docs** are evolving: `networking.md` and `repository-structure.md` exist alongside this file.
+- **Docs** are evolving: `networking.md`, `repository-structure.md`, `stacks.md`, and `router/askey-rtf8115vw.md` exist alongside this file.

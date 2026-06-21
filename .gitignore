@@ -15,3 +15,7 @@ backup/*
 
 # editor
 .idea
+
+# Git Queue — ignore heartbeat tokens (regenerated on each acquire)
+.git-queue/tokens/
+.git-queue/agent-log/

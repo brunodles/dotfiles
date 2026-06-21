@@ -1,0 +1,648 @@
+#!/usr/bin/env bash
+# scripts/git-queue — Queue-based Git coordination for multi-agent repos
+#
+# This script coordinates exclusive access to the repository for multiple
+# AI agents (Hermes Agent, Claude Code, Copilot CLI). It provides:
+#   - POSIX flock-based mutual exclusion
+#   - JSON task queue with dependency tracking
+#   - Heartbeat-based stale lock detection
+#   - File-level conflict prevention
+#
+# Usage:
+#   git-queue init                    # Initialize .git-queue/ directory
+#   git-queue status                  # Show queue state
+#   git-queue add <task.json>         # Enqueue a new task
+#   git-queue acquire                 # Acquire lock and next ready task
+#   git-queue release                 # Mark current task complete
+#   git-queue heartbeat               # Update heartbeat (called internally)
+#   git-queue fail [reason]           # Mark current task as failed
+#   git-queue retry <task-id>         # Re-queue a failed task
+#   git-queue cleanup                 # Remove stale locks/expired heartbeats
+#   git-queue show <task-id>          # Show task details
+#   git-queue graph                   # Print dependency graph (DOT format)
+#
+# Environment:
+#   GIT_QUEUE_AGENT   — Agent identifier (hermes, claude, copilot)
+#   GIT_QUEUE_TASK    — Current task ID (set by acquire)
+#   GIT_QUEUE_DEBUG   — Enable verbose logging if set
+
+set -euo pipefail
+trap 'echo "❌ Error on line ${LINENO}" >&2' ERR
+
+# ── Paths ────────────────────────────────────────────────────────
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || echo ".")"
+QUEUE_DIR="$REPO_ROOT/.git-queue"
+LOCK_FILE="$QUEUE_DIR/lock"
+TASKS_DIR="$QUEUE_DIR/tasks"
+TOKENS_DIR="$QUEUE_DIR/tokens"
+COMPLETED_DIR="$QUEUE_DIR/completed"
+AGENT_LOG_DIR="$QUEUE_DIR/agent-log"
+TASK_MANIFEST="$QUEUE_DIR/task-manifest.json"
+
+AGENT_ID="${GIT_QUEUE_AGENT:-unknown}"
+TASK_ID="${GIT_QUEUE_TASK:-none}"
+
+# ── Helpers ──────────────────────────────────────────────────────
+_ensure_queue() {
+    mkdir -p "$TASKS_DIR" "$TOKENS_DIR" "$COMPLETED_DIR" "$AGENT_LOG_DIR"
+    if [ ! -f "$LOCK_FILE" ]; then
+        touch "$LOCK_FILE"
+    fi
+}
+
+_log() {
+    local level="${1:-INFO}"
+    shift
+    echo "[$(date '+%Y-%m-%dT%H:%M:%S%z')] [$AGENT_ID] [$level] $*"
+    if [ -n "${GIT_QUEUE_DEBUG:-}" ]; then
+        printf "[%s] [%s] [%s] %s\n" "$(date '+%Y-%m-%dT%H:%M:%S%z')" "$AGENT_ID" "$level" "$*" \
+            >> "$AGENT_LOG_DIR/${AGENT_ID}.log"
+    fi
+}
+
+_json_get() {
+    local file="$1"
+    local key="$2"
+    python3 -c "import json,sys; d=json.load(open('$file')); print(d.get('$key',''))" 2>/dev/null || echo ""
+}
+
+_json_set() {
+    local file="$1"
+    local key="$2"
+    local value="$3"
+    python3 -c "
+import json, sys
+d = json.load(open('$file'))
+d['$key'] = '$value'
+json.dump(d, open('$file', 'w'), indent=2)
+" 2>/dev/null
+}
+
+# ── Locking ──────────────────────────────────────────────────────
+_acquire_lock() {
+    exec 200>"$LOCK_FILE"
+    local waited=0
+    local max_wait=60
+    until flock -n 200 2>/dev/null; do
+        if [ "$waited" -ge "$max_wait" ]; then
+            _log "ERROR" "Could not acquire lock after ${max_wait}s"
+            return 1
+        fi
+        _log "WAIT" "Lock held by another agent, retrying in 2s..."
+        sleep 2
+        waited=$((waited + 2))
+    done
+    _check_stale_locks
+    _log "INFO" "Lock acquired"
+    return 0
+}
+
+_release_lock() {
+    exec 200>&-
+    _log "INFO" "Lock released"
+}
+
+_check_stale_locks() {
+    for token in "$TOKENS_DIR"/*.heartbeat; do
+        [ -f "$token" ] || continue
+        local age=$(( $(date +%s) - $(stat -c %Y "$token") ))
+        if [ "$age" -gt 600 ]; then  # 10 minutes TTL
+            local agent
+            agent=$(basename "$token" .heartbeat)
+            _log "WARN" "Stale lock detected: $agent (${age}s old)"
+            rm -f "$token"
+            # Mark any tasks claimed by this agent as timed out
+            for taskfile in "$TASKS_DIR"/*.json; do
+                [ -f "$taskfile" ] || continue
+                local owner
+                owner=$(_json_get "$taskfile" "owner")
+                local status
+                status=$(_json_get "$taskfile" "status")
+                if [ "$owner" = "$agent" ] && [ "$status" = "acquired" ] || [ "$status" = "running" ]; then
+                    _json_set "$taskfile" "status" "timeout"
+                    _json_set "$taskfile" "timeout_at" "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+                    _log "WARN" "Task $taskfile marked as timeout (owner $agent stale)"
+                fi
+            done
+        fi
+    done
+}
+
+_heartbeat() {
+    local token="$TOKENS_DIR/${AGENT_ID}.heartbeat"
+    touch "$token"
+    _log "DEBUG" "Heartbeat updated"
+}
+
+# ── Task Operations ──────────────────────────────────────────────
+# Validate that dependency graph remains acyclic when adding task
+_validate_dag() {
+    local task_file="$1"
+    local task_id
+    task_id=$(_json_get "$task_file" "id")
+    [ -n "$task_id" ] || { _log "ERROR" "Task missing 'id' field"; return 1; }
+
+    local deps
+    deps=$(_json_get "$task_file" "depends_on")
+
+    if [ -z "$deps" ] || [ "$deps" = "[]" ]; then
+        return 0  # No dependencies, always valid
+    fi
+
+    # Build adjacency list from all existing tasks + this new one
+    # Use python3 for DAG validation via topological sort
+    python3 -c "
+import json, sys
+from collections import defaultdict, deque
+
+# Load existing tasks
+tasks = {}
+import os
+for f in os.listdir('$TASKS_DIR'):
+    if f.endswith('.json'):
+        tf = os.path.join('$TASKS_DIR', f)
+        d = json.load(open(tf))
+        tasks[d['id']] = d
+
+# Add the new task
+new_task = json.load(open('$task_file'))
+tasks[new_task['id']] = new_task
+
+# Build graph
+adj = defaultdict(list)
+in_deg = defaultdict(int)
+for tid, tdata in tasks.items():
+    for dep in tdata.get('depends_on', []):
+        adj[dep].append(tid)
+        in_deg[tid] += 1
+    if tid not in in_deg:
+        in_deg[tid] = 0
+
+# Topological sort (Kahn's algorithm)
+q = deque([n for n, d in in_deg.items() if d == 0])
+sorted_nodes = []
+while q:
+    n = q.popleft()
+    sorted_nodes.append(n)
+    for m in adj[n]:
+        in_deg[m] -= 1
+        if in_deg[m] == 0:
+            q.append(m)
+
+if len(sorted_nodes) != len(tasks):
+    print('CYCLE DETECTED: Dependency graph contains a cycle')
+    print('Tasks:', list(tasks.keys()))
+    print('Sorted:', sorted_nodes)
+    sys.exit(1)
+print('DAG validation passed')
+" 2>&1 || return 1
+    return 0
+}
+
+_dequeue_next() {
+    python3 -c "
+import json, os, sys
+from datetime import datetime
+
+tasks_dir = '$TASKS_DIR'
+tasks = {}
+for f in os.listdir(tasks_dir):
+    if not f.endswith('.json'): continue
+    fp = os.path.join(tasks_dir, f)
+    d = json.load(open(fp))
+    tasks[d['id']] = d
+
+# Filter: pending only
+pending = {tid: t for tid, t in tasks.items() if t.get('status') == 'pending'}
+
+# Check dependencies
+ready = []
+for tid, t in pending.items():
+    deps = t.get('depends_on', [])
+    all_done = all(
+        tasks.get(d, {}).get('status') == 'complete'
+        for d in deps
+    )
+    if all_done:
+        ready.append(t)
+
+if not ready:
+    print('QUEUE_EMPTY')
+    # Show what's blocking
+    blocked = [tid for tid, t in pending.items()
+               if not all(tasks.get(d, {}).get('status') == 'complete'
+                         for d in t.get('depends_on', []))]
+    if blocked:
+        print(f'Blocked tasks: {\", \".join(blocked)}')
+    sys.exit(0)
+
+# Sort by priority (high first), then created_at (oldest first)
+ready.sort(key=lambda t: (-t.get('priority', 0), t.get('created_at', '')))
+print(ready[0]['id'])
+" 2>&1
+}
+
+# ── Conflict Detection ───────────────────────────────────────────
+_check_file_conflicts() {
+    local task_file="$1"
+    local task_id
+    task_id=$(_json_get "$task_file" "id")
+    local new_files
+    new_files=$(_json_get "$task_file" "files")
+
+    if [ -z "$new_files" ] || [ "$new_files" = "[]" ]; then
+        return 0  # No files, no conflict
+    fi
+
+    python3 -c "
+import json, os, sys
+
+task_id = '$task_id'
+new_files = set(json.loads('''$new_files'''))
+
+tasks_dir = '$TASKS_DIR'
+for f in os.listdir(tasks_dir):
+    if not f.endswith('.json'): continue
+    fp = os.path.join(tasks_dir, f)
+    d = json.load(open(fp))
+    if d['id'] == task_id: continue
+    if d.get('status') not in ('acquired', 'running'): continue
+
+    existing_files = set(d.get('files', []))
+    overlap = new_files & existing_files
+    if overlap:
+        print(f'CONFLICT: {task_id} conflicts with {d[\"id\"]} on files: {\", \".join(overlap)}')
+        sys.exit(1)
+print('OK')
+" 2>&1
+}
+
+# ── Commands ─────────────────────────────────────────────────────
+cmd_init() {
+    _ensure_queue
+    echo "✅ .git-queue initialized at $QUEUE_DIR"
+    echo "   Tasks:   $TASKS_DIR"
+    echo "   Tokens:  $TOKENS_DIR"
+    echo "   Logs:    $AGENT_LOG_DIR"
+}
+
+cmd_status() {
+    _ensure_queue
+    echo "═══════════════════════════════════════════════"
+    echo "  Git Queue Status"
+    echo "═══════════════════════════════════════════════"
+
+    local pending=0 acquired=0 running=0 complete=0 failed=0 timeout=0
+    for tf in "$TASKS_DIR"/*.json; do
+        [ -f "$tf" ] || continue
+        local s
+        s=$(_json_get "$tf" "status")
+        case "$s" in
+            pending)  pending=$((pending + 1)) ;;
+            acquired) acquired=$((acquired + 1)) ;;
+            running)  running=$((running + 1)) ;;
+            complete) complete=$((complete + 1)) ;;
+            failed)   failed=$((failed + 1)) ;;
+            timeout)  timeout=$((timeout + 1)) ;;
+        esac
+    done
+
+    echo "  Pending:   $pending"
+    echo "  Acquired:  $acquired"
+    echo "  Running:   $running"
+    echo "  Complete:  $complete"
+    echo "  Failed:    $failed"
+    echo "  Timed out: $timeout"
+
+    echo ""
+    echo "  Active agents:"
+    for token in "$TOKENS_DIR"/*.heartbeat; do
+        [ -f "$token" ] || continue
+        local agent age
+        agent=$(basename "$token" .heartbeat)
+        age=$(( $(date +%s) - $(stat -c %Y "$token") ))
+        echo "    • $agent (last heartbeat: ${age}s ago)"
+    done
+
+    echo ""
+    echo "  Agent logs:"
+    for logf in "$AGENT_LOG_DIR"/*.log; do
+        [ -f "$logf" ] || continue
+        local agent_name
+        agent_name=$(basename "$logf" .log)
+        local lines
+        lines=$(wc -l < "$logf")
+        echo "    • $agent_name ($lines lines)"
+    done
+}
+
+cmd_add() {
+    local task_file="${1:-}"
+    [ -n "$task_file" ] || { echo "❌ Usage: git-queue add <task.json>" >&2; exit 1; }
+    [ -f "$task_file" ] || { echo "❌ Task file not found: $task_file" >&2; exit 1; }
+
+    _ensure_queue
+
+    # Validate JSON
+    python3 -c "json.load(open('$task_file'))" 2>/dev/null \
+        || { echo "❌ Invalid JSON in $task_file" >&2; exit 1; }
+
+    # Validate required fields
+    local task_id
+    task_id=$(_json_get "$task_file" "id")
+    [ -n "$task_id" ] || { echo "❌ Task must have an 'id' field" >&2; exit 1; }
+
+    # Check for duplicate task IDs
+    if [ -f "$TASKS_DIR/${task_id}.json" ]; then
+        echo "❌ Task $task_id already exists in queue" >&2
+        exit 1
+    fi
+
+    # Validate DAG (dependency graph)
+    if ! _validate_dag "$task_file"; then
+        echo "❌ Task rejected: dependency graph would contain a cycle" >&2
+        exit 1
+    fi
+
+    # Copy task into queue
+    cp "$task_file" "$TASKS_DIR/${task_id}.json"
+    _log "INFO" "Task added: $task_id"
+    echo "✅ Task $task_id enqueued"
+
+    # Update manifest
+    python3 -c "
+import json
+manifest = {}
+if os.path.exists('$TASK_MANIFEST'):
+    manifest = json.load(open('$TASK_MANIFEST'))
+manifest['$task_id'] = {
+    'added_at': '$(date -u +%Y-%m-%dT%H:%M:%SZ)',
+    'status': 'pending',
+    'agent': '$AGENT_ID'
+}
+json.dump(manifest, open('$TASK_MANIFEST', 'w'), indent=2)
+"
+}
+
+cmd_acquire() {
+    _ensure_queue
+    _acquire_lock || exit 1
+    _heartbeat
+
+    # Find next ready task
+    local next_task
+    next_task=$(_dequeue_next)
+
+    if [ "$next_task" = "QUEUE_EMPTY" ]; then
+        _log "INFO" "No pending tasks ready"
+        echo "ℹ️  No ready tasks in queue"
+        _release_lock
+        exit 0
+    fi
+
+    local task_file="$TASKS_DIR/${next_task}.json"
+    if [ ! -f "$task_file" ]; then
+        _log "ERROR" "Task file missing: $task_file"
+        _release_lock
+        exit 1
+    fi
+
+    # Check for file conflicts
+    local conflict_result
+    conflict_result=$(_check_file_conflicts "$task_file" 2>&1) || true
+    if echo "$conflict_result" | grep -q "^CONFLICT"; then
+        _log "WARN" "$conflict_result"
+        echo "⚠️  $conflict_result"
+        echo "   Task will remain pending until conflict resolves."
+        _release_lock
+        exit 0
+    fi
+
+    # Claim the task
+    _json_set "$task_file" "status" "acquired"
+    _json_set "$task_file" "owner" "$AGENT_ID"
+    _json_set "$task_file" "started_at" "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+    local title
+    title=$(_json_get "$task_file" "title")
+
+    echo "✅ Lock acquired"
+    echo "🎯 Claimed task: $next_task — $title"
+    echo "   Files: $(_json_get "$task_file" "files")"
+    echo ""
+    echo "   Set: export GIT_QUEUE_TASK=$next_task"
+    echo "   Work on the files above, then run: git-queue release"
+}
+
+cmd_release() {
+    _ensure_queue
+    [ "$TASK_ID" != "none" ] || { echo "❌ GIT_QUEUE_TASK not set" >&2; exit 1; }
+
+    local task_file="$TASKS_DIR/${TASK_ID}.json"
+    [ -f "$task_file" ] || { echo "❌ Task $TASK_ID not found" >&2; exit 1; }
+
+    local owner
+    owner=$(_json_get "$task_file" "owner")
+    if [ "$owner" != "$AGENT_ID" ]; then
+        echo "❌ Task $TASK_ID is claimed by $owner, not $AGENT_ID" >&2
+        exit 1
+    fi
+
+    _json_set "$task_file" "status" "complete"
+    _json_set "$task_file" "completed_at" "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+    _log "INFO" "Task completed: $TASK_ID"
+    echo "✅ Task $TASK_ID complete"
+
+    _release_lock
+}
+
+cmd_fail() {
+    local reason="${1:-No reason given}"
+    _ensure_queue
+    [ "$TASK_ID" != "none" ] || { echo "❌ GIT_QUEUE_TASK not set" >&2; exit 1; }
+
+    local task_file="$TASKS_DIR/${TASK_ID}.json"
+    [ -f "$task_file" ] || { echo "❌ Task $TASK_ID not found" >&2; exit 1; }
+
+    _json_set "$task_file" "status" "failed"
+    _json_set "$task_file" "failed_at" "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    _json_set "$task_file" "failure_reason" "$reason"
+
+    _log "ERROR" "Task failed: $TASK_ID — $reason"
+    echo "❌ Task $TASK_ID marked as failed: $reason"
+
+    _release_lock
+}
+
+cmd_retry() {
+    local retry_task_id="${1:-}"
+    [ -n "$retry_task_id" ] || { echo "❌ Usage: git-queue retry <task-id>" >&2; exit 1; }
+
+    _acquire_lock || exit 1
+
+    local task_file="$TASKS_DIR/${retry_task_id}.json"
+    [ -f "$task_file" ] || { echo "❌ Task $retry_task_id not found" >&2; _release_lock; exit 1; }
+
+    local status
+    status=$(_json_get "$task_file" "status")
+    if [ "$status" != "failed" ] && [ "$status" != "timeout" ]; then
+        echo "❌ Cannot retry: task is in status '$status' (only failed/timeout allowed)" >&2
+        _release_lock
+        exit 1
+    fi
+
+    local retry_count
+    retry_count=$(_json_get "$task_file" "retry_count")
+    retry_count=$((retry_count + 1))
+
+    local max_retries
+    max_retries=$(_json_get "$task_file" "max_retries")
+    [ -n "$max_retries" ] || max_retries=3
+
+    if [ "$retry_count" -gt "$max_retries" ]; then
+        echo "❌ Task $retry_task_id exceeded max retries ($max_retries)" >&2
+        _release_lock
+        exit 1
+    fi
+
+    _json_set "$task_file" "status" "pending"
+    _json_set "$task_file" "retry_count" "$retry_count"
+    _json_set "$task_file" "owner" ""
+    _json_set "$task_file" "started_at" ""
+
+    _log "INFO" "Task re-queued: $retry_task_id (attempt $retry_count/$max_retries)"
+    echo "✅ Task $retry_task_id re-queued (attempt $retry_count/$max_retries)"
+
+    _release_lock
+}
+
+cmd_cleanup() {
+    _ensure_queue
+    _acquire_lock || exit 1
+
+    # Remove stale heartbeats
+    _check_stale_locks
+
+    # Remove lock file (flock will auto-release since FD is held)
+    echo "ℹ️  Lock file is healthy"
+
+    # Archive completed tasks
+    for tf in "$TASKS_DIR"/*.json; do
+        [ -f "$tf" ] || continue
+        local s
+        s=$(_json_get "$tf" "status")
+        if [ "$s" = "complete" ] || [ "$s" = "failed" ]; then
+            mv "$tf" "$COMPLETED_DIR/"
+            local tid
+            tid=$(basename "$tf" .json)
+            _log "INFO" "Archived task: $tid (status: $s)"
+        fi
+    done
+
+    echo "✅ Cleanup complete"
+    _release_lock
+}
+
+cmd_show() {
+    local show_task_id="${1:-}"
+    [ -n "$show_task_id" ] || show_task_id="$TASK_ID"
+    [ "$show_task_id" != "none" ] || { echo "❌ No task specified and GIT_QUEUE_TASK not set" >&2; exit 1; }
+
+    local task_file="$TASKS_DIR/${show_task_id}.json"
+    if [ ! -f "$task_file" ]; then
+        task_file="$COMPLETED_DIR/${show_task_id}.json"
+    fi
+    [ -f "$task_file" ] || { echo "❌ Task $show_task_id not found in tasks/ or completed/" >&2; exit 1; }
+
+    python3 -m json.tool "$task_file"
+}
+
+cmd_graph() {
+    _ensure_queue
+    python3 -c "
+import json, os
+
+tasks_dir = '$TASKS_DIR'
+tasks = {}
+for f in os.listdir(tasks_dir):
+    if not f.endswith('.json'): continue
+    d = json.load(open(os.path.join(tasks_dir, f)))
+    tasks[d['id']] = d
+
+# Also include completed
+completed_dir = '$COMPLETED_DIR'
+if os.path.isdir(completed_dir):
+    for f in os.listdir(completed_dir):
+        if not f.endswith('.json'): continue
+        d = json.load(open(os.path.join(completed_dir, f)))
+        tasks[d['id']] = d
+
+print('digraph GitQueue {')
+print('  rankdir=LR;')
+print('  node [shape=box, style=rounded];')
+for tid, t in tasks.items():
+    status = t.get('status', 'unknown')
+    color = {'pending': 'yellow', 'acquired': 'orange', 'running': 'green',
+             'complete': 'lightblue', 'failed': 'red', 'timeout': 'pink'}.get(status, 'white')
+    title = t.get('title', tid)[:40]
+    print(f'  \"{tid}\" [label=\"{tid}\\\n{title}\", style=filled, fillcolor={color}];')
+    for dep in t.get('depends_on', []):
+        print(f'  \"{dep}\" -> \"{tid}\";')
+print('}')
+"
+}
+
+# ── Main ─────────────────────────────────────────────────────────
+cmd="${1:-help}"
+shift 2>/dev/null || true
+
+case "$cmd" in
+    init)      cmd_init "$@" ;;
+    status)    cmd_status "$@" ;;
+    add)       cmd_add "$@" ;;
+    acquire)   cmd_acquire "$@" ;;
+    release)   cmd_release "$@" ;;
+    heartbeat) _heartbeat ;;
+    fail)      cmd_fail "$@" ;;
+    retry)     cmd_retry "$@" ;;
+    cleanup)   cmd_cleanup "$@" ;;
+    show)      cmd_show "$@" ;;
+    graph)     cmd_graph "$@" ;;
+    help|--help|-h)
+        cat <<'HELP'
+Usage: git-queue <command> [options]
+
+Commands:
+  init                  Initialize .git-queue/ directory
+  status                Show queue state
+  add <task.json>       Enqueue a new task
+  acquire               Acquire lock and dequeue next ready task
+  release               Mark current task complete
+  heartbeat             Update heartbeat (called automatically)
+  fail [reason]         Mark current task as failed
+  retry <task-id>       Re-queue a failed task
+  cleanup               Archive completed tasks, remove stale locks
+  show <task-id>        Show task details
+  graph                 Print dependency graph (DOT format)
+
+Environment:
+  GIT_QUEUE_AGENT       Agent name (hermes, claude, copilot)
+  GIT_QUEUE_TASK        Current task ID (set by acquire)
+  GIT_QUEUE_DEBUG       Enable verbose logging
+
+Examples:
+  export GIT_QUEUE_AGENT=hermes
+  git-queue init
+  git-queue add tasks/my-task.json
+  git-queue acquire
+  # ... make changes ...
+  git-queue release
+HELP
+        ;;
+    *)
+        echo "Unknown command: $cmd" >&2
+        echo "Usage: git-queue <command>" >&2
+        exit 1
+        ;;
+esac

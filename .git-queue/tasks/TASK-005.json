@@ -1,0 +1,20 @@
+{
+  "id": "TASK-005",
+  "title": "Migrate host/vps → hosts/vps with split bootstrap",
+  "owner": "claude",
+  "status": "pending",
+  "priority": 5,
+  "files": [
+    "host/vps/",
+    "hosts/vps/"
+  ],
+  "depends_on": [],
+  "blocks": ["TASK-007"],
+  "branch": "refactor/vps-migration",
+  "timeout_seconds": 600,
+  "created_at": "2026-06-21T12:00:00Z",
+  "started_at": null,
+  "completed_at": null,
+  "retry_count": 0,
+  "max_retries": 3
+}

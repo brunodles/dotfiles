@@ -1,0 +1,22 @@
+{
+  "id": "TASK-007",
+  "title": "Update global references from host/ to hosts/ across all docs and scripts",
+  "owner": "hermes",
+  "status": "pending",
+  "priority": 1,
+  "files": [
+    "docs/current-state.md",
+    "docs/repository-structure.md",
+    "scripts/stacks-up",
+    "README.md"
+  ],
+  "depends_on": ["TASK-001", "TASK-002", "TASK-003", "TASK-004", "TASK-005", "TASK-006"],
+  "blocks": [],
+  "branch": "refactor/update-global-refs",
+  "timeout_seconds": 300,
+  "created_at": "2026-06-21T12:00:00Z",
+  "started_at": null,
+  "completed_at": null,
+  "retry_count": 0,
+  "max_retries": 3
+}

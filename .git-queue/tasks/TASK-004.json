@@ -1,0 +1,20 @@
+{
+  "id": "TASK-004",
+  "title": "Migrate host/silver → hosts/silver with split bootstrap",
+  "owner": "hermes",
+  "status": "pending",
+  "priority": 5,
+  "files": [
+    "host/silver/",
+    "hosts/silver/"
+  ],
+  "depends_on": [],
+  "blocks": ["TASK-007"],
+  "branch": "refactor/silver-migration",
+  "timeout_seconds": 600,
+  "created_at": "2026-06-21T12:00:00Z",
+  "started_at": null,
+  "completed_at": null,
+  "retry_count": 0,
+  "max_retries": 3
+}

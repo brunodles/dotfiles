@@ -26,3 +26,13 @@
   silver (desktop), media, android (Termux), work (dev workstation).
 - Tailscale for connectivity, Pi-hole for DNS, Traefik for reverse proxy.
 - dotfiles repo is the source of truth for all config.
+
+## Git Queue Protocol
+
+When modifying the dotfiles repo, always use the queue coordination system:
+1. `scripts/git-queue acquire` from repo root
+2. Set `export GIT_QUEUE_AGENT=copilot GIT_QUEUE_TASK=<id>`
+3. Make one logical change, commit, push
+4. `scripts/git-queue release`
+
+See `docs/agent-queue-design.md` for full design.

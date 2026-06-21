@@ -38,3 +38,16 @@ no over-explaining, no forced enthusiasm.
 - English only in code, comments, commit messages.
 - One logical change per commit.
 - After each commit, a subagent reviews the diff against the plan.
+
+## Git Queue Protocol
+
+This repo uses a queue-based coordination system (see `docs/agent-queue-design.md`).
+
+Before any change:
+1. Run `scripts/git-queue acquire` to claim a lock and dequeue the next task
+2. Set `export GIT_QUEUE_AGENT=hermes GIT_QUEUE_TASK=<id>`
+3. Make changes, commit with conventional commits format
+4. Run `scripts/git-queue release` to mark the task done
+
+Never push directly to main without going through the queue.
+Never hold a lock longer than 10 minutes without a heartbeat.

@@ -1,0 +1,20 @@
+{
+  "id": "TASK-002",
+  "title": "Migrate host/media → hosts/media with split bootstrap",
+  "owner": "claude",
+  "status": "pending",
+  "priority": 5,
+  "files": [
+    "host/media/",
+    "hosts/media/"
+  ],
+  "depends_on": [],
+  "blocks": ["TASK-007"],
+  "branch": "refactor/media-migration",
+  "timeout_seconds": 600,
+  "created_at": "2026-06-21T12:00:00Z",
+  "started_at": null,
+  "completed_at": null,
+  "retry_count": 0,
+  "max_retries": 3
+}

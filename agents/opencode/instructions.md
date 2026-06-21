@@ -11,6 +11,8 @@
 - Make one logical change at a time. Commit after each.
 - Commit format: `type(scope): concise description`.
 - After each commit, review the diff against the original plan.
+- **Git Queue**: Use `scripts/git-queue acquire/release` for any changes.
+  See `docs/agent-queue-design.md`.
 
 ## Conventions
 

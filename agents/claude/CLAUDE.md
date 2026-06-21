@@ -27,3 +27,14 @@
 
 This is the **global** CLAUDE.md — it applies to every project.
 For project-specific instructions, see each repo's own CLAUDE.md.
+
+## Git Queue Protocol
+
+When working on the dotfiles repo (`~/dotfiles`), use the queue-based
+coordination system:
+1. `cd ~/dotfiles && scripts/git-queue acquire`
+2. Set `export GIT_QUEUE_AGENT=claude GIT_QUEUE_TASK=<id>`
+3. Make changes, commit, push
+4. `scripts/git-queue release`
+
+See `docs/agent-queue-design.md` for details.
