@@ -9,9 +9,9 @@ services:
       - "8642:8642"   # gateway API
       - "9119:9119"   # dashboard (only reached when HERMES_DASHBOARD=1)
     volumes:
-      - ~/stack/hermes/data:/opt/data
-      - ~/stack/hermes/ssh:/root/.ssh
-      - ~/workspace:/workspace
+      - /home/ubuntu/stack/hermes/data:/opt/data
+      - /home/ubuntu/stack/hermes/ssh:/root/.ssh
+      - /home/ubuntu/workspace:/workspace
       - ./.gitconfig:/root/.gitconfig
     environment:
       - HERMES_DASHBOARD=1
