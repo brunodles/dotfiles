@@ -137,3 +137,25 @@ are already written, tested for syntax, and ready to use.
 
 If the user hits friction (agents forgetting to queue, stale locks, recovery
 headaches), then invest in a Hermes plugin that automates the protocol.
+
+---
+
+## ⚠️ Update: Gitea Changes the Queue Architecture
+
+The Gitea investigation (`docs/future/gitea-hermes-infra.md`) found that a
+local Gitea instance on the VPS unlocks a **fundamentally better queue
+design** via the Issues REST API.
+
+| Filesystem `.git-queue` | Gitea Issues API |
+|-------------------------|-----------------|
+| `flock` file lock + JSON files | `POST /issues` — atomic, conflict-free |
+| Heartbeat via token file | Natural API session TTL |
+| Merge on concurrent writes | No merge — REST is atomic |
+| Tied to git commit/push cycle | Queryable SQLite state |
+
+**Recommendation updated:** If Gitea is deployed, **skip the file-based queue
+entirely** and go straight to an Issue-based queue via Gitea API. The
+`scripts/git-queue` implementation becomes a thin wrapper around REST calls
+instead of `flock` + JSON files.
+
+See `docs/future/gitea-hermes-infra.md` for the full analysis.
