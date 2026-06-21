@@ -26,4 +26,4 @@
 - This is a homelab dotfiles repository managing 6 hosts:
   vps, pi, silver, media, android, work.
 - Tailsecures the network. Pi-hole for DNS. Traefik in front of web services.
-- Every host has a bootstrap directory in hosts/<name>/bootstrap/ that sets it up from scratch.
+- Every host has a bootstrap.sh in hosts/<name>/ that chains bootstrap/{install,configure,links}.sh.

@@ -56,6 +56,7 @@ dotfiles/
 ├── hosts/                     # Host-specific configurations
 │   ├── android/               # Android/Termux device (always-on server)
 │   │   ├── README.md
+│   │   ├── bootstrap.sh            # → bootstrap/{install,configure,links}.sh
 │   │   ├── bootstrap/
 │   │   │   ├── install.sh
 │   │   │   ├── configure.sh
@@ -74,6 +75,7 @@ dotfiles/
 │   │       └── termux.properties
 │   │
 │   ├── media/                 # Media server
+│   │   ├── bootstrap.sh
 │   │   ├── bootstrap/
 │   │   │   ├── install.sh
 │   │   │   ├── configure.sh
@@ -96,6 +98,7 @@ dotfiles/
 │   │
 │   ├── pi/                    # Raspberry Pi (Pi-hole)
 │   │   ├── README.md
+│   │   ├── bootstrap.sh
 │   │   ├── bootstrap/
 │   │   │   ├── install.sh
 │   │   │   ├── configure.sh
@@ -112,6 +115,7 @@ dotfiles/
 │   │
 │   ├── silver/                # Desktop (Ubuntu, silver PC)
 │   │   ├── README.md
+│   │   ├── bootstrap.sh
 │   │   ├── bootstrap/
 │   │   │   ├── install.sh
 │   │   │   ├── links.sh
@@ -129,6 +133,7 @@ dotfiles/
 │   │       └── wallpaper_dynamic.sh
 │   │
 │   ├── vps/                   # Internet-facing VPS
+│   │   ├── bootstrap.sh
 │   │   ├── bootstrap/
 │   │   │   ├── install.sh
 │   │   │   ├── configure.sh
@@ -160,6 +165,7 @@ dotfiles/
 │   │
 │   └── work/                  # macOS workstation (work)
 │       ├── README.md
+│       ├── bootstrap.sh
 │       └── bootstrap/
 │           ├── install.sh
 │           ├── configure.sh
@@ -275,7 +281,7 @@ dotfiles/
 ## Notes
 
 - **`install/`** contains reusable install scripts. Each host's bootstrap scripts under `bootstrap/install.sh` reference them by path.
-- **All hosts** now follow a consistent `bootstrap/{install,configure,links,lib}.sh` pattern instead of a single monolithic `bootstrap.sh`.
+- **All hosts** follow a `bootstrap.sh` → `bootstrap/{install,configure,links,lib}.sh` pattern. Run `bash hosts/<name>/bootstrap.sh` for the full setup.
 - **`scripts/`** contains Docker wrappers (Claude, Copilot CLI, Hermes) and the `link` utility for symlinks.
 - **`dotfiles/`** only covers config files currently in active use.
 - **`projects/`**, **`bootstrap/`**, and backup/restore scripts do not exist yet.
