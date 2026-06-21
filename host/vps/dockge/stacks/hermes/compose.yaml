@@ -9,7 +9,8 @@ services:
       - "8642:8642"   # gateway API
       - "9119:9119"   # dashboard (only reached when HERMES_DASHBOARD=1)
     volumes:
-      - ~/.hermes_local:/opt/data
+      - ~/stack/hermes/data:/opt/data
+      - ~/stack/hermes/ssh:/root/.ssh
       - ~/workspace:/workspace
       - ./.gitconfig:/root/.gitconfig
     environment:
@@ -23,3 +24,4 @@ services:
         limits:
           memory: 4G
           cpus: "2.0"
+  
