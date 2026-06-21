@@ -16,7 +16,7 @@ connected to the homelab via Tailscale.
 ```bash
 git clone https://github.com/brunodles/dotfiles.git
 cd dotfiles
-bash host/pi/bootstrap.sh
+bash hosts/pi/bootstrap.sh
 ```
 
 After bootstrap completes:
@@ -39,10 +39,10 @@ If the Pi needs to be rebuilt:
 
 ```bash
 git clone <repo>
-bash host/pi/bootstrap.sh
+bash hosts/pi/bootstrap.sh
 
 # Restore saved config
-host/pi/pihole/scripts/restore-config.sh
+bash hosts/pi/pihole/scripts/restore-config.sh
 ```
 
 ## Extraction
@@ -50,7 +50,7 @@ host/pi/pihole/scripts/restore-config.sh
 If you already have a running Pi-hole elsewhere:
 
 ```bash
-host/pi/pihole/scripts/extract-config.sh pi@<ip>
+bash hosts/pi/pihole/scripts/extract-config.sh pi@<ip>
 ```
 
 This saves `setupVars.conf`, `adlists.list`, `whitelist.txt`,

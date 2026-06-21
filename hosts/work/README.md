@@ -7,7 +7,7 @@ My development machine at work, running macOS.
 ```bash
 git clone https://github.com/brunodles/dotfiles.git
 cd dotfiles
-bash host/work/bootstrap.sh
+bash hosts/work/bootstrap.sh
 ```
 
 ## What it installs

@@ -13,25 +13,59 @@ dotfiles/
 ├── LICENSE
 ├── .gitignore
 │
+├── .github/
+│   └── copilot-instructions.md
+├── .git-queue/                         # Git queue task coordination
+│   └── tasks/
+│       ├── TASK-001.json
+│       ├── TASK-002.json
+│       ├── TASK-003.json
+│       ├── TASK-004.json
+│       ├── TASK-005.json
+│       ├── TASK-006.json
+│       └── TASK-007.json
+├── CLAUDE.md                           # Agent coordination instructions
+├── agents/                             # Agent configuration files
+│   ├── claude/
+│   │   ├── CLAUDE.md
+│   │   └── rules/
+│   ├── copilot/
+│   │   └── instructions.md
+│   ├── hermes/
+│   │   └── soul.md
+│   ├── opencode/
+│   │   └── instructions.md
+│   └── skills/                         # Skill definitions (regenerated)
+│
 ├── docs/
+│   ├── agent-queue-design.md               # Git queue coordination design
 │   ├── current-state.md                     # ← this file
 │   ├── networking.md                        # network topology & connectivity
-│   └── repository-structure.md              # aspirational layout
+│   ├── repository-structure.md              # aspirational layout
+│   ├── stacks.md                            # VPS stacks checklist
+│   ├── future/
+│   │   └── agent-queue-feasibility.md       # Queue feasibility study
+│   └── router/
+│       └── askey-rtf8115vw.md               # Router DNS API guide
 │
 ├── dotfiles/                  # Workstation configuration files
 │   ├── .vimrc
 │   ├── compton.conf
 │   ├── alacritty/
+│   │   ├── alacritty                    # symlink to self (macOS)
 │   │   ├── alacritty.toml
 │   │   ├── keyboard.toml
 │   │   ├── window_linux.toml
 │   │   └── window_mac.toml
 │   ├── ghostty/
-│   │   └── config
+│   │   ├── config
+│   │   └── ghostty                      # symlink to self (macOS)
 │   ├── i3/
 │   │   ├── config
+│   │   ├── i3                           # symlink to self
 │   │   └── openTerminal.sh
 │   ├── i3blocks/
+│   │   ├── i3blocks                     # symlink to self
 │   │   ├── title.conf
 │   │   ├── top.conf
 │   │   └── scripts/
@@ -43,7 +77,8 @@ dotfiles/
 │   │       ├── titlebar
 │   │       └── volume
 │   ├── i3status/
-│   │   └── config
+│   │   ├── config
+│   │   └── i3status                     # symlink to self
 │   ├── tmux/
 │   │   ├── .gitignore
 │   │   └── tmux.conf
@@ -51,6 +86,7 @@ dotfiles/
 │       ├── alias
 │       ├── env
 │       ├── p10k.zsh
+│       ├── zsh                          # symlink to self
 │       └── zshrc
 │
 ├── hosts/                     # Host-specific configurations
@@ -83,6 +119,7 @@ dotfiles/
 │   │   │   └── lib.sh
 │   │   └── dockge/
 │   │       ├── dockge/
+│   │       │   ├── .gitignore
 │   │       │   └── compose.yaml
 │   │       └── stacks/
 │   │           ├── gitea/
@@ -106,6 +143,7 @@ dotfiles/
 │   │   │   └── lib.sh
 │   │   ├── pihole/
 │   │   │   ├── extracted/     # future: exported configs
+│   │   │   │   └── .keep
 │   │   │   └── scripts/
 │   │   │       ├── extract-config.sh   # SSH-based config pull
 │   │   │       └── restore-config.sh   # apply saved config locally
@@ -120,17 +158,19 @@ dotfiles/
 │   │   │   ├── install.sh
 │   │   │   ├── links.sh
 │   │   │   └── lib.sh
-│   │   └── home/.local/bin/
-│   │       ├── font_install.sh
-│   │       ├── font_list.sh
-│   │       ├── formatAsJson.py
-│   │       ├── gr
-│   │       ├── network_interface.sh
-│   │       ├── ollama
-│   │       ├── terminal_colors.sh
-│   │       ├── tmux-android
-│   │       ├── tmux-sample
-│   │       └── wallpaper_dynamic.sh
+│   │   ├── home/.local/bin/
+│   │   │   ├── font_install.sh
+│   │   │   ├── font_list.sh
+│   │   │   ├── formatAsJson.py
+│   │   │   ├── gr
+│   │   │   ├── network_interface.sh
+│   │   │   ├── ollama
+│   │   │   ├── terminal_colors.sh
+│   │   │   ├── tmux-android
+│   │   │   ├── tmux-sample
+│   │   │   └── wallpaper_dynamic.sh
+│   │   └── home/.local/fbin/
+│   │       └── _gr                       # Zsh completion for `gr`
 │   │
 │   ├── vps/                   # Internet-facing VPS
 │   │   ├── bootstrap.sh
@@ -141,6 +181,7 @@ dotfiles/
 │   │   │   └── lib.sh
 │   │   └── dockge/
 │   │       ├── dockge/
+│   │       │   ├── .gitignore
 │   │       │   └── compose.yaml
 │   │       └── stacks/
 │   │           ├── hermes/
@@ -151,6 +192,7 @@ dotfiles/
 │   │           │   ├── .env.example
 │   │           │   ├── compose.yaml
 │   │           │   └── config/
+│   │           │       └── .keep
 │   │           ├── traefik/
 │   │           │   ├── compose.yaml
 │   │           │   └── config/
@@ -176,6 +218,7 @@ dotfiles/
 │   ├── _claudeCode.sh
 │   ├── _fonts.sh
 │   ├── _hermesAgent.sh
+│   ├── _homebrew.sh              # macOS Homebrew installer
 │   ├── _oh-my-zsh.sh
 │   ├── _ollama.sh
 │   ├── _pihole.sh             # Pi-hole installer wrapper
@@ -209,9 +252,17 @@ dotfiles/
     │   └── hermes_local
     ├── docker_run_or_exec/
     │   └── docker-run_or_exec
+    ├── git-queue                 # Git queue CLI tool
+    ├── git-queue-pre-push        # Pre-push hook script
     ├── install/
     │   └── link
-    └── install_list.sh
+    ├── install-skills.sh       # Agent skill installer
+    ├── install_list.sh
+    ├── router/
+    │   └── update-dns.sh       # Askey router DNS updater
+    ├── stacks-up               # Docker Compose orchestrator
+    └── vpn/
+        └── sshuttle.sh         # Temporary SSH VPN tunnel
 ```
 
 ---
@@ -238,7 +289,7 @@ dotfiles/
 | Location | Home LAN |
 | OS | Ubuntu |
 | Connectivity | Wired Ethernet + Tailscale |
-|| Status | Dockge stacks ready (gitea, jellyfin, metube, plex, qbittorrent, syncthing, traefik, whoami) |
+| Status | Dockge stacks ready (gitea, jellyfin, metube, plex, qbittorrent, syncthing, traefik, whoami) |
 
 ### pi
 
@@ -272,7 +323,7 @@ dotfiles/
 | Connectivity | Public internet + Tailscale |
 | Proxy | Traefik v3 (Docker provider + file provider) |
 | SSL | Let's Encrypt (ACME) |
-|| Stacks | Dockge, Traefik, Hermes Agent, Tailscale, Gitea |
+| Stacks | Dockge, Traefik, Hermes Agent, Tailscale, Gitea |
 | Hermes | Docker container, git identity mounted from stack |
 | Docker network | `proxy` (external, shared across stacks) |
 
@@ -282,7 +333,8 @@ dotfiles/
 
 - **`install/`** contains reusable install scripts. Each host's bootstrap scripts under `bootstrap/install.sh` reference them by path.
 - **Most hosts** follow a `bootstrap.sh` → `bootstrap/{install,configure,links,lib}.sh` pattern (silver omits `configure.sh`). Run `bash hosts/<name>/bootstrap.sh` for the full setup.
-- **`scripts/`** contains Docker wrappers (Claude, Copilot CLI, Hermes), the `link` utility for symlinks, plus VPN (`vpn/sshuttle.sh`), router DNS (`router/update-dns.sh`), stack orchestration (`stacks-up`), and agent skill installer (`install-skills.sh`).
+- **`scripts/`** contains Docker wrappers (Claude, Copilot CLI, Hermes), the `link` utility for symlinks, the git-queue CLI tool, plus VPN (`vpn/sshuttle.sh`), router DNS (`router/update-dns.sh`), stack orchestration (`stacks-up`), and agent skill installer (`install-skills.sh`).
 - **`dotfiles/`** only covers config files currently in active use.
 - **`projects/`**, **`bootstrap/`**, and backup/restore scripts do not exist yet.
-- **Docs** are evolving: `networking.md`, `repository-structure.md`, `stacks.md`, and `router/askey-rtf8115vw.md` exist alongside this file.
+- **`.git-queue/`** is the coordination system for multi-agent edits. See `docs/agent-queue-design.md` and `CLAUDE.md`.
+- **Docs** are evolving: `networking.md`, `repository-structure.md`, `stacks.md`, `agent-queue-design.md`, and `router/askey-rtf8115vw.md` exist alongside this file.
