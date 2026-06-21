@@ -78,9 +78,10 @@ Network topology for the homelab.
 | Connection | Wired Ethernet |
 | IP | Static reservation |
 | Tailnet IP | `100.x.x.x` |
-| Services | Pi-hole (DNS sinkhole, local DNS) |
+| Services | Pi-hole (DNS sinkhole, local DNS), Tailscale subnet router |
 | DNS role | Primary DNS for the tailnet |
 | Access | LAN + Tailscale |
+| Subnet router | `192.168.${SUBNET}.0/24` advertised to tailnet |
 
 ### Android Server
 
@@ -130,6 +131,40 @@ Network topology for the homelab.
 
 **LAN** = `192.168.x.x` direct (low latency, high bandwidth)\
 **Tailnet** = `100.x.x.x` via Tailscale (encrypted, NAT traversal)
+
+---
+
+## Subnet Routing
+
+The VPS reaches the home LAN `192.168.x.0/24` through the **Pi** acting as a Tailscale subnet router. Any device on the home LAN is reachable from the tailnet — even devices without Tailscale installed (printers, IoT, TVs).
+
+| Endpoint | Advertises | Accepts | Enables |
+|----------|------------|---------|---------|
+| **Pi** (subnet router) | `--advertise-routes=192.168.${SUBNET}.0/24` | — | VPS → any LAN device |
+| **VPS** (sidecar) | — | `--accept-routes` | LAN devices → VPS (via return route) |
+
+### Configuration
+
+**Pi** (native Tailscale):
+```bash
+tailscale up --advertise-routes=192.168.${SUBNET}.0/24 --authkey=${TS_AUTHKEY}
+```
+
+**VPS** (Docker sidecar):
+```yaml
+environment:
+  - TS_EXTRA_ARGS=--accept-dns=true --accept-routes
+```
+
+> By default Tailscale applies SNAT (masquerading) to traffic through the subnet router, so LAN devices see the Pi's IP as the source. Add `--snat-subnet-routes=false` on the Pi to preserve original source IPs (Linux only).
+
+### Connectivity
+
+| From | To | Path |
+|------|----|------|
+| VPS | `192.168.x.10` (printer) | VPS → Tailnet → Pi → LAN |
+| VPS | `192.168.x.20` (smart TV) | VPS → Tailnet → Pi → LAN |
+| VPS | Any LAN device | Via Pi as gateway |
 
 ---
 
@@ -212,6 +247,5 @@ Deny:   All inbound from WAN
 
 ## Future Considerations
 
-- **Subnet routing**: If a device on the home LAN cannot run Tailscale (IoT, TV, printer), one of the home hosts can advertise a subnet route via Tailscale so the VPS can reach it.
 - **Split DNS**: Internal services resolve via Pi-hole (`.home` / `.internal` domains); external DNS resolves public domains for the VPS.
 - **Exit node**: Optionally use the VPS as a Tailscale exit node to route home traffic through its public IP.
