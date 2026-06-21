@@ -1,7 +1,7 @@
 # Current Repository State
 
 This document reflects the **actual** structure of the repository as of June 2026.
-It is meant to be a snapshot of reality — not an aspirational layout.
+It is auto-audited against the filesystem to ensure accuracy.
 
 ---
 
@@ -40,11 +40,14 @@ dotfiles/
 ├── docs/
 │   ├── agent-queue-design.md               # Git queue coordination design
 │   ├── current-state.md                     # ← this file
-│   ├── networking.md                        # network topology & connectivity
-│   ├── repository-structure.md              # aspirational layout
-│   ├── stacks.md                            # VPS stacks checklist
+│   ├── install-list.md                      # Package DSL documentation
+│   ├── networking.md                        # Network topology & connectivity
+│   ├── repository-structure.md              # Aspirational layout
+│   ├── stacks.md                            # Docker stacks overview
 │   ├── future/
-│   │   └── agent-queue-feasibility.md       # Queue feasibility study
+│   │   ├── agent-queue-feasibility.md       # Queue feasibility study
+│   │   ├── gitea-hermes-infra.md            # Gitea for Hermes analysis
+│   │   └── gitea-stack-plan.md              # Gitea production readiness plan
 │   └── router/
 │       └── askey-rtf8115vw.md               # Router DNS API guide
 │
@@ -80,7 +83,6 @@ dotfiles/
 │   │   ├── config
 │   │   └── i3status                     # symlink to self
 │   ├── tmux/
-│   │   ├── .gitignore
 │   │   └── tmux.conf
 │   └── zsh/
 │       ├── alias
@@ -88,6 +90,46 @@ dotfiles/
 │       ├── p10k.zsh
 │       ├── zsh                          # symlink to self
 │       └── zshrc
+│
+├── stacks/                    # Docker stacks — canonical, reusable per host
+│   ├── dockge/                # Dockge UI (louislam/dockge:1)
+│   │   ├── .gitignore         # ignores data/*
+│   │   └── compose.yaml       # mounts ../:/opt/stacks, Traefik-labeled
+│   ├── gitea/                 # Gitea + SQLite (gitea/gitea:1.22.4)
+│   │   ├── .env.example
+│   │   ├── README.md
+│   │   ├── compose.yml
+│   │   └── config/
+│   │       └── .keep
+│   ├── hermes/                # Hermes Agent (nousresearch/hermes-agent:latest)
+│   │   ├── .gitconfig
+│   │   └── compose.yaml
+│   ├── jellyfin/              # Media server (linuxserver/jellyfin:10.10.7)
+│   │   └── compose.yml
+│   ├── metube/                # YouTube downloader (ghcr.io/alexta69/metube)
+│   │   └── compose.yml
+│   ├── plex/                  # Media server (lscr.io/linuxserver/plex:1.40.5)
+│   │   └── docker-compose.yml
+│   ├── qbittorrent/           # Torrent client (hotio/qbittorrent:release-5.0.1)
+│   │   └── docker-compose.yml
+│   ├── syncthing/             # File sync (linuxserver/syncthing:1.29.2)
+│   │   └── compose.yml
+│   ├── tailscale/             # Tailscale sidecar (tailscale/tailscale)
+│   │   ├── .env.example
+│   │   ├── README.md
+│   │   ├── compose.yaml
+│   │   └── config/
+│   │       └── .keep
+│   ├── traefik/               # Reverse proxy (traefik:v3.7)
+│   │   ├── compose.yaml
+│   │   └── config/
+│   │       ├── traefik.yml
+│   │       ├── acme/
+│   │       │   └── .keep
+│   │       └── dynamic/
+│   │           └── .keep
+│   └── whoami/                # Test endpoint (traefik/whoami)
+│       └── compose.yaml
 │
 ├── hosts/                     # Host-specific configurations
 │   ├── android/               # Android/Termux device (always-on server)
@@ -112,26 +154,11 @@ dotfiles/
 │   │
 │   ├── media/                 # Media server
 │   │   ├── bootstrap.sh
-│   │   ├── bootstrap/
-│   │   │   ├── install.sh
-│   │   │   ├── configure.sh
-│   │   │   ├── links.sh
-│   │   │   └── lib.sh
-│   │   └── dockge/
-│   │       ├── dockge/
-│   │       │   ├── .gitignore
-│   │       │   └── compose.yaml
-│   │       └── stacks/
-│   │           ├── gitea/
-│   │           ├── jellyfin/
-│   │           ├── metube/
-│   │           ├── plex/
-│   │           ├── qbittorrent/
-│   │           ├── syncthing/
-│   │           ├── traefik/
-│   │           │   ├── compose.yaml
-│   │           │   └── config/traefik.yaml
-│   │           └── whoami/
+│   │   └── bootstrap/
+│   │       ├── install.sh
+│   │       ├── configure.sh       # symlinks stacks/ for this host
+│   │       ├── links.sh
+│   │       └── lib.sh
 │   │
 │   ├── pi/                    # Raspberry Pi (Pi-hole)
 │   │   ├── README.md
@@ -174,36 +201,11 @@ dotfiles/
 │   │
 │   ├── vps/                   # Internet-facing VPS
 │   │   ├── bootstrap.sh
-│   │   ├── bootstrap/
-│   │   │   ├── install.sh
-│   │   │   ├── configure.sh
-│   │   │   ├── links.sh
-│   │   │   └── lib.sh
-│   │   └── dockge/
-│   │       ├── dockge/
-│   │       │   ├── .gitignore
-│   │       │   └── compose.yaml
-│   │       └── stacks/
-│   │           ├── hermes/
-│   │           │   ├── .gitconfig
-│   │           │   └── compose.yaml
-│   │           ├── tailscale/          # Tailscale sidecar
-│   │           │   ├── README.md
-│   │           │   ├── .env.example
-│   │           │   ├── compose.yaml
-│   │           │   └── config/
-│   │           │       └── .keep
-│   │           ├── traefik/
-│   │           │   ├── compose.yaml
-│   │           │   └── config/
-│   │           │       ├── acme/.keep
-│   │           │       ├── dynamic/.keep
-│   │           │       └── traefik.yml
-│   │           └── gitea/
-│   │               ├── README.md
-│   │               ├── .env.example
-│   │               ├── compose.yaml
-│   │               └── config/
+│   │   └── bootstrap/
+│   │       ├── install.sh
+│   │       ├── configure.sh       # symlinks stacks/ for this host
+│   │       ├── links.sh
+│   │       └── lib.sh
 │   │
 │   └── work/                  # macOS workstation (work)
 │       ├── README.md
@@ -289,7 +291,8 @@ dotfiles/
 | Location | Home LAN |
 | OS | Ubuntu |
 | Connectivity | Wired Ethernet + Tailscale |
-| Status | Dockge stacks ready (gitea, jellyfin, metube, plex, qbittorrent, syncthing, traefik, whoami) |
+| Stacks | dockge, gitea, jellyfin, metube, plex, qbittorrent, syncthing, traefik, whoami |
+| Symlinked via | `configure.sh` → `/dockge/stacks/<name>/` |
 
 ### pi
 
@@ -323,18 +326,52 @@ dotfiles/
 | Connectivity | Public internet + Tailscale |
 | Proxy | Traefik v3 (Docker provider + file provider) |
 | SSL | Let's Encrypt (ACME) |
-| Stacks | Dockge, Traefik, Hermes Agent, Tailscale, Gitea |
+| Stacks | dockge, gitea, hermes, tailscale, traefik |
 | Hermes | Docker container, git identity mounted from stack |
+| Symlinked via | `configure.sh` → `/dockge/stacks/<name>/` |
 | Docker network | `proxy` (external, shared across stacks) |
+
+### work
+
+| Item | Value |
+|------|-------|
+| Location | Remote (workplace) |
+| OS | macOS |
+| Shell | Zsh + Oh My Zsh |
+| Connectivity | Tailscale |
+
+---
+
+## Stack Architecture
+
+All Docker stacks live at `stacks/<name>/` in the repo root —
+**canonical source of truth**, shared across all hosts.
+
+### Runtime layout per host
+
+```
+/dockge/
+└── stacks/                    ← DOCKGE_STACKS_DIR=/opt/stacks
+    ├── dockge/    → <repo>/stacks/dockge/   ← Dockge manages itself
+    ├── gitea/     → <repo>/stacks/gitea/
+    ├── traefik/   → <repo>/stacks/traefik/
+    └── ...        ← only stacks the host needs
+```
+
+Each host's `configure.sh` creates `/dockge/stacks/` and symlinks only the stacks
+it needs. Stacks that need per-host customization (domains, volume paths) use
+`.env` files created during bootstrap.
 
 ---
 
 ## Notes
 
 - **`install/`** contains reusable install scripts. Each host's bootstrap scripts under `bootstrap/install.sh` reference them by path.
-- **Most hosts** follow a `bootstrap.sh` → `bootstrap/{install,configure,links,lib}.sh` pattern (silver omits `configure.sh`). Run `bash hosts/<name>/bootstrap.sh` for the full setup.
+- **All hosts except silver** follow a `bootstrap.sh` → `bootstrap/{install,configure,links,lib}.sh` pattern (silver omits `configure.sh`). Run `bash hosts/<name>/bootstrap.sh` for the full setup.
 - **`scripts/`** contains Docker wrappers (Claude, Copilot CLI, Hermes), the `link` utility for symlinks, the git-queue CLI tool, plus VPN (`vpn/sshuttle.sh`), router DNS (`router/update-dns.sh`), stack orchestration (`stacks-up`), and agent skill installer (`install-skills.sh`).
+- **`stacks-up`** auto-detects `stacks/` at repo root; falls back to legacy `hosts/*/dockge/` layout. Accepts explicit args like `stacks/` or `/dockge/stacks/`.
 - **`dotfiles/`** only covers config files currently in active use.
 - **`projects/`**, **`bootstrap/`**, and backup/restore scripts do not exist yet.
 - **`.git-queue/`** is the coordination system for multi-agent edits. See `docs/agent-queue-design.md` and `CLAUDE.md`.
-- **Docs** are evolving: `networking.md`, `repository-structure.md`, `stacks.md`, `agent-queue-design.md`, and `router/askey-rtf8115vw.md` exist alongside this file.
+- **Docs** are evolving: `networking.md`, `repository-structure.md`, `stacks.md`, `agent-queue-design.md`, `install-list.md`, and `router/askey-rtf8115vw.md` exist alongside this file.
+- **`docs/future/`** contains pre-feasibility research for infrastructure projects (Gitea, queue, etc.). These are not implementation specs — they inform future decisions.
