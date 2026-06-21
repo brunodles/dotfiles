@@ -10,6 +10,6 @@ services:
       icon: https://cdn.jsdelivr.net/gh/IceWhaleTech/CasaOS-AppStore@main/Apps/Gitea/icon.png
     ports:
       - "3000:3000"
-      - "22:222"
+      - "222:22"
     volumes:
       - $HOME/data/gitea/data:/data
