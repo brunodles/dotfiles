@@ -24,6 +24,7 @@ echo "=== System packages ==="
 # ── Tailscale ─────────────────────────────────────────────────
 echo "=== Tailscale ==="
 "$install_path/_tailscale.sh"
+bash "$HOME/dotfiles/host/pi/tailscale/start.sh"
 
 # ── Pi-hole ───────────────────────────────────────────────────
 echo "=== Pi-hole ==="
@@ -42,6 +43,5 @@ echo ""
 echo "✅ Pi setup complete."
 echo ""
 echo "Next steps:"
-echo "  1. Authenticate Tailscale:  sudo tailscale up"
-echo "  2. Set Pi-hole web password:  pihole -a -p"
-echo "  3. Access admin panel:  http://$(hostname -I | awk '{print $1}')/admin"
+echo "  1. Set Pi-hole web password:  pihole -a -p"
+echo "  2. Access admin panel:  http://$(hostname -I | awk '{print $1}')/admin"
