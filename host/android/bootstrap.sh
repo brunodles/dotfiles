@@ -225,7 +225,28 @@ mkdir -p "$HOME/workspace"
 info "Workspace directory ready at ~/workspace"
 
 # ──────────────────────────────────────────────
-# 12. Create convenience aliases
+# 12. DNS — Unbound (commented: ready for redundant DNS)
+# ──────────────────────────────────────────────
+# Unbound provides a lightweight DNS forwarder with TLS fallback.
+# When Pi-hole is unreachable (power outage), Android resolves via Cloudflare.
+# See host/android/dns/unbound.conf for the full config.
+#
+# To enable:
+#   pkg install unbound
+#   cp "$HOST_DIR/dns/unbound.conf" "$PREFIX/etc/unbound/unbound.conf"
+#   mkdir -p "$PREFIX/var/service/unbound/log"
+#   # Create sv run script (similar to SSH section)
+#   sv-enable unbound
+#   sv up unbound
+#   # Update router DHCP: Secondary DNS = <android-ip>
+#
+# To test:
+#   dig @localhost google.com              # local resolution
+#   dig @<android-ip> google.com           # from another host
+#   unbound-control stats                  # cache hit ratio
+#
+# ──────────────────────────────────────────────
+# 13. Create convenience aliases
 # ──────────────────────────────────────────────
 if ! grep -q "source.*alias" "$HOME/.zshrc" 2>/dev/null; then
   cat >> "$HOME/.zshrc" << 'EOF'
