@@ -90,7 +90,7 @@ if $CREATE_PROXY; then
   else
     docker network create proxy
     echo "   ✅ proxy network created"
-  done
+  fi
 fi
 
 # ── Start stacks ──────────────────────────────────────────────
