@@ -1,15 +1,25 @@
 #!/usr/bin/env bash
-# configure.sh — Configure VPS: Dockge symlinks, Docker network, workspace
+# configure.sh — Configure VPS: stack symlinks, Docker network, workspace
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
 
-dockge_path="$HOST_DIR/dockge"
+REPO_ROOT="$(cd "$HOST_DIR/../.." && pwd)"
+STACKS_SRC="$REPO_ROOT/stacks"
 
-info "Setting up Dockge symlinks..."
-sudo mkdir -p /opt
-sudo ln -sf "$dockge_path/stacks" /opt/stacks
-sudo ln -sf "$dockge_path/dockge" /opt/self
-sudo chown "$USER" "$dockge_path/stacks"
-sudo chown "$USER" "$dockge_path/dockge"
+info "Setting up /dockge/ stack symlinks..."
+sudo mkdir -p /dockge/stacks
+
+# Link stacks this host needs
+for stack in dockge gitea hermes tailscale traefik; do
+  if [[ -d "$STACKS_SRC/$stack" ]]; then
+    sudo ln -sf "$STACKS_SRC/$stack" "/dockge/stacks/$stack"
+    info "  linked stacks/$stack"
+  else
+    warn "  stacks/$stack not found — skipping"
+  fi
+done
+
+# Ensure Dockge data dir exists
+sudo mkdir -p /dockge/stacks/dockge/data
 
 info "Creating Docker proxy network for Traefik..."
 if docker network ls --format '{{.Name}}' | grep -q '^proxy$'; then
