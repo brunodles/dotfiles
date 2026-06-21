@@ -1,0 +1,30 @@
+services:
+    metube:
+        environment:
+            YTDL_OPTIONS_FILE: /downloads/ytdl.config.json
+        hostname: metube
+        image: ghcr.io/alexta69/metube:latest
+          #ports:
+          # - 8081:8081
+        restart: unless-stopped
+        volumes:
+          - /mnt/backup_media/backups/youtube2:/downloads
+
+        networks:
+          - proxy
+        labels:
+          # Explicitly tells Traefik to expose this container
+          - "traefik.enable=true"
+          # Routes traffic targeting this domain
+          - "traefik.http.routers.metube.rule=Host(`metube.lab`) || Host(`metube.media.lab`)"
+          # Binds this route to the HTTP port
+          - "traefik.http.routers.metube.entrypoints=web"
+          # Container internal port
+          - "traefik.http.services.metube.loadbalancer.server.port=8081"
+
+networks:
+  proxy:
+    name: proxy
+    external: true
+    
+
