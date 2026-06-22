@@ -1,9 +1,9 @@
 #!/data/data/com.termux/files/usr/bin/bash
-# lib.sh — Shared functions for Android Termux bootstrap
+# _lib.sh — Shared functions for Android Termux bootstrap
 #
 # Source this file from install.sh, configure.sh, and links.sh:
 #   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-#   source "$SCRIPT_DIR/lib.sh"
+#   source "$SCRIPT_DIR/_lib.sh"
 
 set -euo pipefail
 

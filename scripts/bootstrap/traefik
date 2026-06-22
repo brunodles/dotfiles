@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Usage traefik
+# just setup the docker proxy network if needed
+
+source "$HOME/dotfiles/scripts/bootstrap/_log.source.sh"
+
+info "Creating Docker proxy network for Traefik..."
+if docker network ls --format '{{.Name}}' | grep -q '^proxy$'; then
+  info "  proxy network already exists"
+else
+  sudo docker network create proxy
+  info "  proxy network created"
+fi
+
+info "Media configure complete — run links.sh next"

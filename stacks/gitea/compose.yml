@@ -11,6 +11,7 @@ services:
       #    ports:
       #      - 3000:3000
       #      - 222:22
+      # Ports are linked through traefik
     volumes:
       - /home/bruno/data/gitea/data:/data
     networks:

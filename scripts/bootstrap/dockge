@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Usage _dockge.sh <stacks>
+# example _dockge.sh traefik gitea jellyfin metube syncthing
+
+# configure.sh — Configure media server: stack symlinks, Docker network
+source "$HOME/dotfiles/scripts/bootstrap/_log.source.sh"
+
+info "Setting up /dockge/ stack symlinks..."
+sudo mkdir -p "$DOCKGE_OUT_DIR"
+sudo chown $USER "$DOCKGE_OUT_DIR"
+mkdir "$STACKS_OUT_DIR"
+
+# Link dockge
+ln -sf "$STACKS_SRC/dockge" "$DOCKGE_DOCKGE_OUT_DIR"
+
+# Link stacks this host needs
+for stack in $@; do
+  if [[ -d "$STACKS_SRC/$stack" ]]; then
+    sudo ln -sf "$STACKS_SRC/$stack" "$STACKS_OUT_DIR/$stack"
+    info "  linked stacks/$stack"
+  else
+    warn "  stacks/$stack not found — skipping"
+  fi
+done
+
+# Ensure Dockge data dir exists
+mkdir -p /dockge/stacks/dockge/data
+

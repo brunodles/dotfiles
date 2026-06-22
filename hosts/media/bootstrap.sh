@@ -3,10 +3,9 @@
 set -euo pipefail
 
 cd "$(dirname "$0")/bootstrap"
+
 bash install.sh
 bash configure.sh
 bash links.sh
-echo ""
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "  ✅ Media server bootstrap complete"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+echo "Media server bootstrap complete"

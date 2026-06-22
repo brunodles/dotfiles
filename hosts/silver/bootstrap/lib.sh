@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# lib.sh — Shared functions for silver desktop bootstrap
+# _lib.sh — Shared functions for silver desktop bootstrap
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

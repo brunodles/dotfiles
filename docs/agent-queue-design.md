@@ -198,7 +198,7 @@ Why:
     "hosts/pi/bootstrap/install.sh",
     "hosts/pi/bootstrap/configure.sh",
     "hosts/pi/bootstrap/links.sh",
-    "hosts/pi/bootstrap/lib.sh"
+    "hosts/pi/bootstrap/_lib.sh"
   ],
   "depends_on": ["TASK-001", "TASK-002"],
   "blocks": ["TASK-007"],

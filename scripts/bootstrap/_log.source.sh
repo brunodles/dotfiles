@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
-# lib.sh — Shared functions for media server bootstrap
+# logging functions for script
+# This file should be imported on other scripts
+
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-HOST_DIR="$(dirname "$SCRIPT_DIR")"
-REPO_DIR="$(cd "$HOST_DIR/.." && pwd)"
-
+# Logging tool
 info()  { echo -e "${GREEN}[INFO]${NC} $*"; }
 warn()  { echo -e "${YELLOW}[WARN]${NC} $*"; }
 error() { echo -e "${RED}[ERROR]${NC} $*" >&2; }
