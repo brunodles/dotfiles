@@ -3,21 +3,23 @@
 # example _dockge.sh traefik gitea jellyfin metube syncthing
 
 # configure.sh — Configure media server: stack symlinks, Docker network
+source "$HOME/dotfiles/scripts/bootstrap/_env.source.sh"
 source "$HOME/dotfiles/scripts/bootstrap/_log.source.sh"
 
 info "Setting up /dockge/ stack symlinks..."
-sudo mkdir -p "$DOCKGE_OUT_DIR"
-sudo chown $USER "$DOCKGE_OUT_DIR"
-mkdir "$DOCKGE_OUT_DIR/data"
+mkdir -p "$DOCKGE_OUT_DIR"
+#sudo chown $USER "$DOCKGE_OUT_DIR"
+mkdir -p "$DOCKGE_OUT_DIR/data"
+mkdir -p "$STACKS_OUT_DIR"
 
 # Link dockge
-ln -sf "$STACKS_SRC/dockge" "$DOCKGE_DOCKGE_OUT_DIR"
-ln -sf "$STACKS_SRC/dockge" "$DOCKGE_DOCKGE_OUT_DIR"
+ln -sf "$STACKS_SRC_DIR/dockge" "$DOCKGE_DOCKGE_OUT_DIR"
+ln -sf "$STACKS_SRC_DIR/dockge" "$DOCKGE_DOCKGE_OUT_DIR"
 
 # Link stacks this host needs
 for stack in $@; do
-  if [[ -d "$STACKS_SRC/$stack" ]]; then
-    sudo ln -sf "$STACKS_SRC/$stack" "$STACKS_OUT_DIR/$stack"
+  if [[ -d "$STACKS_SRC_DIR/$stack" ]]; then
+    sudo ln -sf "$STACKS_SRC_DIR/$stack" "$STACKS_OUT_DIR/$stack"
     info "  linked stacks/$stack"
   else
     warn "  stacks/$stack not found — skipping"

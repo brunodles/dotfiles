@@ -5,7 +5,7 @@
 # This file should be imported on other scripts
 
 #HOME = /home/<user>
-REPO_DIR="$HOME/dotfiles/"
+REPO_DIR="$HOME/dotfiles"
 SCRIPT_DIR="$REPO_DIR/scripts"
 SCRIPT_BOOTSTRAP_DIR="$REPO_DIR/scripts/bootstrap"
 SCRIPT_INSTALL_DIR="$REPO_DIR/scripts/install"
