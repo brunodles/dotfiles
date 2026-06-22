@@ -5,7 +5,5 @@ set -euo pipefail
 cd "$(dirname "$0")/bootstrap"
 bash install.sh
 bash links.sh
-echo ""
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "  ✅ Silver desktop bootstrap complete"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+echo "Silver desktop bootstrap complete"

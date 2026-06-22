@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
-# links.sh — Symlink dotfiles for VPS
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
+# links.sh — Symlink dotfiles for media server
+source "$HOME/dotfiles/scripts/bootstrap/_log.source.sh"
+source "$HOME/dotfiles/scripts/bootstrap/_env.source.sh"
 
-link="$REPO_DIR/scripts/install/link"
-home_config="$HOME/.config"
-repo_config="$REPO_DIR/dotfiles"
+link="$SCRIPT_BOOTSTRAP_DIR/link"
+config_source="$REPO_DIR/dotfiles"
+config_out="$HOME/.config"
 
-mkdir -p "$home_config"
+mkdir -p "$config_out"
 
 info "Linking dotfiles..."
-bash "$link" "$repo_config/.vimrc" "$HOME/.vimrc"
-bash "$link" "$repo_config/tmux/tmux.conf" "$home_config/tmux/tmux.conf"
-bash "$link" "$repo_config/zsh" "$home_config/zsh"
-bash "$link" "$home_config/zsh/zshrc" "$HOME/.zshrc"
+"$link" "$config_source/.vimrc" "$HOME/.vimrc"
+"$link" "$config_source/tmux/tmux.conf" "$config_out/tmux/tmux.conf"
+"$link" "$config_source/zsh" "$config_out/zsh"
+"$link" "$config_out/zsh/zshrc" "$HOME/.zshrc"
 
-info "VPS links complete"
+info "Media links complete"

@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # install.sh — Install packages for silver desktop
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
+source "$HOME/dotfiles/scripts/bootstrap/_log.source.sh"
+source "$HOME/dotfiles/scripts/bootstrap/_env.source.sh"
 
-install_path="$REPO_DIR/install"
-install_ubuntu="$install_path/ubuntu"
+install_ubuntu="$SCRIPT_INSTALL_DIR/ubuntu"
 
 info "Running Ubuntu bootstrap..."
 "$install_ubuntu/bootstrap.sh"
@@ -15,7 +15,7 @@ info "Installing window manager..."
 "$install_ubuntu/hyperland.sh"
 
 info "Running shared installers..."
-bash "$install_path/_oh-my-zsh.sh"
-bash "$install_path/_tmux.post-install.sh"
+"$SCRIPT_INSTALL_DIR/_oh-my-zsh.sh"
+"$SCRIPT_INSTALL_DIR/_tmux.post-install.sh"
 
 info "Install complete — run configure.sh and links.sh"

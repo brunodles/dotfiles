@@ -13,9 +13,4 @@ else
 fi
 
 echo ""
-echo "Installing base packages..."
-brew install curl wget git vim neovim tmux zsh ripgrep fzf
-brew install --cask neovim ghostty font-jetbrains-mono-nerd-font
-
-echo ""
 echo "✅ Homebrew setup complete."

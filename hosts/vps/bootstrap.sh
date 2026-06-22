@@ -6,7 +6,4 @@ cd "$(dirname "$0")/bootstrap"
 bash install.sh
 bash configure.sh
 bash links.sh
-echo ""
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "  ✅ VPS bootstrap complete"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "VPS bootstrap complete"

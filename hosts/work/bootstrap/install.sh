@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 # install.sh — Install software for macOS work machine
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
+source "$HOME/dotfiles/scripts/bootstrap/_log.source.sh"
+source "$HOME/dotfiles/scripts/bootstrap/_env.source.sh"
 
 if [[ "$(uname)" != "Darwin" ]]; then
   error "This script is for macOS only."
   exit 1
 fi
 
-# ── 1. Xcode Command Line Tools ──────────────────────────────
+# Xcode
 info "Checking Xcode Command Line Tools..."
 if xcode-select -p &>/dev/null; then
   info "  Already installed"
@@ -21,11 +22,14 @@ else
   info "  Installed"
 fi
 
-# ── 2. Homebrew ──────────────────────────────────────────────
 info "Installing Homebrew..."
 bash "$REPO_DIR/install/_homebrew.sh"
+echo ""
+echo "Installing base packages..."
+brew install curl wget git vim neovim tmux zsh ripgrep fzf
+brew install --cask neovim ghostty font-jetbrains-mono-nerd-font
 
-# ── 3. Oh My Zsh ─────────────────────────────────────────────
+
 info "Installing Oh My Zsh..."
 bash "$REPO_DIR/install/_oh-my-zsh.sh"
 
