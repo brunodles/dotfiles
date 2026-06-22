@@ -8,9 +8,10 @@ source "$HOME/dotfiles/scripts/bootstrap/_log.source.sh"
 info "Setting up /dockge/ stack symlinks..."
 sudo mkdir -p "$DOCKGE_OUT_DIR"
 sudo chown $USER "$DOCKGE_OUT_DIR"
-mkdir "$STACKS_OUT_DIR"
+mkdir "$DOCKGE_OUT_DIR/data"
 
 # Link dockge
+ln -sf "$STACKS_SRC/dockge" "$DOCKGE_DOCKGE_OUT_DIR"
 ln -sf "$STACKS_SRC/dockge" "$DOCKGE_DOCKGE_OUT_DIR"
 
 # Link stacks this host needs
@@ -22,7 +23,3 @@ for stack in $@; do
     warn "  stacks/$stack not found — skipping"
   fi
 done
-
-# Ensure Dockge data dir exists
-mkdir -p /dockge/stacks/dockge/data
-

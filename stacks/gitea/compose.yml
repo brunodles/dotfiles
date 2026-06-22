@@ -13,7 +13,7 @@ services:
       #      - 222:22
       # Ports are linked through traefik
     volumes:
-      - /home/bruno/data/gitea/data:/data
+      - $HOME/data/gitea/data:/data
     networks:
       - proxy
     labels:

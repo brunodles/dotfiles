@@ -12,7 +12,7 @@ services:
       #      - "21027:21027"
     restart: unless-stopped
     volumes:
-      - $HOME/data/syncthing/config:/config
+      - $HOME/dockge/data/syncthing/config:/config
       - /mnt/backup_media/backups:/DATA
 
     networks:

@@ -6,7 +6,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
 #      - ./data:/app/data
       # Stacks Directory
-      - /dockge/stacks:/opt/stacks
+      - $HOME/dockge/stacks:/opt/stacks
     environment:
       # Tell Dockge where to find the stacks
       - DOCKGE_STACKS_DIR=/opt/stacks

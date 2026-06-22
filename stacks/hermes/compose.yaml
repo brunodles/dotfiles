@@ -2,6 +2,7 @@ services:
   hermes:
     image: nousresearch/hermes-agent:latest
     container_name: hermes
+    user: "${UID}:${GID}"
     restart: unless-stopped
     working_dir: /workspace
     command: gateway run
@@ -9,9 +10,8 @@ services:
       - "8642:8642"   # gateway API
       - "9119:9119"   # dashboard (only reached when HERMES_DASHBOARD=1)
     volumes:
-      - /home/ubuntu/stack/hermes/data:/opt/data
-      - /home/ubuntu/stack/hermes/ssh:/root/.ssh
-      - /home/ubuntu/workspace:/workspace
+      - $HOME/dockge/stack/hermes/data:/opt/data
+      - $HOME/dockge/stack/hermes/ssh:/root/.ssh
       - ./.gitconfig:/root/.gitconfig
     environment:
       - HERMES_DASHBOARD=1

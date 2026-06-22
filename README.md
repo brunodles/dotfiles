@@ -10,7 +10,7 @@ This repo contains the whole setup for each one of my pcs and servers.
 This means the Physical and virtual infrastructures are documented.
 Each dir have its own purpose, and they might be reused on different places.
 
-| Dir name          | content                                                                         |
+| Repo Dir name     | Content                                                                         |
 |:------------------|---------------------------------------------------------------------------------|
 | agents            | contains files relevant for Ai Agents                                           |
 | agents/skills     | shared skills to use with any agent                                             |
@@ -20,6 +20,23 @@ Each dir have its own purpose, and they might be reused on different places.
 | scripts/install   | install scripts, might depend on os/platfor/runtime                             |
 | scripts/bootstrap | scripts to start some process, preparation scripts                              |
 | stacks            | container configuration, runs on some hosts                                     |
+
+Stack running structure
+```
+/home/<username>/
+* dockge
+  * dockge # linked configuration
+  * stack/ # each dir is linked individually depending on the server
+    * gitea
+    * hermes
+    * jellyfin
+    * metube
+    * syncthing
+    * traefik
+    * ... others
+  data/
+    * real data / state persisted outside the container
+```
 
 # Cloning
 
