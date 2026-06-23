@@ -28,6 +28,9 @@
 ## jekyll
 
 - [x] compose.yaml
+- [x] _config.yml + layouts
+- [x] repos.txt (1 repo per line)
+- [x] sync-repos.sh (cron script)
 
 ## static
 

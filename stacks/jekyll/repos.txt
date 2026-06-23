@@ -1,0 +1,7 @@
+# Jekyll site repositories
+# One git URL per line. Blank lines and # comments are ignored.
+# The repo name becomes the subdirectory under site/.
+#
+# Examples:
+# https://github.com/brunodles/blog.git
+# git@github.com:brunodles/notes.git
