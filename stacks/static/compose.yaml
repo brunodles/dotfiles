@@ -1,0 +1,20 @@
+services:
+  static:
+    image: nginx:alpine
+    container_name: static
+    hostname: static
+    volumes:
+      - ./html:/usr/share/nginx/html:ro
+    restart: unless-stopped
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.static.rule=Host(`static.lab`)"
+      - "traefik.http.routers.static.entrypoints=web"
+      - "traefik.http.services.static.loadbalancer.server.port=80"
+
+networks:
+  proxy:
+    name: proxy
+    external: true

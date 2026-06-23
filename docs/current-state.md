@@ -92,6 +92,12 @@ dotfiles/
 │       └── zshrc
 │
 ├── stacks/                    # Docker stacks — canonical, reusable per host
+│   ├── calibre/               # Ebook library web UI (linuxserver/calibre-web)
+│   │   ├── compose.yaml
+│   │   ├── config/
+│   │   │   └── .gitkeep
+│   │   └── books/
+│   │       └── .gitkeep
 │   ├── dockge/                # Dockge UI (louislam/dockge:1)
 │   │   ├── .gitignore         # ignores data/*
 │   │   └── compose.yaml       # mounts ../:/opt/stacks, Traefik-labeled
@@ -104,6 +110,10 @@ dotfiles/
 │   ├── hermes/                # Hermes Agent (nousresearch/hermes-agent:latest)
 │   │   ├── .gitconfig
 │   │   └── compose.yaml
+│   ├── jekyll/                # Jekyll static site server (jekyll/jekyll:latest)
+│   │   ├── compose.yaml
+│   │   └── site/
+│   │       └── .gitkeep
 │   ├── jellyfin/              # Media server (linuxserver/jellyfin:10.10.7)
 │   │   └── compose.yml
 │   ├── metube/                # YouTube downloader (ghcr.io/alexta69/metube)
@@ -112,6 +122,10 @@ dotfiles/
 │   │   └── docker-compose.yml
 │   ├── qbittorrent/           # Torrent client (hotio/qbittorrent:release-5.0.1)
 │   │   └── docker-compose.yml
+│   ├── static/                # Static file server (nginx:alpine)
+│   │   ├── compose.yaml
+│   │   └── html/
+│   │       └── .gitkeep
 │   ├── syncthing/             # File sync (linuxserver/syncthing:1.29.2)
 │   │   └── compose.yml
 │   ├── tailscale/             # Tailscale sidecar (tailscale/tailscale)

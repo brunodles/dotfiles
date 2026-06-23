@@ -2,25 +2,37 @@
 
 ## traefik
 
-- [ ] compose.yaml
-- [ ] dynamic config
-- [ ] acme
+- [x] compose.yaml
+- [x] dynamic config
+- [x] acme
 
 ## tailscale
 
-- [ ] compose.yaml
-- [ ] auth
+- [x] compose.yaml
+- [x] auth (via .env)
 
 ## hermes
 
-- [ ] compose.yaml
-- [ ] .gitconfig
+- [x] compose.yaml
+- [x] .gitconfig
 
 ## gitea
 
-- [ ] compose.yaml
-- [ ] .env.example
+- [x] compose.yaml
+- [x] .env.example
+
+## calibre
+
+- [x] compose.yaml
+
+## jekyll
+
+- [x] compose.yaml
+
+## static
+
+- [x] compose.yaml
 
 ## Dockge
 
-- [ ] compose.yaml
+- [x] compose.yaml
