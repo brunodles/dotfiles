@@ -7,6 +7,7 @@ link="$SCRIPT_BOOTSTRAP_DIR/link"
 config_source="$REPO_DIR/dotfiles"
 home_local="$HOME/.local"
 home_config="$HOME/.config"
+host_silver="$REPO_DIR/hosts/silver"
 
 mkdir -p "$home_config" "$home_local/bin" "$home_local/fbin"
 
@@ -23,7 +24,7 @@ info "Linking dotfiles..."
 "$link" "$home_config/zsh/zshrc" "$HOME/.zshrc"
 
 info "Copying local scripts..."
-cp -r "$HOST_DIR/home/.local/bin/"* "$home_local/bin/" 2>/dev/null || true
-cp -r "$HOST_DIR/home/.local/fbin/"* "$home_local/fbin/" 2>/dev/null || true
+cp -r "$host_silver/home/.local/bin/"* "$home_local/bin/" 2>/dev/null || true
+cp -r "$host_silver/home/.local/fbin/"* "$home_local/fbin/" 2>/dev/null || true
 
 info "Silver links complete"
