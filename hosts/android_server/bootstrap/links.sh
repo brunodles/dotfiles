@@ -27,6 +27,23 @@ bash "$link" "$repo_config/tmux/tmux.conf" "$home_config/tmux/tmux.conf"
 bash "$link" "$repo_config/zsh" "$home_config/zsh"
 bash "$link" "$home_config/zsh/zshrc" "$HOME/.zshrc"
 
+# ──────────────────────────────────────────────
+# 8. Link runit services
+# ──────────────────────────────────────────────
+SVDIR="$PREFIX/var/service"
+REPO_SVDIR="$REPO_DIR/hosts/android/var/service"
+
+if [[ -d "$REPO_SVDIR/ttsd" ]]; then
+  info "Linking ttsd service..."
+  mkdir -p "$SVDIR"
+  bash "$link" "$REPO_SVDIR/ttsd" "$SVDIR/ttsd"
+
+  if command -v sv-enable &>/dev/null; then
+    sv-enable ttsd 2>/dev/null || true
+    sv up ttsd 2>/dev/null || true
+  fi
+fi
+
 # ── Done ──
 echo ""
 info "═══════════════════════════════════════════"

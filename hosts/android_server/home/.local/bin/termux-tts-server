@@ -1,0 +1,376 @@
+#!/data/data/com.termux/files/usr/bin/python3
+"""termux-tts-server — HTTP server wrapping termux-tts-speak
+
+Usage:
+  termux-tts-server [--port PORT] [--foreground]
+
+Listens on a random high port (persisted to ~/.termux/ttsd-port) and
+speaks text sent via POST /tts using the Android TTS engine.
+
+Only accepts requests from the local subnet (auto-detected).
+"""
+
+import json
+import logging
+import os
+import random
+import shlex
+import signal
+import socket
+import struct
+import subprocess
+import sys
+import ipaddress
+from http.server import HTTPServer, BaseHTTPRequestHandler
+from typing import Optional
+
+logger = logging.getLogger("ttsd")
+
+# ── Paths ────────────────────────────────────────────────────────────
+CONFIG_DIR = os.path.expanduser("~/.termux")
+PORT_FILE = os.path.join(CONFIG_DIR, "ttsd-port")
+TTS_CMD = "termux-tts-speak"
+
+# ── Subnet auto-detection ─────────────────────────────────────────────
+
+
+def _get_default_route() -> Optional[str]:
+    """Get the default route interface from `ip route`."""
+    try:
+        out = subprocess.check_output(
+            ["ip", "route"], text=True, stderr=subprocess.DEVNULL
+        )
+        for line in out.splitlines():
+            parts = line.split()
+            if parts[0] == "default":
+                for i, p in enumerate(parts):
+                    if p == "dev" and i + 1 < len(parts):
+                        return parts[i + 1]
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        pass
+    return None
+
+
+def _iface_ip_and_mask(iface: str):
+    """Return (ip, netmask_length) for a given interface from `ip addr`."""
+    try:
+        out = subprocess.check_output(
+            ["ip", "addr", "show", iface], text=True, stderr=subprocess.DEVNULL
+        )
+        for line in out.splitlines():
+            stripped = line.strip()
+            if stripped.startswith("inet "):
+                # e.g. "inet 192.168.1.100/24 brd 192.168.1.255 ..."
+                parts = stripped.split()
+                cidr = parts[1]  # "192.168.1.100/24"
+                ip_str, prefix = cidr.split("/")
+                return ip_str, int(prefix)
+    except (subprocess.CalledProcessError, FileNotFoundError, ValueError):
+        pass
+    return None, None
+
+
+def detect_subnet() -> str:
+    """Detect the local subnet CIDR from the default route interface.
+
+    Falls back to "127.0.0.0/8" if detection fails.
+    """
+    iface = _get_default_route()
+    if not iface:
+        logger.warning("No default route found, falling back to loopback")
+        return "127.0.0.0/8"
+
+    ip_str, prefix = _iface_ip_and_mask(iface)
+    if not ip_str:
+        logger.warning("Could not detect IP on %s, falling back to loopback", iface)
+        return "127.0.0.0/8"
+
+    ip_obj = ipaddress.ip_address(ip_str)
+    net = ipaddress.ip_network(f"{ip_str}/{prefix}", strict=False)
+    logger.info("Detected subnet: %s via %s (%s/%s)", net, iface, ip_str, prefix)
+    return str(net)
+
+
+# ── Port management ───────────────────────────────────────────────────
+
+
+def _pick_random_port() -> int:
+    """Pick a random high port (32768–60999)."""
+    return random.randint(32768, 60999)
+
+
+def get_or_create_port() -> int:
+    """Return the persisted port, or generate + persist a new one."""
+    os.makedirs(CONFIG_DIR, exist_ok=True)
+    if os.path.isfile(PORT_FILE):
+        try:
+            with open(PORT_FILE) as f:
+                port = int(f.read().strip())
+                if 1024 < port < 65535:
+                    return port
+        except (ValueError, OSError):
+            pass
+
+    port = _pick_random_port()
+    with open(PORT_FILE, "w") as f:
+        f.write(str(port))
+    logger.info("Persisted port %s to %s", port, PORT_FILE)
+    return port
+
+
+# ── TTS invocation ────────────────────────────────────────────────────
+
+
+def build_tts_args(body: dict) -> list[str]:
+    """Build the argument list for termux-tts-speak from the JSON body."""
+    args = [TTS_CMD]
+
+    param_map = {
+        "engine": "-e",
+        "lang": "-l",
+        "region": "-n",
+        "variant": "-v",
+        "stream": "-s",
+    }
+
+    for key, flag in param_map.items():
+        val = body.get(key)
+        if val is not None:
+            args.extend([flag, shlex.quote(str(val))])
+
+    pitch = body.get("pitch")
+    if pitch is not None:
+        args.extend(["-p", str(pitch)])
+
+    rate = body.get("rate")
+    if rate is not None:
+        args.extend(["-r", str(rate)])
+
+    return args
+
+
+def speak(body: dict) -> tuple[bool, str]:
+    """Call termux-tts-speak with parameters from *body*.
+
+    Returns (success, message).
+    """
+    text = body.get("text", "").strip()
+    if not text:
+        return False, "Missing required field: text"
+
+    args = build_tts_args(body)
+
+    logger.info("Speaking (%d chars, args=%s)", len(text), args[1:])
+
+    try:
+        proc = subprocess.run(
+            args,
+            input=text,
+            text=True,
+            capture_output=True,
+            timeout=120,
+        )
+        if proc.returncode == 0:
+            return True, text
+        else:
+            stderr = proc.stderr.strip() or f"exit code {proc.returncode}"
+            return False, f"TTS engine error: {stderr}"
+    except subprocess.TimeoutExpired:
+        return False, "TTS engine timed out"
+    except FileNotFoundError:
+        return False, f"{TTS_CMD} not found — is termux-api installed?"
+    except OSError as exc:
+        return False, f"TTS invocation failed: {exc}"
+
+
+# ── IP allowlist ──────────────────────────────────────────────────────
+
+
+class IPAllowList:
+    """Check whether a client IP is allowed."""
+
+    def __init__(self, subnet_cidr: str):
+        self._net = ipaddress.ip_network(subnet_cidr, strict=False)
+
+    def allows(self, ip: str) -> bool:
+        try:
+            addr = ipaddress.ip_address(ip)
+            return addr in self._net
+        except ValueError:
+            return False
+
+
+# ── HTTP Handler ──────────────────────────────────────────────────────
+
+
+class TTSHandler(BaseHTTPRequestHandler):
+    """HTTP request handler for the TTS server."""
+
+    # Set by the server wrapper
+    allowlist: IPAllowList = None  # type: ignore[assignment]
+
+    # Silence default stderr logging
+    def log_message(self, fmt, *args):
+        logger.info("http: %s - %s", self.client_address[0], fmt % args)
+
+    def _send_json(self, status: int, data: dict):
+        body = json.dumps(data, ensure_ascii=False).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _check_allowed(self) -> bool:
+        client_ip = self.client_address[0]
+        if not self.allowlist.allows(client_ip):
+            logger.warning("Blocked request from %s (outside subnet)", client_ip)
+            self._send_json(403, {"error": "Forbidden: client IP not in local subnet"})
+            return False
+        return True
+
+    # ── Routes ────────────────────────────────────────────────────
+
+    def do_POST(self):
+        if self.path != "/tts":
+            self._send_json(404, {"error": "Not found"})
+            return
+
+        if not self._check_allowed():
+            return
+
+        length = int(self.headers.get("Content-Length", 0))
+        if length == 0:
+            self._send_json(400, {"error": "Empty request body"})
+            return
+
+        try:
+            body = json.loads(self.rfile.read(length))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            self._send_json(400, {"error": "Invalid JSON"})
+            return
+
+        if not isinstance(body, dict):
+            self._send_json(400, {"error": "Request body must be a JSON object"})
+            return
+
+        success, msg = speak(body)
+        if success:
+            self._send_json(200, {"status": "ok", "text": msg})
+        else:
+            self._send_json(500, {"error": msg})
+
+    def do_GET(self):
+        if self.path == "/health":
+            if not self._check_allowed():
+                return
+            self._send_json(200, {"status": "running"})
+            return
+
+        if self.path == "/":
+            self._send_json(200, {
+                "service": "termux-tts-server",
+                "endpoints": {
+                    "POST /tts": "Speak text (JSON body with 'text' field)",
+                    "GET /health": "Health check",
+                },
+            })
+            return
+
+        self._send_json(404, {"error": "Not found"})
+
+
+# ── Server wrapper ────────────────────────────────────────────────────
+
+
+class TTSD:
+    """Thin wrapper around HTTPServer that handles SIGTERM gracefully."""
+
+    def __init__(self, host: str, port: int, subnet_cidr: str):
+        self._host = host
+        self._port = port
+        self._subnet = subnet_cidr
+
+        # Inject the allowlist into the handler class
+        TTSHandler.allowlist = IPAllowList(subnet_cidr)
+
+        self._server = HTTPServer((host, port), TTSHandler)
+
+    @property
+    def port(self) -> int:
+        return self._server.server_port
+
+    def run(self):
+        logger.info(
+            "Starting TTSD on %s:%s  (subnet: %s)",
+            self._host, self._port, self._subnet,
+        )
+        self._server.serve_forever()
+
+    def shutdown(self):
+        logger.info("Shutting down...")
+        self._server.shutdown()
+
+
+def main():
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="HTTP server wrapping termux-tts-speak"
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=None,
+        help="Port to listen on (default: random, persisted)",
+    )
+    parser.add_argument(
+        "--foreground",
+        action="store_true",
+        help="Run in foreground (don't daemonize)",
+    )
+    parser.add_argument(
+        "--bind",
+        default="0.0.0.0",
+        help="Address to bind (default: 0.0.0.0)",
+    )
+    parser.add_argument(
+        "--subnet",
+        default=None,
+        help="CIDR subnet to allow (default: auto-detect)",
+    )
+    parser.add_argument(
+        "--verbose",
+        "-v",
+        action="store_true",
+        help="Enable debug logging",
+    )
+    args = parser.parse_args()
+
+    logging.basicConfig(
+        level=logging.DEBUG if args.verbose else logging.INFO,
+        format="%(asctime)s  %(levelname)s  %(message)s",
+        datefmt="%H:%M:%S",
+    )
+
+    subnet = args.subnet or detect_subnet()
+    port = args.port or get_or_create_port()
+
+    server = TTSD(host=args.bind, port=port, subnet_cidr=subnet)
+
+    # Graceful shutdown on SIGTERM
+    def _handle_sigterm(signum, frame):
+        server.shutdown()
+
+    signal.signal(signal.SIGTERM, _handle_sigterm)
+
+    try:
+        server.run()
+    except KeyboardInterrupt:
+        server.shutdown()
+
+    logger.info("Exited cleanly")
+
+
+if __name__ == "__main__":
+    main()
