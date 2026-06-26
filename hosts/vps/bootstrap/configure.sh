@@ -10,7 +10,7 @@ info "Setting up /dockge/ stack symlinks..."
 sudo mkdir -p /dockge/stacks
 
 # Link stacks this host needs
-for stack in calibre dockge gitea hermes jekyll static tailscale traefik; do
+for stack in calibre dockge gitea_vps hermes jekyll static tailscale traefik; do
   if [[ -d "$STACKS_SRC/$stack" ]]; then
     sudo ln -sf "$STACKS_SRC/$stack" "/dockge/stacks/$stack"
     info "  linked stacks/$stack"
