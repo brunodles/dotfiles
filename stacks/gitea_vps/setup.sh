@@ -7,8 +7,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 COMPOSE="docker compose -f $SCRIPT_DIR/compose.yml"
 GITEA="$COMPOSE exec -T gitea gitea"
 BASE_URL="http://gitea:3000"
-HERMES_HOME="${HERMES_HOME:-/opt/data}"
-HERMES_TOKEN_FILE="$HERMES_HOME/.gitea-token"
+
+# DOCKGE_DATA_DIR vem do .env do stack (ou da Dockge env)
+DOCKGE_DATA="${DOCKGE_DATA_DIR:-/opt/dockge_data}"
+HERMES_DATA_DIR="$DOCKGE_DATA/hermes"
+HERMES_TOKEN_FILE="$HERMES_DATA_DIR/.gitea-token"
 
 # ── Colors ──────────────────────────────────────────────────────────────
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
@@ -175,7 +178,7 @@ fi
 if [[ -z "$HERMES_TOKEN" ]]; then
   warn "Could not generate Hermes PAT — create one manually at /user/settings/applications"
 else
-  if [[ -d "$HERMES_HOME" ]]; then
+  if [[ -d "$HERMES_DATA_DIR" ]]; then
     echo "$HERMES_TOKEN" > "$HERMES_TOKEN_FILE"
     chmod 600 "$HERMES_TOKEN_FILE"
     info "Hermes token saved to $HERMES_TOKEN_FILE"
