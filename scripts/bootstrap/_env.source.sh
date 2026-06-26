@@ -10,14 +10,15 @@ export REPO_DIR="$HOME/dotfiles"
 export SCRIPT_DIR="$REPO_DIR/scripts"
 export SCRIPT_BOOTSTRAP_DIR="$REPO_DIR/scripts/bootstrap"
 export SCRIPT_INSTALL_DIR="$REPO_DIR/scripts/install"
-export STACKS_SRC_DIR="$REPO_DIR/stacks"
+export DOCKGE_STACKS_SRC_DIR="$REPO_DIR/stacks"
 
-export DOCKGE_OUT_DIR="/dockge"
-export DOCKGE_DOCKGE_OUT_DIR="$DOCKGE_OUT_DIR/dockge"
-export STACKS_OUT_DIR="$DOCKGE_OUT_DIR/stacks"
+export DOCKGE_DIR="/dockge"
+export DOCKGE_DOCKGE_DIR="$DOCKGE_DIR/dockge"
+export DOCKGE_STACKS_DIR="$DOCKGE_DIR/stacks"
+export DOCKGE_DATA_DIR="$DOCKGE_DIR/data"
 
 # Make their dir
-sudo mkdir -p $DOCKGE_OUT_DIR
-sudo chown $USER $DOCKGE_OUT_DIR
-mkdir -p $DOCKGE_DOCKGE_OUT_DIR
-mkdir -p $STACKS_OUT_DIR
+sudo mkdir -p $DOCKGE_DIR
+sudo chown $USER $DOCKGE_DIR
+mkdir -p $DOCKGE_DOCKGE_DIR
+mkdir -p $DOCKGE_STACKS_DIR

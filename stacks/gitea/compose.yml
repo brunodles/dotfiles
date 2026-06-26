@@ -13,14 +13,14 @@ services:
       #      - 222:22
       # Ports are linked through traefik
     volumes:
-      - $HOME/data/gitea/data:/data
+      - $DOCKGE_DATA_DIR/gitea/data:/data
     networks:
       - proxy
     labels:
       # Explicitly tells Traefik to expose this container
       - traefik.enable=true 
       # Routes traffic targeting this domain
-      - traefik.http.routers.gitea.rule=Host(`gitea.media.lab`) 
+      - traefik.http.routers.gitea.rule=Host(`gitea.lab`) || Host(`gitea.media.lab`) || Host(`gitea.vps`)
       # Binds this route to the HTTP port
       - traefik.http.routers.gitea.entrypoints=web 
       # Container internal port

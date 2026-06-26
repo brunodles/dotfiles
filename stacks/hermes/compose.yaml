@@ -9,8 +9,8 @@ services:
       - "8642:8642"   # gateway API
       - "9119:9119"   # dashboard (only reached when HERMES_DASHBOARD=1)
     volumes:
-      - $HOME/dockge/data/hermes/data:/opt/data
-      - $HOME/dockge/data/hermes/ssh:/root/.ssh
+      - $DOCKGE_DATA_DIR/hermes/data:/opt/data
+      - $DOCKGE_DATA_DIR/hermes/ssh:/root/.ssh
       - ./.gitconfig:/root/.gitconfig
     environment:
       - HERMES_DASHBOARD=1

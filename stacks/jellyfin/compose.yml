@@ -20,7 +20,7 @@ services:
       #- "1900:1900"
     restart: unless-stopped
     volumes:
-      - $HOME/data/jellyfin/config:/config
+      - $DOCKGE_DATA_DIR//jellyfin/config:/config
       - /opt/vc/lib:/opt/vc/lib
       - /DATA/Media:/Media
       - /mnt/backup_media/backups:/DataHd
