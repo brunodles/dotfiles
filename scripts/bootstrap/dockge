@@ -8,18 +8,14 @@ source "$HOME/dotfiles/scripts/bootstrap/_log.source.sh"
 
 info "Setting up /dockge/ stack symlinks..."
 mkdir -p "$DOCKGE_DIR"
-#sudo chown $USER "$DOCKGE_DIR"
+sudo chown $USER "$DOCKGE_DIR"
 mkdir -p "$DOCKGE_DIR/data"
 mkdir -p "$DOCKGE_STACKS_DIR"
-
-# Link dockge
-ln -sf "$DOCKGE_STACKS_SRC_DIR/dockge" "$DOCKGE_DOCKGE_DIR"
-ln -sf "$DOCKGE_STACKS_SRC_DIR/dockge" "$DOCKGE_DOCKGE_DIR"
 
 # Link stacks this host needs
 for stack in $@; do
   if [[ -d "$DOCKGE_STACKS_SRC_DIR/$stack" ]]; then
-    sudo ln -sf "$DOCKGE_STACKS_SRC_DIR/$stack" "$DOCKGE_STACKS_DIR/$stack"
+    ln -sf "$DOCKGE_STACKS_SRC_DIR/$stack" "$DOCKGE_STACKS_DIR/"
     info "  linked stacks/$stack"
   else
     warn "  stacks/$stack not found — skipping"
