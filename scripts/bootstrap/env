@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+# env — Install environment variables system-wide
+# Reads variables from _env.source.sh and writes them to:
+#   /etc/environment        (PAM-level, absolute paths only)
+#   /etc/profile.d/dockge.sh (login shell, all vars with expansion)
+set -euo pipefail
+
+BOOTSTRAP_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "$BOOTSTRAP_DIR/_log.source.sh"
+source "$BOOTSTRAP_DIR/_env.source.sh"
+
+ENV_FILE="/etc/environment"
+PROFILE_DIR="/etc/profile.d"
+PROFILE_FILE="$PROFILE_DIR/dockge.sh"
+
+# -------------------------------------------------------------------
+# Generate /etc/environment content (absolute paths only, no expansion)
+# -------------------------------------------------------------------
+gen_environment() {
+  cat <<'EOF'
+# Dockge paths (managed by dotfiles/scripts/bootstrap/env)
+DOCKGE_DIR=/dockge
+DOCKGE_DOCKGE_DIR=/dockge/dockge
+DOCKGE_STACKS_DIR=/dockge/stacks
+DOCKGE_DATA_DIR=/dockge/data
+EOF
+}
+
+# -------------------------------------------------------------------
+# Generate /etc/profile.d/dockge.sh content (all vars, with expansion)
+# -------------------------------------------------------------------
+gen_profile() {
+  cat <<'PROFILE_EOF'
+# Dockge paths (managed by dotfiles/scripts/bootstrap/env)
+export DOCKGE_DIR="/dockge"
+export DOCKGE_DOCKGE_DIR="$DOCKGE_DIR/dockge"
+export DOCKGE_STACKS_DIR="$DOCKGE_DIR/stacks"
+export DOCKGE_DATA_DIR="$DOCKGE_DIR/data"
+
+# Repo paths — expanded per-user at login time
+export REPO_DIR="$HOME/dotfiles"
+export SCRIPT_DIR="$REPO_DIR/scripts"
+export SCRIPT_BOOTSTRAP_DIR="$REPO_DIR/scripts/bootstrap"
+export SCRIPT_INSTALL_DIR="$REPO_DIR/scripts/install"
+export DOCKGE_STACKS_SRC_DIR="$REPO_DIR/stacks"
+PROFILE_EOF
+}
+
+# -------------------------------------------------------------------
+# Atomic install: write to temp, diff, sudo cp if changed
+# -------------------------------------------------------------------
+install_file() {
+  local content="$1"
+  local target="$2"
+  local tmp
+  tmp=$(mktemp)
+
+  printf '%s\n' "$content" > "$tmp"
+
+  if [[ -f "$target" ]] && diff -q "$tmp" "$target" &>/dev/null; then
+    rm -f "$tmp"
+    return 0  # unchanged
+  fi
+
+  sudo cp "$tmp" "$target"
+  sudo chmod 644 "$target"
+  rm -f "$tmp"
+  return 1  # updated
+}
+
+# -------------------------------------------------------------------
+# Main
+# -------------------------------------------------------------------
+ENV_CONTENT=$(gen_environment)
+PROFILE_CONTENT=$(gen_profile)
+UPDATED=false
+
+if install_file "$ENV_CONTENT" "$ENV_FILE"; then
+  info "/etc/environment — up to date"
+else
+  info "/etc/environment — updated"
+  UPDATED=true
+fi
+
+sudo mkdir -p "$PROFILE_DIR"
+
+if install_file "$PROFILE_CONTENT" "$PROFILE_FILE"; then
+  info "/etc/profile.d/dockge.sh — up to date"
+else
+  info "/etc/profile.d/dockge.sh — updated"
+  UPDATED=true
+fi
+
+if $UPDATED; then
+  echo
+  info "Environment files updated."
+  info "Log out and back in (or exec bash -l) for profile.d changes to take effect."
+else
+  info "All environment files already current."
+fi

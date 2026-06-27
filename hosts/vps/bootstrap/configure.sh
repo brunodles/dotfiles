@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
-# configure.sh — Configure VPS: stack symlinks, Docker network, workspace
+# configure.sh — Configure VPS: env, stack symlinks, Docker network, workspace
 source "$HOME/dotfiles/scripts/bootstrap/_log.source.sh"
 source "$HOME/dotfiles/scripts/bootstrap/_env.source.sh"
 
 REPO_ROOT="$(cd "$HOST_DIR/../.." && pwd)"
 STACKS_SRC="$REPO_ROOT/stacks"
+
+# Ensure system-wide env vars for docker compose
+"$SCRIPT_BOOTSTRAP_DIR/env"
 
 info "Setting up /dockge/ stack symlinks..."
 sudo mkdir -p /dockge/stacks
