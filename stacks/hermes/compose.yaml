@@ -5,6 +5,7 @@ services:
     restart: unless-stopped
     working_dir: /workspace
     command: gateway run
+    user: "${UID}:${GID}"
     ports:
       - "8642:8642"   # gateway API
       - "9119:9119"   # dashboard (only reached when HERMES_DASHBOARD=1)
@@ -18,9 +19,27 @@ services:
       # - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       # - OPENAI_API_KEY=${OPENAI_API_KEY}
       # - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - HERMES_UID=${UID:-1000}
+      - HERMES_GID=${GID:-1000}
     deploy:
       resources:
         limits:
           memory: 4G
           cpus: "2.0"
-  
+    networks:
+      - proxy
+    labels:
+      # Explicitly tells Traefik to expose this container
+      - traefik.enable=false
+      # Routes traffic targeting this domain
+      - traefik.http.routers.gitea.rule=Host(`hermes.lab`) || Host(`hermes.vps`)
+      # Binds this route to the HTTP port
+      - traefik.http.routers.gitea.entrypoints=web
+      # Container internal port
+      - traefik.http.services.gitea.loadbalancer.server.port=9119
+
+networks:
+  proxy:
+    name: proxy
+    external: true
+
