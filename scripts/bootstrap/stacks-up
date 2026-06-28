@@ -39,6 +39,9 @@ info "  Docker is running"
 # ── Proxy network (optional) ───────────────────────────────────
 "$BOOTSTRAP_DIR/traefik"
 
+# ── Docs infrastructure (network + volume) ────────────────────
+"$BOOTSTRAP_DIR/docs"
+
 # ── Helpers ────────────────────────────────────────────────────
 start_compose() {
   local dir="$1"
