@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Usage _dockge.sh <stacks>
 # example _dockge.sh traefik gitea jellyfin metube syncthing
+# Each <stack> is a sub-folder on stacks folder, containing the compose.yml and the configuration for the stack.
 
 # configure.sh — Configure media server: stack symlinks, Docker network
 source "$HOME/dotfiles/scripts/bootstrap/_env.source.sh"
@@ -14,9 +15,7 @@ mkdir -p "$DOCKGE_STACKS_DIR"
 mkdir -p "$DOCKGE_STACKS_DIR"
 
 # Link dockge dir
-if [[ -d "$DOCKGE_DOCKGE_DIR" ]]; then
-  ln -sf "$DOCKGE_STACKS_SRC_DIR/dockge" "$DOCKGE_DIR/"
-fi
+ln -sf "$DOCKGE_STACKS_SRC_DIR/dockge" "$DOCKGE_DIR/"
 
 # Link stacks this host needs
 for stack in $@; do
