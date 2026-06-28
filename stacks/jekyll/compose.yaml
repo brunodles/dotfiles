@@ -6,16 +6,25 @@ services:
     command: jekyll serve --watch --force_polling --host 0.0.0.0 --port 4000
     volumes:
       - ./site:/srv/jekyll
+      - docs_data:/srv/jekyll/docs
     restart: unless-stopped
     networks:
       - proxy
+      - docs
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.jekyll.rule=Host(`jekyll.lab`)"
       - "traefik.http.routers.jekyll.entrypoints=web"
       - "traefik.http.services.jekyll.loadbalancer.server.port=4000"
 
+volumes:
+  docs_data:
+    external: true
+
 networks:
   proxy:
     name: proxy
+    external: true
+  docs:
+    name: docs
     external: true
