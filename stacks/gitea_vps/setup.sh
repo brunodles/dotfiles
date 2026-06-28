@@ -216,8 +216,31 @@ except Exception:
 
 create_repo "dotfiles" "Bruno's dotfiles — mirrored from GitHub"
 create_repo "hermes-plans" "Plans, PRDs, and task tracking for Hermes agent"
+create_repo "docs" "Docstore — knowledge base served by Jekyll + Calibre"
 
-# ── 6. Summary ───────────────────────────────────────────────────────────
+# ── 7. Docs webhook ──────────────────────────────────────────────────
+
+WEBHOOK_SECRET="${DOCS_WEBHOOK_SECRET:-}"
+if [[ -n "$WEBHOOK_SECRET" && -n "$HERMES_TOKEN" ]]; then
+  info "Creating docs webhook (pointing to docs-sync)..."
+  api_call POST "/api/v1/repos/hermes/docs/hooks" "$HERMES_TOKEN" \
+    "$(cat <<JSON
+{
+  "type": "gitea",
+  "config": {
+    "url": "http://docs-sync:8080/hook?secret=$WEBHOOK_SECRET",
+    "content_type": "json"
+  },
+  "events": ["push"],
+  "active": true
+}
+JSON
+  )" 2>/dev/null && info "  docs webhook created" || warn "  failed to create webhook"
+else
+  warn "WEBHOOK_SECRET not set — skipping docs webhook (create manually in Gitea UI)"
+fi
+
+# ── 8. Summary ───────────────────────────────────────────────────────────
 
 echo ""
 echo "═══════════════════════════════════════════════════"
@@ -226,12 +249,13 @@ echo ""
 echo "  Admin: $ADMIN_USER / $ADMIN_EMAIL"
 echo "  Hermes: hermes / hermes@vps"
 echo "  Token:  ${HERMES_TOKEN:+$HERMES_TOKEN_FILE}"
-echo "  Repos:  dotfiles, hermes-plans"
+echo "  Repos:  dotfiles, hermes-plans, docs"
+echo "  Webhook: docs → docs-sync ${DOCS_WEBHOOK_SECRET:+✔}${DOCS_WEBHOOK_SECRET:-✘}"
 echo ""
 echo "  Access: http://gitea.lab  (Traefik)"
 echo "          http://gitea:3000  (Docker internal)"
 echo ""
 echo "  Next:"
-echo "    git remote add gitea http://gitea:3000/hermes/dotfiles.git"
-echo "    git push gitea main"
+echo "    Deploy docs stack: cd stacks/docs && docker compose up -d"
+echo "    Clone locally:     git clone http://gitea:3000/hermes/dotfiles.git"
 echo "═══════════════════════════════════════════════════"
