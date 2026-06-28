@@ -8,4 +8,6 @@ bash install.sh
 bash configure.sh
 bash links.sh
 
+$BOOTSTRAP_DIR/stacks-up
+
 echo "Media server bootstrap complete"

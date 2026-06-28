@@ -1,50 +1,87 @@
-#!/bin/bash
-# Generate /etc/environment from _env.source.sh
-# /etc/environment uses KEY=value format (no export, variable expansion, or quoting).
-# We source _env.source.sh with relaxed error handling, then extract the relevant
-# variables with resolved values.
-
+#!/usr/bin/env bash
+# env — Install environment variables system-wide
+# Reads variables from _env.source.sh and writes them to:
+#   /etc/environment        (PAM-level, absolute paths only)
+#   /etc/profile.d/dockge.sh (login shell, all vars with expansion)
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-SOURCE_FILE="$SCRIPT_DIR/_env.source.sh"
+BOOTSTRAP_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "$BOOTSTRAP_DIR/_log.source.sh"
+source "$BOOTSTRAP_DIR/_env.source.sh"
 
-if [ ! -f "$SOURCE_FILE" ]; then
-  echo "Error: $SOURCE_FILE not found" >&2
-  exit 1
-fi
+ENV_FILE="/etc/environment"
+PROFILE_DIR="/etc/profile.d"
+PROFILE_FILE="$PROFILE_DIR/dockge.sh"
 
-if [ -z "${HOME:-}" ]; then
-  echo "Error: \$HOME is not set — cannot resolve paths from _env.source.sh" >&2
-  exit 1
-fi
+# -------------------------------------------------------------------
+# Generate /etc/environment content (absolute paths only, no expansion)
+# -------------------------------------------------------------------
+gen_environment() {
+  cat <<'EOF'
+# Dockge paths (managed by dotfiles/scripts/bootstrpa/env_install)
+DOCKGE_DIR=$DOCKGE_DIR
+DOCKGE_DOCKGE_DIR=$DOCKGE_DOCKGE_DIR
+DOCKGE_STACKS_DIR=$DOCKGE_STACKS_DIR
+DOCKGE_DATA_DIR=$DOCKGE_DATA_DIR
+EOF
+}
 
-# Source _env.source.sh in a sub-shell to resolve all variable references.
-# mkdir/chown failures (no sudo, wrong permissions) are ignored via set +e.
-env_vars=$(
-  set +e
-  source "$SOURCE_FILE" 2>/dev/null
-  for var in REPO_DIR SCRIPT_DIR SCRIPT_BOOTSTRAP_DIR SCRIPT_INSTALL_DIR \
-             DOCKGE_STACKS_SRC_DIR DOCKGE_DIR DOCKGE_DOCKGE_DIR \
-             DOCKGE_STACKS_DIR DOCKGE_DATA_DIR; do
-    printf "%s=%s\n" "$var" "${!var}"
-  done
-)
+# -------------------------------------------------------------------
+# Generate /etc/profile.d/dockge.sh content (all vars, with expansion)
+# -------------------------------------------------------------------
+gen_profile() {
+  cat "$BOOTSTRAP_DIR/_env.source.sh"
+}
 
-if [ -z "$env_vars" ]; then
-  echo "Error: no variables resolved from $SOURCE_FILE — source may have failed" >&2
-  exit 1
-fi
+# -------------------------------------------------------------------
+# Atomic install: write to temp, diff, sudo cp if changed
+# -------------------------------------------------------------------
+install_file() {
+  local content="$1"
+  local target="$2"
+  local tmp
+  tmp=$(mktemp)
 
-# Write to /etc/environment — PAM reads this at login for all users.
-if command -v sudo &>/dev/null && sudo -n true 2>/dev/null; then
-  echo "$env_vars" | sudo tee /etc/environment >/dev/null
-elif [ "$(id -u)" -eq 0 ]; then
-  echo "$env_vars" > /etc/environment
+  printf '%s\n' "$content" > "$tmp"
+
+  if [[ -f "$target" ]] && diff -q "$tmp" "$target" &>/dev/null; then
+    rm -f "$tmp"
+    return 0  # unchanged
+  fi
+
+  sudo cp "$tmp" "$target"
+  sudo chmod 644 "$target"
+  rm -f "$tmp"
+  return 1  # updated
+}
+
+# -------------------------------------------------------------------
+# Main
+# -------------------------------------------------------------------
+ENV_CONTENT=$(gen_environment)
+PROFILE_CONTENT=$(gen_profile)
+UPDATED=false
+
+if install_file "$ENV_CONTENT" "$ENV_FILE"; then
+  info "/etc/environment — up to date"
 else
-  echo "Error: cannot write to /etc/environment — no passwordless sudo and not root" >&2
-  exit 1
+  info "/etc/environment — updated"
+  UPDATED=true
 fi
 
-echo "Wrote to /etc/environment:"
-echo "$env_vars"
+sudo mkdir -p "$PROFILE_DIR"
+
+if install_file "$PROFILE_CONTENT" "$PROFILE_FILE"; then
+  info "/etc/profile.d/dockge.sh — up to date"
+else
+  info "/etc/profile.d/dockge.sh — updated"
+  UPDATED=true
+fi
+
+if $UPDATED; then
+  echo
+  info "Environment files updated."
+  info "Log out and back in (or exec bash -l) for profile.d changes to take effect."
+else
+  info "All environment files already current."
+fi

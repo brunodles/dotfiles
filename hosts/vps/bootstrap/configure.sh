@@ -1,36 +1,10 @@
 #!/usr/bin/env bash
-# configure.sh — Configure VPS: stack symlinks, Docker network, workspace
+# configure.sh — Configure VPS: env, stack symlinks, Docker network, workspace
 source "$HOME/dotfiles/scripts/bootstrap/_log.source.sh"
 source "$HOME/dotfiles/scripts/bootstrap/_env.source.sh"
 
-REPO_ROOT="$(cd "$HOST_DIR/../.." && pwd)"
-STACKS_SRC="$REPO_ROOT/stacks"
+# install system-wide env vars for docker compose
+$SCRIPT_BOOTSTRAP_DIR/env_install
+$SCRIPT_BOOTSTRAP_DIR/dockge calibre gitea_vps hermes jekyll static tailscale traefik
+$SCRIPT_BOOTSTRAP_DIR/traefik
 
-info "Setting up /dockge/ stack symlinks..."
-sudo mkdir -p /dockge/stacks
-
-# Link stacks this host needs
-for stack in calibre dockge gitea_vps hermes jekyll static tailscale traefik; do
-  if [[ -d "$STACKS_SRC/$stack" ]]; then
-    sudo ln -sf "$STACKS_SRC/$stack" "/dockge/stacks/$stack"
-    info "  linked stacks/$stack"
-  else
-    warn "  stacks/$stack not found — skipping"
-  fi
-done
-
-# Ensure Dockge data dir exists
-sudo mkdir -p /dockge/stacks/dockge/data
-
-info "Creating Docker proxy network for Traefik..."
-if docker network ls --format '{{.Name}}' | grep -q '^proxy$'; then
-  info "  proxy network already exists"
-else
-  sudo docker network create proxy
-  info "  proxy network created"
-fi
-
-info "Creating workspace..."
-mkdir -p "$HOME/workspace"
-
-info "Configure complete — run links.sh"

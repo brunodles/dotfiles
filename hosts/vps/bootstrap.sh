@@ -6,4 +6,6 @@ cd "$(dirname "$0")/bootstrap"
 bash install.sh
 bash configure.sh
 bash links.sh
+
+$BOOTSTRAP_DIR/stacks-up
 echo "VPS bootstrap complete"

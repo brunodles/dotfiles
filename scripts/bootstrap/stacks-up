@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+# stacks-up — Bring all Docker Compose stacks online
+# Starts dockge first (if present), then all stacks under $DOCKGE_STACKS_DIR.
+#
+# Usage:
+#   stacks-up                          # auto — uses $DOCKGE_DIR
+#
+# Requires $DOCKGE_DIR to be set (sourced from _env.source.sh).
+# Idempotent — safe to run multiple times.
+set -euo pipefail
+
+BOOTSTRAP_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "$BOOTSTRAP_DIR/_log.source.sh"
+source "$BOOTSTRAP_DIR/_env.source.sh"
+
+# ── Validate ───────────────────────────────────────────────────
+if [[ -z "${DOCKGE_DIR:-}" ]]; then
+  error "\$DOCKGE_DIR is not set. Source _env.source.sh or run from bootstrap context."
+  exit 1
+fi
+
+if [[ ! -d "$DOCKGE_STACKS_DIR" ]]; then
+  error "Stacks directory not found: $DOCKGE_STACKS_DIR"
+  exit 1
+fi
+
+# ── Pre-flight ─────────────────────────────────────────────────
+info "Checking prerequisites..."
+if ! command -v docker &>/dev/null; then
+  error "Docker is not installed."
+  exit 1
+fi
+if ! docker info &>/dev/null; then
+  error "Docker daemon is not running."
+  exit 1
+fi
+info "  Docker is running"
+
+# ── Proxy network (optional) ───────────────────────────────────
+"$BOOTSTRAP_DIR/traefik"
+
+# ── Helpers ────────────────────────────────────────────────────
+start_compose() {
+  local dir="$1"
+  local label="$2"
+  local compose_file
+
+  if [[ -f "$dir/compose.yaml" ]]; then
+    compose_file="$dir/compose.yaml"
+  elif [[ -f "$dir/compose.yml" ]]; then
+    compose_file="$dir/compose.yml"
+  elif [[ -f "$dir/docker-compose.yml" ]]; then
+    compose_file="$dir/docker-compose.yml"
+  else
+    warn "  $label — no compose file found, skipping"
+    return
+  fi
+
+  info "  $label..."
+  (cd "$dir" && docker compose up -d 2>&1) | sed 's/^/    /' || true
+}
+
+# ── Start dockge first ─────────────────────────────────────────
+echo ""
+info "Starting Dockge..."
+if [[ -d "$DOCKGE_STACKS_DIR/dockge" ]]; then
+  start_compose "$DOCKGE_STACKS_DIR/dockge" "dockge"
+else
+  warn "  dockge stack not found in $DOCKGE_STACKS_DIR — skipping"
+fi
+
+# ── Start remaining stacks ─────────────────────────────────────
+echo ""
+info "Starting stacks..."
+for stack_dir in "$DOCKGE_STACKS_DIR"/*/; do
+  [[ -d "$stack_dir" ]] || continue
+  name="$(basename "$stack_dir")"
+  [[ "$name" == "dockge" ]] && continue  # already started above
+  start_compose "$stack_dir" "$name"
+done
+
+# ── Summary ────────────────────────────────────────────────────
+echo ""
+info "All stacks started"
+docker ps --format "table {{.Names}}\t{{.Status}}" | sed 's/^/  /'
