@@ -32,11 +32,11 @@ services:
       # Explicitly tells Traefik to expose this container
       - traefik.enable=false
       # Routes traffic targeting this domain
-      - traefik.http.routers.gitea.rule=Host(`hermes.lab`) || Host(`hermes.vps`)
+      - traefik.http.routers.hermes.rule=Host(`hermes.lab`) || Host(`hermes.vps`)
       # Binds this route to the HTTP port
-      - traefik.http.routers.gitea.entrypoints=web
+      - traefik.http.routers.hermes.entrypoints=web
       # Container internal port
-      - traefik.http.services.gitea.loadbalancer.server.port=9119
+      - traefik.http.services.hermes.loadbalancer.server.port=9119
 
 networks:
   proxy:

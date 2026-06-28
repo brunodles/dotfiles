@@ -12,7 +12,6 @@ sudo mkdir -p "$DOCKGE_DIR"
 sudo chown $USER "$DOCKGE_DIR"
 mkdir -p "$DOCKGE_DIR/data"
 mkdir -p "$DOCKGE_STACKS_DIR"
-mkdir -p "$DOCKGE_STACKS_DIR"
 
 # Link dockge dir
 ln -sf "$DOCKGE_STACKS_SRC_DIR/dockge" "$DOCKGE_DIR/"

@@ -18,7 +18,7 @@ PROFILE_FILE="$PROFILE_DIR/dockge.sh"
 # -------------------------------------------------------------------
 gen_environment() {
   cat <<'EOF'
-# Dockge paths (managed by dotfiles/scripts/bootstrpa/env_install)
+# Dockge paths (managed by dotfiles/scripts/bootstrap/env_install)
 DOCKGE_DIR=$DOCKGE_DIR
 DOCKGE_DOCKGE_DIR=$DOCKGE_DOCKGE_DIR
 DOCKGE_STACKS_DIR=$DOCKGE_STACKS_DIR
