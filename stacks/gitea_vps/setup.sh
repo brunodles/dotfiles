@@ -223,7 +223,7 @@ create_repo "docs" "Docstore — knowledge base served by Jekyll + Calibre"
 WEBHOOK_SECRET="${DOCS_WEBHOOK_SECRET:-}"
 if [[ -n "$WEBHOOK_SECRET" && -n "$HERMES_TOKEN" ]]; then
   info "Creating docs webhook (pointing to docs-sync)..."
-  api_call POST "/api/v1/repos/hermes/docs/hooks" "$HERMES_TOKEN" \
+  _resp=$(api_call POST "/api/v1/repos/hermes/docs/hooks" "$HERMES_TOKEN" \
     "$(cat <<JSON
 {
   "type": "gitea",
@@ -235,7 +235,20 @@ if [[ -n "$WEBHOOK_SECRET" && -n "$HERMES_TOKEN" ]]; then
   "active": true
 }
 JSON
-  )" 2>/dev/null && info "  docs webhook created" || warn "  failed to create webhook"
+  )")
+  _webhook_id=$(echo "$_resp" | python3 -c "
+import sys, json
+try:
+    d = json.load(sys.stdin)
+    print(d.get('id', ''))
+except Exception:
+    print('')
+" 2>/dev/null)
+  if [[ -n "$_webhook_id" ]]; then
+    info "  docs webhook created (id: $_webhook_id)"
+  else
+    warn "  failed to create webhook"
+  fi
 else
   warn "WEBHOOK_SECRET not set — skipping docs webhook (create manually in Gitea UI)"
 fi
