@@ -16,9 +16,3 @@ export DOCKGE_DIR="/dockge"
 export DOCKGE_DOCKGE_DIR="$DOCKGE_DIR/dockge"
 export DOCKGE_STACKS_DIR="$DOCKGE_DIR/stacks"
 export DOCKGE_DATA_DIR="$DOCKGE_DIR/data"
-
-# Make their dir
-sudo mkdir -p $DOCKGE_DIR
-sudo chown $USER $DOCKGE_DIR
-mkdir -p $DOCKGE_DOCKGE_DIR
-mkdir -p $DOCKGE_STACKS_DIR

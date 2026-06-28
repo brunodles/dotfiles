@@ -7,10 +7,16 @@ source "$HOME/dotfiles/scripts/bootstrap/_env.source.sh"
 source "$HOME/dotfiles/scripts/bootstrap/_log.source.sh"
 
 info "Setting up /dockge/ stack symlinks..."
-mkdir -p "$DOCKGE_DIR"
+sudo mkdir -p "$DOCKGE_DIR"
 sudo chown $USER "$DOCKGE_DIR"
 mkdir -p "$DOCKGE_DIR/data"
 mkdir -p "$DOCKGE_STACKS_DIR"
+mkdir -p "$DOCKGE_STACKS_DIR"
+
+# Link dockge dir
+if [[ -d "$DOCKGE_DOCKGE_DIR" ]]; then
+  ln -sf "$DOCKGE_STACKS_SRC_DIR/$stack" "$DOCKGE_STACKS_DIR/"
+fi
 
 # Link stacks this host needs
 for stack in $@; do

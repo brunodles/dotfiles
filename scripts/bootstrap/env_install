@@ -18,11 +18,11 @@ PROFILE_FILE="$PROFILE_DIR/dockge.sh"
 # -------------------------------------------------------------------
 gen_environment() {
   cat <<'EOF'
-# Dockge paths (managed by dotfiles/scripts/bootstrap/env)
-DOCKGE_DIR=/dockge
-DOCKGE_DOCKGE_DIR=/dockge/dockge
-DOCKGE_STACKS_DIR=/dockge/stacks
-DOCKGE_DATA_DIR=/dockge/data
+# Dockge paths (managed by dotfiles/scripts/bootstrpa/env_install)
+DOCKGE_DIR=$DOCKGE_DIR
+DOCKGE_DOCKGE_DIR=$DOCKGE_DOCKGE_DIR
+DOCKGE_STACKS_DIR=$DOCKGE_STACKS_DIR
+DOCKGE_DATA_DIR=$DOCKGE_DATA_DIR
 EOF
 }
 
@@ -30,20 +30,7 @@ EOF
 # Generate /etc/profile.d/dockge.sh content (all vars, with expansion)
 # -------------------------------------------------------------------
 gen_profile() {
-  cat <<'PROFILE_EOF'
-# Dockge paths (managed by dotfiles/scripts/bootstrap/env)
-export DOCKGE_DIR="/dockge"
-export DOCKGE_DOCKGE_DIR="$DOCKGE_DIR/dockge"
-export DOCKGE_STACKS_DIR="$DOCKGE_DIR/stacks"
-export DOCKGE_DATA_DIR="$DOCKGE_DIR/data"
-
-# Repo paths — expanded per-user at login time
-export REPO_DIR="$HOME/dotfiles"
-export SCRIPT_DIR="$REPO_DIR/scripts"
-export SCRIPT_BOOTSTRAP_DIR="$REPO_DIR/scripts/bootstrap"
-export SCRIPT_INSTALL_DIR="$REPO_DIR/scripts/install"
-export DOCKGE_STACKS_SRC_DIR="$REPO_DIR/stacks"
-PROFILE_EOF
+  cat "$BOOTSTRAP_DIR/_env.source.sh"
 }
 
 # -------------------------------------------------------------------

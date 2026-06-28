@@ -4,7 +4,6 @@
 #
 # Usage:
 #   stacks-up                          # auto — uses $DOCKGE_DIR
-#   stacks-up --proxy                  # + ensure proxy network exists
 #
 # Requires $DOCKGE_DIR to be set (sourced from _env.source.sh).
 # Idempotent — safe to run multiple times.
@@ -13,20 +12,6 @@ set -euo pipefail
 BOOTSTRAP_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$BOOTSTRAP_DIR/_log.source.sh"
 source "$BOOTSTRAP_DIR/_env.source.sh"
-
-# ── Parse flags ────────────────────────────────────────────────
-CREATE_PROXY=false
-
-for arg in "$@"; do
-  case "$arg" in
-    --proxy) CREATE_PROXY=true ;;
-    -*)
-      echo "Unknown flag: $arg" >&2
-      echo "Usage: $0 [--proxy]" >&2
-      exit 1
-      ;;
-  esac
-done
 
 # ── Validate ───────────────────────────────────────────────────
 if [[ -z "${DOCKGE_DIR:-}" ]]; then
@@ -52,16 +37,7 @@ fi
 info "  Docker is running"
 
 # ── Proxy network (optional) ───────────────────────────────────
-if $CREATE_PROXY; then
-  echo ""
-  info "Ensuring proxy network..."
-  if docker network ls --format '{{.Name}}' | grep -q '^proxy$'; then
-    info "  proxy network already exists"
-  else
-    docker network create proxy
-    info "  proxy network created"
-  fi
-fi
+"$BOOTSTRAP_DIR/traefik"
 
 # ── Helpers ────────────────────────────────────────────────────
 start_compose() {

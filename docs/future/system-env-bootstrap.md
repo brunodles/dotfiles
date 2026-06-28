@@ -2,15 +2,15 @@
 
 **Goal:** Make `$DOCKGE_DATA_DIR`, `$DOCKGE_STACKS_DIR`, and friends available system-wide so `docker compose up` works directly from any stack directory without sourcing `_env.source.sh` first.
 
-**Architecture:** A reusable script `scripts/bootstrap/env` that writes Dockge env vars to `/etc/environment`. Each host's `configure.sh` calls it. Idempotent — safe to re-run.
+**Architecture:** A reusable script `scripts/bootstrpa/env_install` that writes Dockge env vars to `/etc/environment`. Each host's `configure.sh` calls it. Idempotent — safe to re-run.
 
 ---
 
 ## Tasks
 
-### Task 1: Create `scripts/bootstrap/env`
+### Task 1: Create `scripts/bootstrpa/env_install`
 
-**File:** `scripts/bootstrap/env` (create)
+**File:** `scripts/bootstrpa/env_install` (create)
 
 ```bash
 #!/usr/bin/env bash
@@ -82,11 +82,11 @@ info "Done — Dockge environment variables installed to $ENV_FILE"
 info "Log out and back in (or run 'source /etc/environment') for changes to take effect."
 ```
 
-Make executable: `chmod +x scripts/bootstrap/env`
+Make executable: `chmod +x scripts/bootstrpa/env_install`
 
 ---
 
-### Task 2: Update VPS `configure.sh` to call `scripts/bootstrap/env`
+### Task 2: Update VPS `configure.sh` to call `scripts/bootstrpa/env_install`
 
 **File:** `hosts/vps/bootstrap/configure.sh` (modify)
 
@@ -101,14 +101,14 @@ Wait — this file already sources `_env.source.sh` and `_log.source.sh`. The ch
 
 ```bash
 # Ensure system-wide env vars
-"$SCRIPT_BOOTSTRAP_DIR/env"
+"$SCRIPT_BOOTSTRAP_DIR/env_install"
 ```
 
 Right after the `source` lines and `REPO_ROOT` assignment, before the `info "Setting up /dockge/ stack symlinks..."` line.
 
 ---
 
-### Task 3: Update Media `configure.sh` to call `scripts/bootstrap/env`
+### Task 3: Update Media `configure.sh` to call `scripts/bootstrpa/env_install`
 
 **File:** `hosts/media/bootstrap/configure.sh` (modify)
 
@@ -126,7 +126,7 @@ Add the env call before dockge/traefik:
 # configure.sh — Configure media server: env, stacks, Docker network
 BOOTSTRAP_DIR="$HOME/dotfiles/scripts/bootstrap/"
 
-$BOOTSTRAP_DIR/env
+$BOOTSTRAP_DIR/env_install
 $BOOTSTRAP_DIR/dockge traefik gitea jellyfin metube syncthing
 $BOOTSTRAP_DIR/traefik
 ```
@@ -159,7 +159,7 @@ REPO_ROOT="$(cd "$HOST_DIR/../.." && pwd)"
 STACKS_SRC="$REPO_ROOT/stacks"
 
 # Ensure system-wide env vars for docker compose
-"$SCRIPT_BOOTSTRAP_DIR/env"
+"$SCRIPT_BOOTSTRAP_DIR/env_install"
 
 info "Setting up /dockge/ stack symlinks..."
 ```
@@ -191,7 +191,7 @@ info "Setting up /dockge/ stack symlinks..."
    Should show no errors — `$DOCKGE_DATA_DIR` resolves to `/dockge/data`.
 
 3. **Idempotency test:**
-   Run `scripts/bootstrap/env` again — should print "already up to date" and make no changes.
+   Run `scripts/bootstrpa/env_install` again — should print "already up to date" and make no changes.
 
 ---
 
