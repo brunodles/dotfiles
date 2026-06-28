@@ -15,7 +15,7 @@ mkdir -p "$DOCKGE_STACKS_DIR"
 
 # Link dockge dir
 if [[ -d "$DOCKGE_DOCKGE_DIR" ]]; then
-  ln -sf "$DOCKGE_STACKS_SRC_DIR/$stack" "$DOCKGE_STACKS_DIR/"
+  ln -sf "$DOCKGE_STACKS_SRC_DIR/dockge" "$DOCKGE_DIR/"
 fi
 
 # Link stacks this host needs
