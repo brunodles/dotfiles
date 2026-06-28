@@ -30,6 +30,15 @@ log = logging.getLogger("docs-sync")
 
 _lock = threading.Lock()
 
+def _configure_git():
+    """One-time git config at module load."""
+    subprocess.run(
+        ["git", "config", "--global", "--add", "safe.directory", DATA],
+        capture_output=True, timeout=5,
+    )
+
+_configure_git()
+
 
 def _repo_url() -> str:
     """Build clone URL with optional token auth, preserving scheme."""
@@ -64,12 +73,6 @@ def sync() -> dict:
         return {"status": "skipped", "reason": "sync already in progress"}
 
     try:
-        # Newer git refuses to operate on repos with different owner
-        subprocess.run(
-            ["git", "config", "--global", "--add", "safe.directory", DATA],
-            capture_output=True, timeout=5,
-        )
-
         if os.path.isdir(f"{DATA}/.git"):
             out = subprocess.run(
                 ["git", "-C", DATA, "pull", "origin", BRANCH],
