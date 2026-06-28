@@ -17,7 +17,7 @@ PROFILE_FILE="$PROFILE_DIR/dockge.sh"
 # Generate /etc/environment content (absolute paths only, no expansion)
 # -------------------------------------------------------------------
 gen_environment() {
-  cat <<'EOF'
+  cat <<EOF
 # Dockge paths (managed by dotfiles/scripts/bootstrap/env_install)
 DOCKGE_DIR=$DOCKGE_DIR
 DOCKGE_DOCKGE_DIR=$DOCKGE_DOCKGE_DIR
