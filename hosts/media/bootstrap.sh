@@ -5,7 +5,7 @@ set -euo pipefail
 cd "$(dirname "$0")/bootstrap"
 
 bash install.sh
-bash configure.sh
+bash provision.sh
 bash links.sh
 
 $BOOTSTRAP_DIR/stacks-up

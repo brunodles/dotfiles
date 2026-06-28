@@ -3,7 +3,7 @@
 # example _dockge.sh traefik gitea jellyfin metube syncthing
 # Each <stack> is a sub-folder on stacks folder, containing the compose.yml and the configuration for the stack.
 
-# configure.sh — Configure media server: stack symlinks, Docker network
+# provision.sh — Provision server: stack symlinks, Docker network
 source "$HOME/dotfiles/scripts/bootstrap/_env.source.sh"
 source "$HOME/dotfiles/scripts/bootstrap/_log.source.sh"
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# configure.sh — Configure media server: env, stacks, Docker network
+# provision.sh — Provision media server: env, stacks, Docker network
 BOOTSTRAP_DIR="$HOME/dotfiles/scripts/bootstrap/"
 
 $BOOTSTRAP_DIR/env_install

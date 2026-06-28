@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# configure.sh — Configure VPS: env, stack symlinks, Docker network, workspace
+# provision.sh — Provision VPS: env, stack symlinks, Docker network, workspace
 source "$HOME/dotfiles/scripts/bootstrap/_log.source.sh"
 source "$HOME/dotfiles/scripts/bootstrap/_env.source.sh"
 
