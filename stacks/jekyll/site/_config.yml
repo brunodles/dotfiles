@@ -16,3 +16,9 @@ defaults:
       path: ""
     values:
       layout: default
+  # ── Docstore (mounted from docs_data volume) ──────────────────
+  - scope:
+      path: "docs"
+    values:
+      layout: default
+      permalink: /docs/:path/
