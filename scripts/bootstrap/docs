@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Usage docs
+# Set up the docs network + volume for the docstore stack
+#
+# Creates:
+#   - docs      Docker network (isolated, internal)
+#   - docs_data Docker named volume (shared with jekyll, calibre)
+
+source "$HOME/dotfiles/scripts/bootstrap/_log.source.sh"
+
+info "Setting up docs network..."
+
+if docker network ls --format '{{.Name}}' | grep -q '^docs$'; then
+  info "  docs network already exists"
+else
+  sudo docker network create docs --internal 2>/dev/null || \
+    sudo docker network create docs
+  info "  docs network created"
+fi
+
+info "Setting up docs_data volume..."
+
+if docker volume ls --format '{{.Name}}' | grep -q '^docs_data$'; then
+  info "  docs_data volume already exists"
+else
+  sudo docker volume create docs_data
+  info "  docs_data volume created"
+fi
