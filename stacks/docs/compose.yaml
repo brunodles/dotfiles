@@ -10,7 +10,8 @@ services:
       - GITEA_URL=${GITEA_URL:-http://gitea:3000}
       - GITEA_REPO=${GITEA_REPO:-hermes/docs}
       - GITEA_TOKEN=${GITEA_TOKEN:?required}
-      - WEBHOOK_SECRET=${DOCS_WEBHOOK_SECRET:?required}
+      - WEBHOOK_SECRET=${WEBHOOK_SECRET:?required}
+      - SYNC_BRANCH=${SYNC_BRANCH:-main}
     volumes:
       - docs_data:/data
     networks:
@@ -24,7 +25,7 @@ services:
     depends_on:
       - docs-sync
     environment:
-      - DOCS_WEBHOOK_SECRET=${DOCS_WEBHOOK_SECRET:?required}
+      - WEBHOOK_SECRET=${WEBHOOK_SECRET:?required}
       - POLL_INTERVAL=${DOCS_POLL_INTERVAL:-3600}
     command:
       - /bin/sh
@@ -33,7 +34,7 @@ services:
         while true; do
           echo "[poll] $$(date -Iseconds)"
           curl -s -o /dev/null \
-            "http://docs-sync:8080/hook?secret=$${DOCS_WEBHOOK_SECRET}"
+            "http://docs-sync:8080/hook?secret=$${WEBHOOK_SECRET}"
           sleep "$${POLL_INTERVAL}"
         done
     networks:

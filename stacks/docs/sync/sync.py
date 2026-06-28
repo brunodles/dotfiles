@@ -11,12 +11,15 @@ import json
 import logging
 import os
 import subprocess
-import sys
+import threading
+import urllib.parse
 
 DATA = os.environ.get("SYNC_DATA_DIR", "/data")
 GITEA_URL = os.environ.get("GITEA_URL", "http://gitea:3000")
 REPO = os.environ.get("GITEA_REPO", "hermes/docs")
+TOKEN = os.environ.get("GITEA_TOKEN", "")
 SECRET = os.environ.get("WEBHOOK_SECRET", "")
+BRANCH = os.environ.get("SYNC_BRANCH", "main")
 HOST = os.environ.get("SYNC_HOST", "0.0.0.0")
 PORT = int(os.environ.get("SYNC_PORT", "8080"))
 
@@ -25,15 +28,23 @@ log = logging.getLogger("docs-sync")
 
 # ── Git helpers ────────────────────────────────────────────────────
 
-_repo_locked = False
+_lock = threading.Lock()
 
 
 def _repo_url() -> str:
-    token = os.environ.get("GITEA_TOKEN", "")
+    """Build clone URL with optional token auth, preserving scheme."""
+    scheme = "https" if GITEA_URL.startswith("https://") else "http"
     netloc = GITEA_URL.removeprefix("http://").removeprefix("https://")
-    if token:
-        return f"http://{token}@{netloc}/{REPO}.git"
-    return f"http://{netloc}/{REPO}.git"
+    if TOKEN:
+        return f"{scheme}://{TOKEN}@{netloc}/{REPO}.git"
+    return f"{scheme}://{netloc}/{REPO}.git"
+
+
+def _sanitize(text: str) -> str:
+    """Remove tokens from error text to avoid credential leaks."""
+    if not TOKEN:
+        return text
+    return text.replace(TOKEN, "***")
 
 
 def _last_commit_hash() -> str:
@@ -49,15 +60,19 @@ def _last_commit_hash() -> str:
 
 def sync() -> dict:
     """Pull (or clone) the docs repository. Returns status dict."""
-    global _repo_locked
-    if _repo_locked:
+    if not _lock.acquire(blocking=False):
         return {"status": "skipped", "reason": "sync already in progress"}
 
-    _repo_locked = True
     try:
+        # Newer git refuses to operate on repos with different owner
+        subprocess.run(
+            ["git", "config", "--global", "--add", "safe.directory", DATA],
+            capture_output=True, timeout=5,
+        )
+
         if os.path.isdir(f"{DATA}/.git"):
             out = subprocess.run(
-                ["git", "-C", DATA, "pull"],
+                ["git", "-C", DATA, "pull", "origin", BRANCH],
                 capture_output=True, text=True, check=True, timeout=30,
             )
             log.info("pull: %s", out.stdout.strip())
@@ -66,7 +81,7 @@ def sync() -> dict:
         else:
             os.makedirs(DATA, exist_ok=True)
             out = subprocess.run(
-                ["git", "clone", _repo_url(), DATA],
+                ["git", "clone", "--branch", BRANCH, _repo_url(), DATA],
                 capture_output=True, text=True, check=True, timeout=60,
             )
             log.info("clone: %s", out.stdout.strip())
@@ -76,13 +91,14 @@ def sync() -> dict:
         log.error("git operation timed out")
         return {"status": "error", "reason": "timeout"}
     except subprocess.CalledProcessError as exc:
-        log.error("git error: %s", exc.stderr.strip() if exc.stderr else str(exc))
-        return {"status": "error", "reason": exc.stderr.strip() if exc.stderr else str(exc)}
+        msg = exc.stderr.strip() if exc.stderr else str(exc)
+        log.error("git error: %s", _sanitize(msg))
+        return {"status": "error", "reason": _sanitize(msg)}
     except Exception as exc:
         log.error("unexpected error: %s", exc)
         return {"status": "error", "reason": str(exc)}
     finally:
-        _repo_locked = False
+        _lock.release()
 
 
 # ── HTTP handlers ──────────────────────────────────────────────────
@@ -120,7 +136,6 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self._respond(404, {"status": "error", "reason": "not found"})
 
     def _query_param(self, name: str) -> str | None:
-        import urllib.parse
         if "?" not in self.path:
             return None
         qs = self.path.split("?", 1)[1]
