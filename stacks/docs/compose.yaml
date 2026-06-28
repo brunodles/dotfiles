@@ -1,0 +1,49 @@
+services:
+  # ── Sidecar: webhook + git sync ──────────────────────────────────
+  docs-sync:
+    build:
+      context: ./sync
+      dockerfile: Dockerfile
+    container_name: docs-sync
+    restart: unless-stopped
+    environment:
+      - GITEA_URL=${GITEA_URL:-http://gitea:3000}
+      - GITEA_REPO=${GITEA_REPO:-hermes/docs}
+      - GITEA_TOKEN=${GITEA_TOKEN:?required}
+      - WEBHOOK_SECRET=${DOCS_WEBHOOK_SECRET:?required}
+    volumes:
+      - docs_data:/data
+    networks:
+      - docs
+
+  # ── Safety-net cron: periodic poll as fallback ───────────────────
+  docs-cron:
+    image: curlimages/curl:latest
+    container_name: docs-cron
+    restart: unless-stopped
+    depends_on:
+      - docs-sync
+    environment:
+      - DOCS_WEBHOOK_SECRET=${DOCS_WEBHOOK_SECRET:?required}
+      - POLL_INTERVAL=${DOCS_POLL_INTERVAL:-3600}
+    command:
+      - /bin/sh
+      - -c
+      - |
+        while true; do
+          echo "[poll] $$(date -Iseconds)"
+          curl -s -o /dev/null \
+            "http://docs-sync:8080/hook?secret=$${DOCS_WEBHOOK_SECRET}"
+          sleep "$${POLL_INTERVAL}"
+        done
+    networks:
+      - docs
+
+volumes:
+  docs_data:
+    external: true
+
+networks:
+  docs:
+    name: docs
+    external: true
