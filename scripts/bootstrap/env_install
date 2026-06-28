@@ -1,0 +1,50 @@
+#!/bin/bash
+# Generate /etc/environment from _env.source.sh
+# /etc/environment uses KEY=value format (no export, variable expansion, or quoting).
+# We source _env.source.sh with relaxed error handling, then extract the relevant
+# variables with resolved values.
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SOURCE_FILE="$SCRIPT_DIR/_env.source.sh"
+
+if [ ! -f "$SOURCE_FILE" ]; then
+  echo "Error: $SOURCE_FILE not found" >&2
+  exit 1
+fi
+
+if [ -z "${HOME:-}" ]; then
+  echo "Error: \$HOME is not set — cannot resolve paths from _env.source.sh" >&2
+  exit 1
+fi
+
+# Source _env.source.sh in a sub-shell to resolve all variable references.
+# mkdir/chown failures (no sudo, wrong permissions) are ignored via set +e.
+env_vars=$(
+  set +e
+  source "$SOURCE_FILE" 2>/dev/null
+  for var in REPO_DIR SCRIPT_DIR SCRIPT_BOOTSTRAP_DIR SCRIPT_INSTALL_DIR \
+             DOCKGE_STACKS_SRC_DIR DOCKGE_DIR DOCKGE_DOCKGE_DIR \
+             DOCKGE_STACKS_DIR DOCKGE_DATA_DIR; do
+    printf "%s=%s\n" "$var" "${!var}"
+  done
+)
+
+if [ -z "$env_vars" ]; then
+  echo "Error: no variables resolved from $SOURCE_FILE — source may have failed" >&2
+  exit 1
+fi
+
+# Write to /etc/environment — PAM reads this at login for all users.
+if command -v sudo &>/dev/null && sudo -n true 2>/dev/null; then
+  echo "$env_vars" | sudo tee /etc/environment >/dev/null
+elif [ "$(id -u)" -eq 0 ]; then
+  echo "$env_vars" > /etc/environment
+else
+  echo "Error: cannot write to /etc/environment — no passwordless sudo and not root" >&2
+  exit 1
+fi
+
+echo "Wrote to /etc/environment:"
+echo "$env_vars"
