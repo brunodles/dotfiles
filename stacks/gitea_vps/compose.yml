@@ -34,7 +34,7 @@ services:
 
     labels:
       - traefik.enable=true
-      - traefik.http.routers.gitea.rule=Host(`gitea.lab`) || Host(`gitea.vps`)
+      - traefik.http.routers.gitea.rule=Host(`gitea.vps`)
       - traefik.http.routers.gitea.entrypoints=web
       - traefik.http.services.gitea.loadbalancer.server.port=3000
 
