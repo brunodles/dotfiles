@@ -2,10 +2,17 @@
 # setup.sh — Bootstrap Gitea on VPS: admin user, Hermes user, initial repos
 set -euo pipefail
 
+# ── Guard: must NOT run as root ─────────────────────────────────────────
+if [[ $EUID -eq 0 ]]; then
+  echo -e "\033[0;31m\u2717 Do not run setup.sh as root.\033[0m" >&2
+  echo "  Run as a normal user with Docker access (e.g. via the docker group)." >&2
+  exit 1
+fi
+
 # ── Paths ──────────────────────────────────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 COMPOSE="docker compose -f $SCRIPT_DIR/compose.yml"
-GITEA="$COMPOSE exec -T gitea gitea"
+GITEA="$COMPOSE exec --user git -T gitea gitea"
 BASE_URL="http://gitea:3000"
 
 # DOCKGE_DATA_DIR vem do .env do stack (ou da Dockge env)
