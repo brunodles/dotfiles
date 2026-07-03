@@ -5,13 +5,14 @@
 #   cd ~/dotfiles && bash hosts/android/bootstrap/links.sh
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
+source "$HOME/dotfiles/scripts/bootstrap/_env.source.sh"
 
 if [[ ! -d /data/data/com.termux ]]; then
   error "This script must run inside Termux on Android."
   exit 1
 fi
 
-link="$REPO_DIR/scripts/install/link"
+link="$SCRIPT_BOOTSTRAP_DIR/link"
 home_config="$HOME/.config"
 repo_config="$REPO_DIR/dotfiles"
 

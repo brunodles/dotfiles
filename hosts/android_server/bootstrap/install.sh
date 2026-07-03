@@ -5,6 +5,7 @@
 #   cd ~/dotfiles && bash hosts/android/bootstrap/install.sh
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
+source "$HOME/dotfiles/scripts/bootstrap/_env.source.sh"
 
 # ── Sanity checks ──
 if [[ ! -d /data/data/com.termux ]]; then
