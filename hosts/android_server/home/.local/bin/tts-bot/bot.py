@@ -1,6 +1,7 @@
-"""Raw HTTP Telegram bot — text-to-text dispatch."""
+"""Raw HTTP Telegram bot — text-to-speech dispatch."""
 
 import logging
+from pathlib import Path
 
 import requests
 
@@ -55,6 +56,16 @@ def _handle_message(token: str, msg: dict) -> None:
     """Dispatch a single message."""
     chat_id = msg["chat"]["id"]
 
+    if "voice" in msg:
+        log.info("Voice from %d", msg["from"]["id"])
+        _handle_audio(token, chat_id, msg["voice"]["file_id"])
+        return
+
+    if "audio" in msg:
+        log.info("Audio from %d", msg["from"]["id"])
+        _handle_audio(token, chat_id, msg["audio"]["file_id"])
+        return
+
     if "text" in msg:
         text = msg["text"]
         log.info("Text from %d: %s", msg["from"]["id"], text[:80])
@@ -65,7 +76,44 @@ def _handle_message(token: str, msg: dict) -> None:
             _reply(token, chat_id, f"TTS failed: {e}")
         return
 
-    log.info("Ignored non-text message from %d", msg["from"]["id"])
+    log.info("Ignored unsupported message type from %d", msg["from"]["id"])
+
+
+def _handle_audio(token: str, chat_id: int, file_id: str) -> None:
+    """Download an audio/voice file and play it via Termux."""
+    try:
+        resp = requests.get(
+            f"{API}{token}/getFile",
+            params={"file_id": file_id},
+            timeout=15,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+
+        if not data.get("ok") or "result" not in data:
+            log.warning("getFile failed: %s", data)
+            _reply(token, chat_id, "Failed to resolve file")
+            return
+
+        file_path = data["result"]["file_path"]
+        download_url = f"{API}{token}/{file_path}"
+
+        audio_resp = requests.get(download_url, timeout=30)
+        audio_resp.raise_for_status()
+
+        # Save as .oga (Telegram voice is OGG Opus)
+        dest = Path(f"/tmp/tts_{file_id}.oga")
+        dest.write_bytes(audio_resp.content)
+
+        tts.play(dest)
+        dest.unlink(missing_ok=True)
+
+    except requests.RequestException as e:
+        log.error("Audio download failed: %s", e)
+        _reply(token, chat_id, f"Audio download failed: {e}")
+    except Exception as e:
+        log.error("Audio playback failed: %s", e)
+        _reply(token, chat_id, f"Audio playback failed: {e}")
 
 
 def _reply(token: str, chat_id: int, text: str) -> None:
