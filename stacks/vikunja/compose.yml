@@ -1,0 +1,48 @@
+services:
+  vikunja:
+    image: vikunja/vikunja
+    restart: unless-stopped
+    hostname: vikunja
+
+    environment:
+      # ── Registro desligado (só admin via CLI) ─────
+      VIKUNJA_SERVICE_ENABLEREGISTRATION: "false"
+      VIKUNJA_SERVICE_JWTSECRET: ${VIKUNJA_JWT_SECRET:?required}
+      VIKUNJA_SERVICE_TIMEZONE: America/Sao_Paulo
+
+      # ── SQLite ────────────────────────────────────
+      VIKUNJA_DATABASE_TYPE: sqlite
+      VIKUNJA_DATABASE_PATH: /db/vikunja.db
+
+      # ── Admin user (via init script) ──────────────
+      VIKUNJA_ADMIN_USER: ${VIKUNJA_ADMIN_USER:-bruno}
+      VIKUNJA_ADMIN_PASS: ${VIKUNJA_ADMIN_PASS:?required}
+      VIKUNJA_ADMIN_EMAIL: ${VIKUNJA_ADMIN_EMAIL:-bruno@vps}
+
+    volumes:
+      - $DOCKGE_DATA_DIR/vikunja/db:/db
+      - $DOCKGE_DATA_DIR/vikunja/files:/app/vikunja/files
+      - ./vikunja-init.sh:/entrypoint.sh:ro
+
+    entrypoint: ["/bin/sh", "/entrypoint.sh"]
+
+    healthcheck:
+      test: wget -q -O /dev/null http://localhost:3456/api/v1/health
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+    networks:
+      - proxy
+
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.vikunja.rule=Host(`vikunja.vps`)
+      - traefik.http.routers.vikunja.entrypoints=web
+      - traefik.http.services.vikunja.loadbalancer.server.port=3456
+
+networks:
+  proxy:
+    name: proxy
+    external: true
