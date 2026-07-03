@@ -5,6 +5,6 @@ source "$HOME/dotfiles/scripts/bootstrap/_env.source.sh"
 
 # install system-wide env vars for docker compose
 $SCRIPT_BOOTSTRAP_DIR/env_install
-$SCRIPT_BOOTSTRAP_DIR/dockge calibre docs gitea_vps hermes jekyll static tailscale traefik
+$SCRIPT_BOOTSTRAP_DIR/dockge calibre docs gitea_vps hermes jekyll static tailscale traefik vikunja
 $SCRIPT_BOOTSTRAP_DIR/docs
 $SCRIPT_BOOTSTRAP_DIR/traefik
