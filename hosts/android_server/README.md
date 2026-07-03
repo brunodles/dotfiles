@@ -7,7 +7,7 @@ Acts as secondary DNS for Pi-hole redundancy (see [Services](#services) and [DNS
 ## Installation
 
 1. **Install Termux** — [F-Droid](https://f-droid.org/packages/com.termux/) (recommended, avoids Play Store issues).
-   Run `termux-setup-storage` to grant file access (required on Android 11+).
+2. Run `termux-setup-storage` to grant file access (required on Android 11+).
 
 Two routes depending on whether you have a computer handy.
 
