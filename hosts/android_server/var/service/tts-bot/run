@@ -1,0 +1,3 @@
+#!/data/data/com.termux/files/usr/bin/sh
+# run — runit service for TTS bot
+exec python3 ~/.local/bin/tts-bot/main.py
