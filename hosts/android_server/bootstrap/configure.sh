@@ -25,20 +25,6 @@ if [[ -f "$HOST_DIR/termux/termux.properties" ]]; then
 fi
 
 # ──────────────────────────────────────────────
-# 6. Set Zsh as default shell (Termux-specific)
-# ──────────────────────────────────────────────
-if [[ "$SHELL" != */zsh ]]; then
-  info "Changing default shell to zsh..."
-  ZSH_PATH=$(command -v zsh)
-  if [[ -n "$ZSH_PATH" ]]; then
-    mkdir -p "$HOME/.termux"
-    echo "$ZSH_PATH" > "$HOME/.termux/shell"
-    info "  Set default shell to zsh in ~/.termux/shell"
-    info "  ➜  Restart Termux or start a new session to apply."
-  fi
-fi
-
-# ──────────────────────────────────────────────
 # 7. Copy custom scripts to ~/.local/bin
 # ──────────────────────────────────────────────
 info "Copying Termux scripts..."
