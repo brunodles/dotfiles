@@ -1,4 +1,5 @@
 services:
+  # ── Gitea server ──────────────────────────────────────────────────────
   gitea:
     image: gitea/gitea:1.22.4
     hostname: gitea
@@ -9,22 +10,29 @@ services:
       USER_GID: "1000"
       USER_UID: "1000"
 
-      # ── Skip web installer ──────────────────
+      # ── Skip web installer (managed by gitea-setup) ──
       INSTALL_LOCK: "true"
 
-      # ── Only admin-created users ────────────
+      # ── Only admin-created users ────────────────────
       DISABLE_REGISTRATION: "true"
 
-      # ── HTTP-only (no SSH) ──────────────────
+      # ── HTTP-only (no SSH) ──────────────────────────
       DISABLE_SSH: "true"
       START_SSH_SERVER: "false"
 
-      # ── Domain / URL ────────────────────────
+      # ── Domain / URL ────────────────────────────────
       DOMAIN: gitea.lab
       ROOT_URL: http://gitea.lab/
       GITEA__server__PROTOCOL: http
       GITEA__server__DOMAIN: gitea.lab
       GITEA__server__ROOT_URL: http://gitea.lab/
+
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:3000/"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
     volumes:
       - $DOCKGE_DATA_DIR/gitea_vps/data:/data
@@ -37,6 +45,26 @@ services:
       - traefik.http.routers.gitea.rule=Host(`gitea.vps`)
       - traefik.http.routers.gitea.entrypoints=web
       - traefik.http.services.gitea.loadbalancer.server.port=3000
+
+  # ── One-time setup (init container) ───────────────────────────────────
+  gitea-setup:
+    image: gitea/gitea:1.22.4
+    depends_on:
+      gitea:
+        condition: service_healthy
+    restart: no
+    volumes:
+      - $DOCKGE_DATA_DIR/gitea_vps/data:/data
+      - ./setup/init.sh:/setup/init.sh:ro
+    environment:
+      GITEA_ADMIN_PASS: ${GITEA_ADMIN_PASS:?required}
+      GITEA_ADMIN_USER: ${GITEA_ADMIN_USER:-bruno}
+      GITEA_ADMIN_EMAIL: ${GITEA_ADMIN_EMAIL:-bruno@vps}
+      HERMES_PASS: ${HERMES_PASS:-changeme-on-first-login}
+      DOCS_WEBHOOK_SECRET: ${DOCS_WEBHOOK_SECRET:-}
+    entrypoint: ["/bin/bash", "/setup/init.sh"]
+    networks:
+      - proxy
 
 networks:
   proxy:
