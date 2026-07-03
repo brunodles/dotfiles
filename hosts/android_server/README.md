@@ -8,29 +8,19 @@ Acts as secondary DNS for Pi-hole redundancy (see [Services](#services) and [DNS
 
 1. **Install Termux** — [F-Droid](https://f-droid.org/packages/com.termux/) (recommended, avoids Play Store issues).
 2. Run `termux-setup-storage` to grant file access (required on Android 11+).
-
-Two routes depending on whether you have a computer handy.
-
-### With a computer
-
-1. **Install SSH server** — `pkg add openssh && sshd` (default port 8022).
-   First run `passwd` to set a login password — Termux starts with none.
-
-2. **Access via SSH** — `ssh -p 8022 <user>@<android-ip>` from your computer.
-   Find the device IP with `ip addr` or `ifconfig`.
-
-3. **Clone the repo** — `git clone https://github.com/brunodles/dotfiles.git ~/dotfiles`
-
-4. **Run bootstrap** — `cd ~/dotfiles && bash hosts/android_server/bootstrap.sh`
-
-### Without a computer (paste block)
-
-Paste the following directly into Termux after installation:
+3. Paste the following directly into Termux after installation:
 
 ```bash
-pkg update -y && pkg install -y git curl
+apt update -y
+apt upgrade -y
+
+pkg update -y
+pkg install -y git curl
+
 git clone https://github.com/brunodles/dotfiles.git ~/dotfiles
-cd ~/dotfiles && bash hosts/android_server/bootstrap.sh
+
+cd ~/dotfiles 
+bash hosts/android_server/bootstrap.sh
 ```
 
 The bootstrap runs three phases — install (packages, Oh My Zsh, SSH keys), configure (Termux settings, scripts, SSH config), and links (dotfiles symlinks, runit services).
