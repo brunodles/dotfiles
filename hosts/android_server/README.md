@@ -18,7 +18,25 @@ pkg update -y
 pkg install -y git curl
 
 git clone https://github.com/brunodles/dotfiles.git ~/dotfiles
+```
 
+4 **Install SSH server**
+set password
+```bash
+passwd #First run to set a login password
+```
+Instal and run
+```bash
+pkg add openssh
+ifconfig
+echo $USER
+sshd #(default port 8022).
+```
+
+**Access via SSH** — `ssh -p 8022 <user>@<android-ip>` from your computer.
+
+5. Run Android Server bootstrap
+```bash
 cd ~/dotfiles 
 bash hosts/android_server/bootstrap.sh
 ```
