@@ -6,22 +6,22 @@ Acts as secondary DNS for Pi-hole redundancy (see [Services](#services) and [DNS
 
 ## Installation
 
+1. **Install Termux** — [F-Droid](https://f-droid.org/packages/com.termux/) (recommended, avoids Play Store issues).
+   Run `termux-setup-storage` to grant file access (required on Android 11+).
+
 Two routes depending on whether you have a computer handy.
 
 ### With a computer
 
-1. **Install Termux** — [F-Droid](https://f-droid.org/packages/com.termux/) (recommended, avoids Play Store issues).
-   Run `termux-setup-storage` to grant file access (required on Android 11+).
-
-2. **Install SSH server** — `pkg add openssh && sshd` (default port 8022).
+1. **Install SSH server** — `pkg add openssh && sshd` (default port 8022).
    First run `passwd` to set a login password — Termux starts with none.
 
-3. **Access via SSH** — `ssh -p 8022 <user>@<android-ip>` from your computer.
+2. **Access via SSH** — `ssh -p 8022 <user>@<android-ip>` from your computer.
    Find the device IP with `ip addr` or `ifconfig`.
 
-4. **Clone the repo** — `git clone https://github.com/brunodles/dotfiles.git ~/dotfiles`
+3. **Clone the repo** — `git clone https://github.com/brunodles/dotfiles.git ~/dotfiles`
 
-5. **Run bootstrap** — `cd ~/dotfiles && bash hosts/android_server/bootstrap.sh`
+4. **Run bootstrap** — `cd ~/dotfiles && bash hosts/android_server/bootstrap.sh`
 
 ### Without a computer (paste block)
 
