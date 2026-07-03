@@ -1,0 +1,14 @@
+# Termux Aliases
+# These aliases will only be included if running on termux.
+
+if [[ "$PREFIX" == *com.termux* ]]; then
+    alias wake='termux-wake'
+    alias sleep='termux-sleep'
+    alias notify='termux-notify'
+    alias battery='termux-battery-status'
+    alias myip='termux-ip'
+    alias tunnel='termux-ssh-tunnel'
+    alias svstart='sv up'
+    alias svstop='sv down'
+    alias svstatus='sv status'
+fi

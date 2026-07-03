@@ -123,6 +123,7 @@ source $ZSH/oh-my-zsh.sh
 
 # Import aliases
 source ~/.config/zsh/alias
+source ~/.config/zsh/alias_termux
 
 # Override previous configurations for work
 if [ -e $HOME/.config/zsh/work ]; then

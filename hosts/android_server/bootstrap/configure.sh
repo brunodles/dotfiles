@@ -70,26 +70,6 @@ mkdir -p "$HOME/workspace"
 info "Workspace directory ready at ~/workspace"
 
 # ──────────────────────────────────────────────
-# 13. Create convenience aliases
-# ──────────────────────────────────────────────
-if ! grep -q "source.*alias" "$HOME/.zshrc" 2>/dev/null; then
-  cat >> "$HOME/.zshrc" << 'EOF'
-
-# ── Termux homelab aliases ──
-alias wake='termux-wake'
-alias sleep='termux-sleep'
-alias notify='termux-notify'
-alias battery='termux-battery-status'
-alias myip='termux-ip'
-alias tunnel='termux-ssh-tunnel'
-alias svstart='sv up'
-alias svstop='sv down'
-alias svstatus='sv status'
-EOF
-  info "Termux aliases added to ~/.zshrc"
-fi
-
-# ──────────────────────────────────────────────
 # 12. DNS — Dnsmasq (commented: lighter than Unbound)
 # ──────────────────────────────────────────────
 # Dnsmasq replaces Unbound as the DNS forwarder on Android.
