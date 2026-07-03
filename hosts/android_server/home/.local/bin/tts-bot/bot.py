@@ -105,8 +105,10 @@ def _handle_audio(token: str, chat_id: int, file_id: str) -> None:
         dest = Path(f"/tmp/tts_{file_id}.oga")
         dest.write_bytes(audio_resp.content)
 
-        tts.play(dest)
-        dest.unlink(missing_ok=True)
+        try:
+            tts.play(dest)
+        finally:
+            dest.unlink(missing_ok=True)
 
     except requests.RequestException as e:
         log.error("Audio download failed: %s", e)

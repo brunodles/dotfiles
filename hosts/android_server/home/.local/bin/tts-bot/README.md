@@ -27,7 +27,7 @@ Preencha `.env`:
 ## Run
 
 ```bash
-python ~/.local/bin/tts-bot/main.py
+python3 ~/.local/bin/tts-bot/main.py
 ```
 
 Ou via runit (supervisionado):
