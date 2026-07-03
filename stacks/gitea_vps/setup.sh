@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
-# setup.sh — Bootstrap Gitea on VPS: admin user, Hermes user, initial repos
-set -euo pipefail
+# setup.sh — [DEPRECATED] Bootstrap Gitea on VPS
+#
+# This script is deprecated. The gitea-setup init container now handles
+# all setup automatically via stacks/gitea_vps/setup/init.sh.
+# See compose.yml for the gitea-setup service definition.
+#
+# Kept for reference and manual fallback. To re-run setup:
+#   1. docker compose rm -f gitea-setup
+#   2. rm /opt/dockge_data/gitea_vps/data/.gitea-hermes-token
+#   3. docker compose up -d
+#
 
 # ── Guard: must NOT run as root ─────────────────────────────────────────
 if [[ $EUID -eq 0 ]]; then
