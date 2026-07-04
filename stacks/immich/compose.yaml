@@ -1,0 +1,78 @@
+name: immich
+
+services:
+  immich-server:
+    container_name: immich-server
+    hostname: immich-server
+    image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
+    volumes:
+      - ${UPLOAD_LOCATION}:/data
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - DB_HOSTNAME=database
+      - REDIS_HOSTNAME=redis
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - database
+    restart: unless-stopped
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.immich.rule=Host(`immich.lab`)"
+      - "traefik.http.routers.immich.entrypoints=web"
+      - "traefik.http.services.immich.loadbalancer.server.port=2283"
+
+  immich-machine-learning:
+    container_name: immich-ml
+    hostname: immich-ml
+    image: ghcr.io/immich-app/immich-machine-learning:${IMMICH_VERSION:-release}
+    volumes:
+      - model-cache:/cache
+    env_file:
+      - .env
+    depends_on:
+      - immich-server
+    restart: unless-stopped
+    networks:
+      - proxy
+
+  redis:
+    container_name: immich-redis
+    hostname: immich-redis
+    image: docker.io/valkey/valkey:9
+    restart: unless-stopped
+    networks:
+      - proxy
+    healthcheck:
+      test: redis-cli ping || exit 1
+
+  database:
+    container_name: immich-db
+    hostname: immich-db
+    image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0
+    volumes:
+      - ${DB_DATA_LOCATION}:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_DB=${DB_DATABASE_NAME}
+      - POSTGRES_INITDB_ARGS=--data-checksums
+    env_file:
+      - .env
+    restart: unless-stopped
+    networks:
+      - proxy
+    shm_size: 128mb
+    healthcheck:
+      test: pg_isready || exit 1
+
+volumes:
+  model-cache:
+
+networks:
+  proxy:
+    name: proxy
+    external: true
