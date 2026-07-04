@@ -265,6 +265,9 @@ dotfiles/
 │       └── ufw.sh
 │
 └── scripts/                   # Utility scripts
+    ├── dns/                       # Central DNS config & deployment
+    │   ├── dns-config.yaml
+    │   └── apply-dns.sh
     ├── docker_claude/
     │   └── claude
     ├── docker_copilot_cli/
@@ -302,6 +305,8 @@ dotfiles/
 | SSH port | 8022 |
 | Connectivity | Wi-Fi + Tailscale |
 | Purpose | Always-on Android server (SSH tunnel, tailnet node) |
+| DNS role | Secondary DNS (Dnsmasq) — fallback to Cloudflare when Pi-hole is unreachable |
+| DNS config | Auto-generated from `scripts/dns/dns-config.yaml` via `apply-dns.sh` |
 
 ### media
 
@@ -322,6 +327,7 @@ dotfiles/
 | Connectivity | Wired Ethernet + Tailscale |
 | Services | Pi-hole (DNS sinkhole, local DNS) |
 | DNS role | Primary DNS for the tailnet |
+| DNS records | Local records (hosts, CNAMEs) injected via `/etc/dnsmasq.d/99-homelab.conf` from `scripts/dns/dns-config.yaml` |
 | Status | Placeholder — Pi not yet on the same network |
 | Scripts | `extract-config.sh` (SSH pull), `restore-config.sh` (local apply) |
 

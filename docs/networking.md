@@ -171,31 +171,54 @@ environment:
 ## DNS Architecture
 
 ```
-  ┌──────────────────────────────────────────────┐
-  │           Tailscale Admin Console            │
-  │  → Global nameserver: Pi-hole Tailnet IP     │
-  │  → MagicDNS: enabled                         │
-  └──────────────────────┬───────────────────────┘
-                         │
-          All tailnet devices use Pi-hole
-                         │
-              ┌──────────┴──────────┐
-              │       Pi-hole       │
-              │  192.168.x.xx  (LAN)│
-              │  100.x.x.xx  (TN)   │
-              ├─────────────────────┤
-              │ Blocklists (ad/track)│
-              │ Local DNS records   │
-              │ Custom CNAME entries│
-              └─────────────────────┘
+              ┌──────────────────────────────────────────────┐
+              │           Tailscale Admin Console            │
+              │  → Global nameserver: Pi-hole Tailnet IP     │
+              │  → MagicDNS: enabled                         │
+              └──────────────────────┬───────────────────────┘
+                                     │
+                    All tailnet devices use Pi-hole
+                                     │
+                          ┌──────────┴──────────┐
+                          │       Pi-hole        │
+                          │  (dnsmasq)            │
+                          │  192.168.x.xx  (LAN) │
+                          │  100.x.x.xx  (TN)    │
+                          ├──────────────────────┤
+                          │ Blocklists           │
+                          │ Local DNS records ←──┼── apply-dns.sh
+                          │ Custom CNAME entries │     (from central
+                          └──────┬───────────────┘      dns-config.yaml)
+                                 │
+                     ┌───────────┴───────────┐
+                     │   Android (Dnsmasq)    │
+                     │   192.168.x.xx  (LAN)  │
+                     │   port 53              │
+                     ├───────────────────────┤
+                     │ Primary: Pi-hole       │
+                     │ Fallback: Cloudflare   │
+                     │ Local DNS records ←────┼── apply-dns.sh
+                     └───────────────────────┘     (same source)
 ```
 
-Pi-hole is the central DNS for the entire homelab:
+The homelab has two DNS servers sharing the same config source:
 
-1. **Local hosts** point to Pi-hole via DHCP or manual config
-2. **Tailscale global nameserver** = Pi-hole tailnet IP
-3. **All devices** (local + remote via Tailscale) get ad-blocking DNS
-4. **Local DNS records** resolve home services by hostname
+| Host | Software | Role | Config source |
+|------|----------|------|--------------|
+| **Pi** | Pi-hole (dnsmasq) | Primary DNS, ad-blocking, local records | Pi-hole admin + `scripts/dns/dns-config.yaml` via `apply-dns.sh` |
+| **Android** | Dnsmasq | Secondary DNS, fallback to Cloudflare, local records | `scripts/dns/dns-config.yaml` via `apply-dns.sh` |
+
+**Config centralization:**
+
+Local DNS records (static hosts, CNAMEs) are defined once in
+`scripts/dns/dns-config.yaml` and deployed to both hosts via
+`scripts/dns/apply-dns.sh`:
+
+- **Pi**: creates `/etc/dnsmasq.d/99-homelab.conf` (local records only)
+- **Android**: creates `/data/data/com.termux/files/usr/etc/dnsmasq.conf` (full config)
+
+Pi-hole continues to manage its own upstreams and blocklists
+independently via its admin UI or CLI.
 
 ---
 
@@ -211,6 +234,7 @@ Pi-hole is the central DNS for the entire homelab:
 | VPS | Dockge | `5001` | Tailscale only |
 | VPS | Tailscale | `UDP 41641` | Tailscale wireguard |
 | Android | SSH | `8022` | LAN + Tailscale |
+| Android | DNS (Dnsmasq) | `53` UDP | LAN + Tailscale |
 | Pi | Pi-hole DNS | `53` UDP | LAN + Tailscale |
 | Pi | Pi-hole Admin | `80` or `8080` | LAN + Tailscale |
 | Media | Jellyfin / Plex / *arr | Various | LAN only |
