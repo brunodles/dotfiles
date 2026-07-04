@@ -33,6 +33,26 @@ global nameserver in the Tailscale admin console. Every device on
 the tailnet gets ad-blocking automatically — even phones on mobile
 data.
 
+## Local DNS Records
+
+Static host records and CNAME aliases (e.g. `jellyfin.lab`,
+`immich.lab`) are managed centrally via
+`scripts/dns/dns-config.yaml` and deployed to both hosts with
+`scripts/dns/apply-dns.sh`.
+
+On the Pi, this creates `/etc/dnsmasq.d/99-homelab.conf` with only
+local records (Pi-hole continues to manage upstreams and
+blocklists). The file is auto-generated — do not edit it manually.
+
+```bash
+# Deploy local records to Pi
+cd ~/dotfiles
+bash scripts/dns/apply-dns.sh --host pi
+
+# Deploy to both Pi and Android
+bash scripts/dns/apply-dns.sh
+```
+
 ## Recovery
 
 If the Pi needs to be rebuilt:
