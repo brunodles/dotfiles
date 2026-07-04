@@ -110,6 +110,11 @@ dotfiles/
 │   ├── hermes/                # Hermes Agent (nousresearch/hermes-agent:latest)
 │   │   ├── .gitconfig
 │   │   └── compose.yaml
+│   ├── immich/                # Photo/video management (ghcr.io/immich-app/immich-server)
+│   │   ├── compose.yaml
+│   │   ├── .env.example
+│   │   ├── config/
+│   │   │   └── .gitkeep
 │   ├── jekyll/                # Jekyll static site server (jekyll/jekyll:latest)
 │   │   ├── compose.yaml
 │   │   └── site/
@@ -305,7 +310,7 @@ dotfiles/
 | Location | Home LAN |
 | OS | Ubuntu |
 | Connectivity | Wired Ethernet + Tailscale |
-| Stacks | dockge, gitea, jellyfin, metube, plex, qbittorrent, syncthing, traefik, whoami |
+| Stacks | dockge, gitea, immich, jellyfin, metube, plex, qbittorrent, syncthing, traefik, whoami |
 | Symlinked via | `configure.sh` → `/dockge/stacks/<name>/` |
 
 ### pi
