@@ -23,3 +23,6 @@ backup/*
 # Pycache
 __pycache__/
 
+# DNS — real MACs stay local
+dns-config.yaml
+

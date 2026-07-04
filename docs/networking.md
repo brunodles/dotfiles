@@ -211,7 +211,8 @@ The homelab has two DNS servers sharing the same config source:
 **Config centralization:**
 
 Local DNS records (static hosts, CNAMEs) are defined once in
-`scripts/dns/dns-config.yaml` and deployed to both hosts via
+`scripts/dns/dns-config.yaml` (or `dns-config.example.yaml` as
+template) and deployed to both hosts via
 `scripts/dns/apply-dns.sh`:
 
 - **Pi**: creates `/etc/dnsmasq.d/99-homelab.conf` (local records only)

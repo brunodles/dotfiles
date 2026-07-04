@@ -20,7 +20,17 @@ set -euo pipefail
 # ── Config ──────────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
-CONFIG_FILE="$SCRIPT_DIR/dns-config.yaml"
+
+# Config: use real file first, fall back to example
+CONFIG_FILE="${CONFIG_FILE:-$SCRIPT_DIR/dns-config.yaml}"
+EXAMPLE_FILE="$SCRIPT_DIR/dns-config.example.yaml"
+if [ ! -f "$CONFIG_FILE" ] && [ -f "$EXAMPLE_FILE" ]; then
+  CONFIG_FILE="$EXAMPLE_FILE"
+  info "No dns-config.yaml found, using example file."
+  info "Copy it to add real MACs:"
+  info "  cp $EXAMPLE_FILE $SCRIPT_DIR/dns-config.yaml"
+  echo
+fi
 
 # Hosts alvo (SSH via Tailscale — ajustar IPs/hostnames)
 ANDROID_SSH="${ANDROID_SSH:-android.lab}"

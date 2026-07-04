@@ -1,9 +1,9 @@
 # ──────────────────────────────────────────────
-# dns-config.yaml — Central DNS & DHCP config
+# dns-config.example.yaml — Example DNS & DHCP config
 # ──────────────────────────────────────────────
-# Fonte única de verdade para DNS do homelab.
-# O script scripts/apply-dns.sh lê este arquivo
-# e configura ambos os hosts (Android + Pi).
+# Template — copy to dns-config.yaml and fill in
+# your real MAC addresses before running apply-dns.sh.
+# dns-config.yaml is .gitignored and stays local.
 #
 # Upstreams e blocklists continuam gerenciados
 # pelo Pi-hole no Pi (via admin UI ou CLI).
@@ -33,26 +33,26 @@ local_domains:
 # aliases: CNAMEs apontando pro name (opcional).
 #          adiciona address=/<alias>.lab/<ip>
 hosts:
-  - mac: "ab:cd:ef:01:00:01"
+  - mac: "aa:bb:cc:dd:ee:01"
     ip: "192.168.1.10"
     name: "media"
     aliases: []
     # jellyfin, immich, plex → viraram CNAME avulso
     # (são serviços, não hosts físicos)
 
-  - mac: "ab:cd:ef:01:00:02"
+  - mac: "aa:bb:cc:dd:ee:02"
     ip: "192.168.1.20"
     name: "pi"
     aliases: []
     # pihole e admin viraram CNAME avulso
     # (são serviços, não o host físico em si)
 
-  - mac: "ab:cd:ef:01:00:03"
+  - mac: "aa:bb:cc:dd:ee:03"
     ip: "192.168.1.30"
     name: "android"
     aliases: []
 
-  - mac: "ab:cd:ef:01:00:04"
+  - mac: "aa:bb:cc:dd:ee:04"
     ip: "192.168.1.40"
     name: "silver"
     aliases: []

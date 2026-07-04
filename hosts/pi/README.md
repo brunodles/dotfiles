@@ -35,9 +35,10 @@ data.
 
 ## Local DNS Records
 
-Static host records and CNAME aliases (e.g. `jellyfin.lab`,
+static host records and CNAME aliases (e.g. `jellyfin.lab`,
 `immich.lab`) are managed centrally via
-`scripts/dns/dns-config.yaml` and deployed to both hosts with
+`scripts/dns/dns-config.yaml` (or `dns-config.example.yaml` as
+template) and deployed to both hosts with
 `scripts/dns/apply-dns.sh`.
 
 On the Pi, this creates `/etc/dnsmasq.d/99-homelab.conf` with only

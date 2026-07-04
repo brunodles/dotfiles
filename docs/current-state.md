@@ -266,7 +266,8 @@ dotfiles/
 │
 └── scripts/                   # Utility scripts
     ├── dns/                       # Central DNS config & deployment
-    │   ├── dns-config.yaml
+    │   ├── dns-config.example.yaml   ← template, copy to dns-config.yaml
+    │   ├── dns-config.yaml           ← real MACs (gitignored)
     │   └── apply-dns.sh
     ├── docker_claude/
     │   └── claude
@@ -306,7 +307,7 @@ dotfiles/
 | Connectivity | Wi-Fi + Tailscale |
 | Purpose | Always-on Android server (SSH tunnel, tailnet node) |
 | DNS role | Secondary DNS (Dnsmasq) — fallback to Cloudflare when Pi-hole is unreachable |
-| DNS config | Auto-generated from `scripts/dns/dns-config.yaml` via `apply-dns.sh` |
+| DNS config | Auto-generated from `scripts/dns/dns-config.yaml` (template: `dns-config.example.yaml`) via `apply-dns.sh` |
 
 ### media
 
