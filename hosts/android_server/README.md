@@ -51,7 +51,7 @@ Services are managed via **runit** (termux-services).
 |---------|------|------|--------|
 | `sshd` | 8022 | `var/service/sshd/run` | ✅ Enabled by bootstrap |
 | `ttsd` | dynamic | `var/service/ttsd/run` | ✅ Enabled by bootstrap |
-| `unbound` | 53 | — | ⏸️ Commented (see [DNS](#dns)) |
+| `dnsmasq` | 53 | `var/service/dnsmasq/run` | ⏸️ Commented (see [DNS](#dns)) |
 
 ```bash
 sv status <service>     # check status
@@ -64,20 +64,29 @@ sv-disable <service>    # disable on boot
 
 The run scripts live in `var/service/<name>/run` within this directory.
 
-## DNS (Unbound)
+## DNS (Dnsmasq)
 
 This device can act as a redundant DNS forwarder when the Pi-hole is unreachable (e.g. power outage).
 
-The config file is at `dns/unbound.conf` — it forwards queries to the Pi-hole by default and falls back to Cloudflare DNS-over-TLS.
+Dnsmasq replaces the previous Unbound setup — it uses less memory (~2MB vs ~12MB) and shares the same config format as Pi-hole (both run dnsmasq under the hood).
+
+The config is auto-generated from the central `scripts/dns/dns-config.yaml`. A reference file is at `dns/dnsmasq.conf`.
 
 To enable:
 
 ```bash
-pkg install unbound
-cp $PREFIX/etc/unbound/unbound.conf $PREFIX/etc/unbound/unbound.conf.bak  # backup default
-cp ~/dotfiles/hosts/android_server/dns/unbound.conf $PREFIX/etc/unbound/unbound.conf
-sv-enable unbound
-sv up unbound
+pkg install dnsmasq
+cp $PREFIX/etc/dnsmasq.conf $PREFIX/etc/dnsmasq.conf.bak  # backup default
+cp ~/dotfiles/hosts/android_server/dns/dnsmasq.conf $PREFIX/etc/dnsmasq.conf
+sv-enable dnsmasq
+sv up dnsmasq
+```
+
+To update config after changes to the central YAML:
+
+```bash
+cd ~/dotfiles
+bash scripts/dns/apply-dns.sh --host android
 ```
 
 To test:
@@ -85,7 +94,6 @@ To test:
 ```bash
 dig @localhost google.com           # local resolution
 dig @<android-ip> google.com        # from another host
-unbound-control stats               # cache hit ratio
 ```
 
 Update your router DHCP to set this device's IP as secondary DNS.
