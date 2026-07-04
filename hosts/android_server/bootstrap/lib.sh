@@ -20,6 +20,6 @@ error() { echo -e "${RED}[ERROR]${NC} $*" >&2; }
 
 # ── Derived paths ──
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-HOST_DIR="$(dirname "$SCRIPT_DIR")"  # hosts/android
+HOST_DIR="$(dirname "$SCRIPT_DIR")"  # hosts/android_server
 REPO_DIR="$(cd "$HOST_DIR/.." && pwd)"  # dotfiles root (parent of hosts/)
 DOTFILES="${DOTFILES:-$HOME/dotfiles}"

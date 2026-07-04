@@ -43,15 +43,19 @@ hosts:
   - mac: "ab:cd:ef:01:00:02"
     ip: "192.168.1.20"
     name: "pi"
-    aliases: ["pihole", "admin"]
+    aliases: []
+    # pihole e admin viraram CNAME avulso
+    # (são serviços, não o host físico em si)
 
   - mac: "ab:cd:ef:01:00:03"
     ip: "192.168.1.30"
     name: "android"
+    aliases: []
 
   - mac: "ab:cd:ef:01:00:04"
     ip: "192.168.1.40"
     name: "silver"
+    aliases: []
 
 # ── CNAMEs avulsos ─────────────────────────────
 # Aliases para serviços (não hosts físicos).
