@@ -8,21 +8,24 @@ Self-hosted photo and video management — backup de celular, álbum familiar, o
 |---------|--------|--------|
 | `immich-server` | `ghcr.io/immich-app/immich-server` | API + Web UI |
 | `immich-machine-learning` | `ghcr.io/immich-app/immich-machine-learning` | Detecção facial (CPU) |
-| `database` | `ghcr.io/immich-app/postgres:14-vectorchord` | Postgres + pgvecto.rs |
+| `database` | `ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0` | Postgres + pgvecto.rs |
 | `redis` | `valkey/valkey:9` | Fila de jobs |
 
 ## Deploy
 
 ```bash
-# 1. Copiar e configurar
+# 1. Entrar no diretório da stack
+cd stacks/immich
+
+# 2. Copiar e configurar
 cp .env.example .env
 # Edite .env: DB_PASSWORD, confira os paths
 
-# 2. Criar diretórios de dados
+# 3. Criar diretórios de dados
 mkdir -p /media/data/immich/library
 mkdir -p /media/data/immich/postgres
 
-# 3. Subir
+# 4. Subir
 docker compose up -d
 ```
 
