@@ -1,0 +1,99 @@
+# ──────────────────────────────────────────────
+# dns-config.yaml — Central DNS & DHCP config
+# ──────────────────────────────────────────────
+# Fonte única de verdade para DNS do homelab.
+# O script scripts/apply-dns.sh lê este arquivo
+# e configura ambos os hosts (Android + Pi).
+#
+# Upstreams e blocklists continuam gerenciados
+# pelo Pi-hole no Pi (via admin UI ou CLI).
+# Aqui só o que é compartilhado entre os hosts.
+
+# ── Upstream ──────────────────────────────────
+# O primary aponta para o Pi-hole (LAN).
+# O Android também usa fallback quando o Pi cai.
+# O Pi ignora fallback — ele já tem os upstreams
+# configurados no Pi-hole (Cloudflare, etc).
+upstream:
+  primary: 192.168.1.53      # Pi-hole (LAN)
+
+fallback:
+  - 1.1.1.1
+  - 1.0.0.1
+
+# ── Domínios locais ────────────────────────────
+# Domínios que resolvem localmente sem consultar
+# upstream. O dnsmasq gera local=/<dominio>/
+local_domains:
+  - lab
+  - home
+
+# ── Hosts estáticos ────────────────────────────
+# MAC → IP fixo via DHCP + DNS reverso e direto.
+# aliases: CNAMEs apontando pro name (opcional).
+#          adiciona address=/<alias>.lab/<ip>
+hosts:
+  - mac: "ab:cd:ef:01:00:01"
+    ip: "192.168.1.10"
+    name: "media"
+    aliases: []
+    # jellyfin, immich, plex → viraram CNAME avulso
+    # (são serviços, não hosts físicos)
+
+  - mac: "ab:cd:ef:01:00:02"
+    ip: "192.168.1.20"
+    name: "pi"
+    aliases: ["pihole", "admin"]
+
+  - mac: "ab:cd:ef:01:00:03"
+    ip: "192.168.1.30"
+    name: "android"
+
+  - mac: "ab:cd:ef:01:00:04"
+    ip: "192.168.1.40"
+    name: "silver"
+
+# ── CNAMEs avulsos ─────────────────────────────
+# Aliases para serviços (não hosts físicos).
+# Gera cname=<alias>,<target> no dnsmasq.
+cnames:
+  - alias: "jellyfin"
+    target: "media"
+  - alias: "immich"
+    target: "media"
+  - alias: "photos"
+    target: "immich"
+  - alias: "plex"
+    target: "media"
+  - alias: "pihole"
+    target: "pi"
+  - alias: "admin"
+    target: "pi"
+  - alias: "traefik"
+    target: "media"
+  - alias: "metube"
+    target: "media"
+  - alias: "qbittorrent"
+    target: "media"
+
+# ── DHCP ───────────────────────────────────────
+# Desligado por enquanto.
+# Quando ativar, um host (android ou pi) passa a
+# distribuir IPs e respeitar as reservas MAC→IP.
+dhcp:
+  enabled: false
+
+  # Qual host serve DHCP
+  # host: android
+
+  # Pool de IPs dinâmicos
+  # range: 192.168.1.100,192.168.1.200,24h
+
+  # Gateway anunciado
+  # gateway: 192.168.1.1
+
+  # DNS anunciado (este próprio host)
+  # dns: 192.168.1.30
+
+  # Domínio DHCP
+  # domain: lab
