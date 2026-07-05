@@ -94,6 +94,19 @@ Network topology for the homelab.
 | Access | LAN (SSH) + Tailscale |
 | Power | Always plugged in, battery saver off, wakelock on |
 
+### Phone
+
+| Field | Value |
+|-------|-------|
+| Connection | Wi-Fi + 4G/5G (mobile) |
+| OS | Android + Termux |
+| IP | Dynamic (no DHCP reservation) |
+| Tailnet IP | `100.x.x.x` |
+| Services | None — terminal client only |
+| Access | Tailscale only |
+| Power | Normal (no wakelock, phone can sleep) |
+| Purpose | SSH terminal to access homelab hosts from anywhere |
+
 ### Silver
 
 | Field | Value |

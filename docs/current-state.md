@@ -178,8 +178,7 @@ dotfiles/
 │   │       ├── configure.sh       # symlinks stacks/ for this host
 │   │       ├── links.sh
 │   │       └── lib.sh
-│   │
-│   ├── pi/                    # Raspberry Pi (Pi-hole)
+│   │\n│   ├── phone/                 # Android phone (terminal client)\n│   │   ├── README.md\n│   │   ├── bootstrap.sh\n│   │   ├── bootstrap/\n│   │   │   ├── install.sh\n│   │   │   ├── configure.sh\n│   │   │   └── links.sh\n│   │   └── home/.ssh/\n│   │       └── config\n│   │\n│   ├── pi/                    # Raspberry Pi (Pi-hole)
 │   │   ├── README.md
 │   │   ├── bootstrap.sh
 │   │   ├── bootstrap/
@@ -265,7 +264,7 @@ dotfiles/
 │       └── ufw.sh
 │
 └── scripts/                   # Utility scripts
-    ├── dns/                       # Central DNS config & deployment
+    ├── termux/                    # Shared Termux scripts & config\n    │   ├── README.md\n    │   ├── termux.properties\n    │   └── bin/\n    │       ├── termux-ip\n    │       ├── termux-notify\n    │       └── termux-wake\n    ├── dns/                       # Central DNS config & deployment
     │   ├── dns-config.example.yaml   ← template, copy to dns-config.yaml
     │   ├── dns-config.yaml           ← real MACs (gitignored)
     │   └── apply-dns.sh
@@ -308,6 +307,19 @@ dotfiles/
 | Purpose | Always-on Android server (SSH tunnel, tailnet node) |
 | DNS role | Secondary DNS (Dnsmasq) — fallback to Cloudflare when Pi-hole is unreachable |
 | DNS config | Auto-generated from `scripts/dns/dns-config.yaml` (template: `dns-config.example.yaml`) via `apply-dns.sh` |
+
+### phone
+
+| Item | Value |
+|------|-------|
+| Location | Mobile (Wi-Fi + 4G/5G) |
+| OS | Android + Termux |
+| Package manager | `pkg` |
+| Shell | Zsh + Oh My Zsh |
+| Connectivity | Tailscale (no fixed IP, no DHCP reservation) |
+| Purpose | Terminal client — SSH into homelab hosts |
+| Services | None (consumer device, no daemons) |
+| Notes | Shared scripts from `scripts/termux/` |
 
 ### media
 

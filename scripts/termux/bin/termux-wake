@@ -1,0 +1,16 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# termux-wake — Acquire a wakelock so the CPU stays awake
+# Usage: termux-wake [lock_name]
+# Default lock name: "terminal"
+
+set -euo pipefail
+
+LOCK_NAME="${1:-terminal}"
+
+if ! command -v termux-wake-lock &>/dev/null; then
+  echo "Error: termux-wake-lock not found. Install termux-api: pkg install termux-api" >&2
+  exit 1
+fi
+
+termux-wake-lock "$LOCK_NAME"
+echo "Wakelock acquired: $LOCK_NAME"

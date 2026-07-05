@@ -1,0 +1,65 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# termux-notify — Send an Android notification from Termux
+# Usage: termux-notify [-t title] [-c content] [-i icon] [--alert-once] [--priority p]
+#   priority: low, high, max (default: high)
+#   icon:     info, warning, error (default: info)
+
+set -euo pipefail
+
+TITLE=""
+CONTENT=""
+PRIORITY="high"
+ALERT_ONCE=""
+ICON="info"
+
+usage() {
+  cat <<EOF
+Usage: $(basename "$0") -t TITLE -c CONTENT [options]
+
+Options:
+  -t TITLE       Notification title (required)
+  -c CONTENT     Notification body (required)
+  -p PRIORITY    low | high | max  (default: high)
+  -i ICON        info | warning | error (default: info)
+  --alert-once   Only alert once (no repeated sound)
+  -h             Show help
+EOF
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -t) TITLE="$2"; shift 2 ;;
+    -c) CONTENT="$2"; shift 2 ;;
+    -p) PRIORITY="$2"; shift 2 ;;
+    -i) ICON="$2"; shift 2 ;;
+    --alert-once) ALERT_ONCE="--alert-once"; shift ;;
+    -h|--help) usage; exit 0 ;;
+    *) echo "Unknown: $1"; usage; exit 1 ;;
+  esac
+done
+
+if [[ -z "$TITLE" || -z "$CONTENT" ]]; then
+  echo "Error: -t and -c are required" >&2
+  usage
+  exit 1
+fi
+
+if ! command -v termux-notification &>/dev/null; then
+  echo "Error: termux-notification not found. Install termux-api: pkg install termux-api" >&2
+  exit 1
+fi
+
+icon_path=""
+case "$ICON" in
+  warning) icon_path="${PREFIX}/share/termux-api/icons/warning.png" ;;
+  error)   icon_path="${PREFIX}/share/termux-api/icons/error.png" ;;
+  *)       icon_path="" ;;  # default (info)
+esac
+
+# shellcheck disable=SC2086
+termux-notification \
+  --title "$TITLE" \
+  --content "$CONTENT" \
+  --priority "$PRIORITY" \
+  ${icon_path:+--icon "$icon_path"} \
+  $ALERT_ONCE
