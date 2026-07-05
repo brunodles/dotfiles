@@ -82,8 +82,8 @@ fi
 # ──────────────────────────────────────────────
 if [[ ! -f "$HOME/.ssh/id_ed25519" ]]; then
   info "Generating SSH key pair..."
-  read -r -p "Enter a passphrase for the new key (recommended): " PASSPHRASE
-  ssh-keygen -t ed25519 -f "$HOME/.ssh/id_ed25519" -N "$PASSPHRASE" -C "phone-$(date +%Y%m%d)"
+  info "You will be prompted for a passphrase (recommended for a mobile device)."
+  ssh-keygen -t ed25519 -f "$HOME/.ssh/id_ed25519" -C "phone-$(date +%Y%m%d)"
   echo ""
   info "📄 Public key — add this to each server's authorized_keys:"
   cat "$HOME/.ssh/id_ed25519.pub"
@@ -94,10 +94,12 @@ fi
 # ──────────────────────────────────────────────
 # 6. Add Termux aliases to .zshrc
 # ──────────────────────────────────────────────
-if ! grep -q "termux" "$HOME/.zshrc" 2>/dev/null; then
+# ── Termux aliases ──
+if ! grep -q "# ── Termux aliases ──" "$HOME/.zshrc" 2>/dev/null; then
   cat >> "$HOME/.zshrc" << 'EOF'
 
 # ── Termux aliases ──
+export PATH="$HOME/.local/bin:$PATH"
 alias myip='termux-ip'
 alias notify='termux-notify'
 alias wake='termux-wake'

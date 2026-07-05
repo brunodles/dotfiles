@@ -34,6 +34,7 @@ if [[ -f "$SCRIPT_BOOTSTRAP/link" ]]; then
   info "  Dotfiles linked."
 else
   # Fallback: direct symlinks if bootstrap/link not available
+  mkdir -p "$home_config/tmux" "$home_config/zsh"
   ln -sf "$DOTFILES/.vimrc" "$HOME/.vimrc" 2>/dev/null || true
   ln -sf "$DOTFILES/tmux/tmux.conf" "$home_config/tmux/tmux.conf" 2>/dev/null || true
   ln -sf "$DOTFILES/zsh" "$home_config/zsh" 2>/dev/null || true

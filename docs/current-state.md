@@ -178,7 +178,18 @@ dotfiles/
 │   │       ├── configure.sh       # symlinks stacks/ for this host
 │   │       ├── links.sh
 │   │       └── lib.sh
-│   │\n│   ├── phone/                 # Android phone (terminal client)\n│   │   ├── README.md\n│   │   ├── bootstrap.sh\n│   │   ├── bootstrap/\n│   │   │   ├── install.sh\n│   │   │   ├── configure.sh\n│   │   │   └── links.sh\n│   │   └── home/.ssh/\n│   │       └── config\n│   │\n│   ├── pi/                    # Raspberry Pi (Pi-hole)
+│   │
+│   ├── phone/                 # Android phone (terminal client)
+│   │   ├── README.md
+│   │   ├── bootstrap.sh
+│   │   ├── bootstrap/
+│   │   │   ├── install.sh
+│   │   │   ├── configure.sh
+│   │   │   └── links.sh
+│   │   └── home/.ssh/
+│   │       └── config
+│   │
+│   ├── pi/                    # Raspberry Pi (Pi-hole)
 │   │   ├── README.md
 │   │   ├── bootstrap.sh
 │   │   ├── bootstrap/
@@ -264,7 +275,14 @@ dotfiles/
 │       └── ufw.sh
 │
 └── scripts/                   # Utility scripts
-    ├── termux/                    # Shared Termux scripts & config\n    │   ├── README.md\n    │   ├── termux.properties\n    │   └── bin/\n    │       ├── termux-ip\n    │       ├── termux-notify\n    │       └── termux-wake\n    ├── dns/                       # Central DNS config & deployment
+    ├── termux/                    # Shared Termux scripts & config
+    │   ├── README.md
+    │   ├── termux.properties
+    │   └── bin/
+    │       ├── termux-ip
+    │       ├── termux-notify
+    │       └── termux-wake
+    ├── dns/                       # Central DNS config & deployment
     │   ├── dns-config.example.yaml   ← template, copy to dns-config.yaml
     │   ├── dns-config.yaml           ← real MACs (gitignored)
     │   └── apply-dns.sh

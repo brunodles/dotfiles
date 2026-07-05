@@ -3,7 +3,7 @@
 # Usage: cd ~/dotfiles && bash hosts/phone/bootstrap.sh
 set -euo pipefail
 
-cd "$(dirname "$0")/bootstrap"
+cd "$(dirname "$0")/bootstrap" || { echo "bootstrap/ directory not found"; exit 1; }
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
