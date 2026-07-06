@@ -1,50 +1,24 @@
 #!/data/data/com.termux/files/usr/bin/bash
-# links.sh — Symlink dotfiles for phone (terminal client)
-#
-# Run after install.sh and configure.sh:
-#   cd ~/dotfiles && bash hosts/phone/bootstrap/links.sh
+# links.sh — Symlink dotfiles for android phone
+source "$HOME/dotfiles/scripts/bootstrap/_log.source.sh"
+source "$HOME/dotfiles/scripts/bootstrap/_env.source.sh"
 
-set -euo pipefail
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-HOST_DIR="$(dirname "$SCRIPT_DIR")"     # hosts/phone
-DOTFILES="${DOTFILES:-$HOME/dotfiles}"
-SCRIPT_BOOTSTRAP="$DOTFILES/scripts/bootstrap"
-link="$SCRIPT_BOOTSTRAP/link"
-
-# ── Colors ──
-GREEN='\033[0;32m'
-NC='\033[0m'
-info()  { echo -e "${GREEN}[INFO]${NC} $*"; }
-
+link="$SCRIPT_BOOTSTRAP_DIR/link"
+config_source="$REPO_DIR/dotfiles"
+home_local="$HOME/.local"
 home_config="$HOME/.config"
+host_phone="$REPO_DIR/hosts/phone"
 
-mkdir -p "$home_config"
+mkdir -p "$home_config" "$home_local/bin" "$home_local/fbin"
 
-# ──────────────────────────────────────────────
-# Link dotfiles
-# ──────────────────────────────────────────────
 info "Linking dotfiles..."
+"$link" "$config_source/.vimrc" "$HOME/.vimrc"
+"$link" "$config_source/tmux/tmux.conf" "$home_config/tmux/tmux.conf"
+"$link" "$config_source/zsh" "$home_config/zsh"
+"$link" "$home_config/zsh/zshrc" "$HOME/.zshrc"
 
-if [[ -f "$SCRIPT_BOOTSTRAP/link" ]]; then
-  bash "$link" "$DOTFILES/.vimrc" "$HOME/.vimrc"
-  bash "$link" "$DOTFILES/tmux/tmux.conf" "$home_config/tmux/tmux.conf"
-  bash "$link" "$DOTFILES/zsh" "$home_config/zsh"
-  bash "$link" "$home_config/zsh/zshrc" "$HOME/.zshrc"
-  info "  Dotfiles linked."
-else
-  # Fallback: direct symlinks if bootstrap/link not available
-  mkdir -p "$home_config/tmux" "$home_config/zsh"
-  ln -sf "$DOTFILES/.vimrc" "$HOME/.vimrc" 2>/dev/null || true
-  ln -sf "$DOTFILES/tmux/tmux.conf" "$home_config/tmux/tmux.conf" 2>/dev/null || true
-  ln -sf "$DOTFILES/zsh" "$home_config/zsh" 2>/dev/null || true
-  ln -sf "$home_config/zsh/zshrc" "$HOME/.zshrc" 2>/dev/null || true
-  info "  Dotfiles linked (direct)."
-fi
+info "Copying local scripts..."
+cp -r "$host_phone/home/.local/bin/"* "$home_local/bin/" 2>/dev/null || true
+cp -r "$host_phone/home/.local/fbin/"* "$home_local/fbin/" 2>/dev/null || true
 
-# ── Done ──
-echo ""
-info "═══════════════════════════════════════════"
-info "  ✅ Phone bootstrap complete!"
-info "  ➜  Restart Termux or run 'zsh'"
-info "═══════════════════════════════════════════"
+info "Silver links complete"
