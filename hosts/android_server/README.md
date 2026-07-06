@@ -7,10 +7,12 @@ Acts as secondary DNS for Pi-hole redundancy (see [Services](#services) and [DNS
 ## Installation
 
 1. **Install Termux** — [F-Droid](https://f-droid.org/packages/com.termux/) (recommended, avoids Play Store issues).
-2. Run `termux-setup-storage` to grant file access (required on Android 11+).
-3. Paste the following directly into Termux after installation:
+2. Paste the following directly into Termux after installation:
 
 ```bash
+# grant file access (required on Android 11+)
+termux-setup-storage
+
 apt update -y
 apt upgrade -y
 
@@ -20,12 +22,13 @@ pkg install -y git curl
 git clone https://github.com/brunodles/dotfiles.git ~/dotfiles
 ```
 
-4 **Install SSH server**
-set password
+3. **Install SSH server**
+Set password
 ```bash
-passwd #First run to set a login password
+#First run to set a login password
+passwd
 ```
-Instal and run
+Install and run
 ```bash
 pkg add openssh
 ifconfig
@@ -35,7 +38,7 @@ sshd #(default port 8022).
 
 **Access via SSH** — `ssh -p 8022 <user>@<android-ip>` from your computer.
 
-5. Run Android Server bootstrap
+4. Run Android Server bootstrap
 ```bash
 cd ~/dotfiles 
 bash hosts/android_server/bootstrap.sh

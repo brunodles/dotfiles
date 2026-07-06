@@ -7,15 +7,18 @@
 ## Installation
 
 1. **Install Termux** — [F-Droid](https://f-droid.org/packages/com.termux/) (recommended).
-2. Run `termux-setup-storage` to grant file access.
-3. Paste the following directly into Termux:
+2. Paste the following directly into Termux:
 
 ```bash
-apt update -y && apt upgrade -y
+# grant file access (required on Android 11+)
+termux-setup-storage
+ 
+apt update -y
+apt upgrade -y
+
 pkg install -y git curl
 
 git clone https://github.com/brunodles/dotfiles.git ~/dotfiles
-
 cd ~/dotfiles
 bash hosts/phone/bootstrap.sh
 ```
