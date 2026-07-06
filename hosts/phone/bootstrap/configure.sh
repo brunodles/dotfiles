@@ -92,22 +92,6 @@ else
 fi
 
 # ──────────────────────────────────────────────
-# 6. Add Termux aliases to .zshrc
-# ──────────────────────────────────────────────
-# ── Termux aliases ──
-if ! grep -q "# ── Termux aliases ──" "$HOME/.zshrc" 2>/dev/null; then
-  cat >> "$HOME/.zshrc" << 'EOF'
-
-# ── Termux aliases ──
-export PATH="$HOME/.local/bin:$PATH"
-alias myip='termux-ip'
-alias notify='termux-notify'
-alias wake='termux-wake'
-EOF
-  info "  Termux aliases added to ~/.zshrc"
-fi
-
-# ──────────────────────────────────────────────
 # 7. Create workspace directory
 # ──────────────────────────────────────────────
 mkdir -p "$HOME/workspace"

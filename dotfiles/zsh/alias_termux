@@ -2,6 +2,8 @@
 # These aliases will only be included if running on termux.
 
 if [[ "$PREFIX" == *com.termux* ]]; then
+    export PATH="$HOME/.local/bin:$PATH"
+
     alias wake='termux-wake'
     alias sleep='termux-sleep'
     alias notify='termux-notify'
