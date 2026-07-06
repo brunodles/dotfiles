@@ -1,7 +1,7 @@
 # Current Repository State
 
-This document reflects the **actual** structure of the repository as of June 2026.
-It is auto-audited against the filesystem to ensure accuracy.
+This document reflects the **actual** structure of the repository as of July 2026.
+Auto-audited against `git ls-files` — every file listed is tracked, nothing is guessed.
 
 ---
 
@@ -9,13 +9,10 @@ It is auto-audited against the filesystem to ensure accuracy.
 
 ```
 dotfiles/
-├── README.md
-├── LICENSE
 ├── .gitignore
-│
 ├── .github/
 │   └── copilot-instructions.md
-├── .git-queue/                         # Git queue task coordination
+├── .git-queue/
 │   └── tasks/
 │       ├── TASK-001.json
 │       ├── TASK-002.json
@@ -24,51 +21,56 @@ dotfiles/
 │       ├── TASK-005.json
 │       ├── TASK-006.json
 │       └── TASK-007.json
-├── CLAUDE.md                           # Agent coordination instructions
-├── agents/                             # Agent configuration files
-│   ├── claude/
-│   │   ├── CLAUDE.md
-│   │   └── rules/
-│   ├── copilot/
-│   │   └── instructions.md
-│   ├── hermes/
-│   │   └── soul.md
+├── LICENSE
+├── README.md
+│
+├── agents/                         # Agent configuration & skill definitions
 │   ├── opencode/
 │   │   └── instructions.md
-│   └── skills/                         # Skill definitions (regenerated)
+│   └── skills/
+│       ├── grill-me/
+│       │   └── SKILL.md
+│       ├── handoff/
+│       │   └── SKILL.md
+│       └── to-prd/
+│           └── SKILL.md
 │
-├── docs/
-│   ├── agent-queue-design.md               # Git queue coordination design
-│   ├── current-state.md                     # ← this file
-│   ├── install-list.md                      # Package DSL documentation
-│   ├── networking.md                        # Network topology & connectivity
-│   ├── repository-structure.md              # Aspirational layout
-│   ├── stacks.md                            # Docker stacks overview
+├── docs/                           # Documentation
+│   ├── agent-queue-design.md
+│   ├── current-state.md            # ← this file
+│   ├── install-list.md
+│   ├── networking.md
+│   ├── repository-structure.md
+│   ├── stacks.md
 │   ├── future/
-│   │   ├── agent-queue-feasibility.md       # Queue feasibility study
-│   │   ├── gitea-hermes-infra.md            # Gitea for Hermes analysis
-│   │   └── gitea-stack-plan.md              # Gitea production readiness plan
+│   │   ├── agent-queue-feasibility.md
+│   │   ├── docs-pipeline.md
+│   │   ├── gitea-hermes-infra.md
+│   │   ├── gitea-stack-plan.md
+│   │   ├── system-env-bootstrap.md
+│   │   ├── termux-speech-to-text.md
+│   │   └── termux-tts-server.md
+│   ├── improvements/
+│   │   ├── docs-bootstrap-review.md
+│   │   ├── docs-sync-review.md
+│   │   └── jekyll-docs-integration-review.md
 │   └── router/
-│       └── askey-rtf8115vw.md               # Router DNS API guide
+│       └── askey-rtf8115vw.md
 │
-├── dotfiles/                  # Workstation configuration files
+├── dotfiles/                       # Workstation configuration files
 │   ├── .vimrc
 │   ├── compton.conf
 │   ├── alacritty/
-│   │   ├── alacritty                    # symlink to self (macOS)
 │   │   ├── alacritty.toml
 │   │   ├── keyboard.toml
 │   │   ├── window_linux.toml
 │   │   └── window_mac.toml
 │   ├── ghostty/
-│   │   ├── config
-│   │   └── ghostty                      # symlink to self (macOS)
+│   │   └── config
 │   ├── i3/
 │   │   ├── config
-│   │   ├── i3                           # symlink to self
 │   │   └── openTerminal.sh
 │   ├── i3blocks/
-│   │   ├── i3blocks                     # symlink to self
 │   │   ├── title.conf
 │   │   ├── top.conf
 │   │   └── scripts/
@@ -80,140 +82,91 @@ dotfiles/
 │   │       ├── titlebar
 │   │       └── volume
 │   ├── i3status/
-│   │   ├── config
-│   │   └── i3status                     # symlink to self
+│   │   └── config
 │   ├── tmux/
 │   │   └── tmux.conf
 │   └── zsh/
 │       ├── alias
+│       ├── alias_termux
 │       ├── env
 │       ├── p10k.zsh
-│       ├── zsh                          # symlink to self
 │       └── zshrc
 │
-├── stacks/                    # Docker stacks — canonical, reusable per host
-│   ├── calibre/               # Ebook library web UI (linuxserver/calibre-web)
-│   │   ├── compose.yaml
-│   │   ├── config/
-│   │   │   └── .gitkeep
-│   │   └── books/
-│   │       └── .gitkeep
-│   ├── dockge/                # Dockge UI (louislam/dockge:1)
-│   │   ├── .gitignore         # ignores data/*
-│   │   └── compose.yaml       # mounts ../:/opt/stacks, Traefik-labeled
-│   ├── gitea/                 # Gitea + SQLite (gitea/gitea:1.22.4)
-│   │   ├── .env.example
+├── hosts/                          # Host-specific configurations
+│   ├── android_server/             # Android/Termux device (always-on server)
 │   │   ├── README.md
-│   │   ├── compose.yml
-│   │   └── config/
-│   │       └── .keep
-│   ├── hermes/                # Hermes Agent (nousresearch/hermes-agent:latest)
-│   │   ├── .gitconfig
-│   │   └── compose.yaml
-│   ├── immich/                # Photo/video management (ghcr.io/immich-app/immich-server)
-│   │   ├── compose.yaml
-│   │   ├── .env.example
-│   │   ├── config/
-│   │   │   └── .gitkeep
-│   ├── jekyll/                # Jekyll static site server (jekyll/jekyll:latest)
-│   │   ├── compose.yaml
-│   │   └── site/
-│   │       └── .gitkeep
-│   ├── jellyfin/              # Media server (linuxserver/jellyfin:10.10.7)
-│   │   └── compose.yml
-│   ├── metube/                # YouTube downloader (ghcr.io/alexta69/metube)
-│   │   └── compose.yml
-│   ├── plex/                  # Media server (lscr.io/linuxserver/plex:1.40.5)
-│   │   └── docker-compose.yml
-│   ├── qbittorrent/           # Torrent client (hotio/qbittorrent:release-5.0.1)
-│   │   └── docker-compose.yml
-│   ├── static/                # Static file server (nginx:alpine)
-│   │   ├── compose.yaml
-│   │   └── html/
-│   │       └── .gitkeep
-│   ├── syncthing/             # File sync (linuxserver/syncthing:1.29.2)
-│   │   └── compose.yml
-│   ├── tailscale/             # Tailscale sidecar (tailscale/tailscale)
-│   │   ├── .env.example
-│   │   ├── README.md
-│   │   ├── compose.yaml
-│   │   └── config/
-│   │       └── .keep
-│   ├── traefik/               # Reverse proxy (traefik:v3.7)
-│   │   ├── compose.yaml
-│   │   └── config/
-│   │       ├── traefik.yml
-│   │       ├── acme/
-│   │       │   └── .keep
-│   │       └── dynamic/
-│   │           └── .keep
-│   └── whoami/                # Test endpoint (traefik/whoami)
-│       └── compose.yaml
-│
-├── hosts/                     # Host-specific configurations
-│   ├── android/               # Android/Termux device (always-on server)
-│   │   ├── README.md
-│   │   ├── bootstrap.sh            # → bootstrap/{install,configure,links}.sh
+│   │   ├── bootstrap.sh
 │   │   ├── bootstrap/
-│   │   │   ├── install.sh
 │   │   │   ├── configure.sh
-│   │   │   ├── links.sh
-│   │   │   └── lib.sh
+│   │   │   ├── install.sh
+│   │   │   ├── lib.sh
+│   │   │   └── links.sh
 │   │   ├── dns/
-│   │   │   └── unbound.conf
+│   │   │   └── dnsmasq.conf
 │   │   ├── home/.local/bin/
 │   │   │   ├── termux-battery-status
 │   │   │   ├── termux-ip
 │   │   │   ├── termux-notify
 │   │   │   ├── termux-sleep
 │   │   │   ├── termux-ssh-tunnel
-│   │   │   └── termux-wake
-│   │   └── termux/
-│   │       └── termux.properties
+│   │   │   ├── termux-tts-server
+│   │   │   ├── termux-wake
+│   │   │   └── tts-bot/               # Telegram → TTS bot app
+│   │   │       ├── .env.example
+│   │   │       ├── .gitignore
+│   │   │       ├── README.md
+│   │   │       ├── bot.py
+│   │   │       ├── env.py
+│   │   │       ├── main.py
+│   │   │       └── tts.py
+│   │   ├── termux/
+│   │   │   └── termux.properties
+│   │   └── var/service/              # runit service definitions
+│   │       ├── tts-bot/
+│   │       │   ├── run
+│   │       │   └── log/run
+│   │       └── ttsd/
+│   │           ├── run
+│   │           └── log/run
 │   │
-│   ├── media/                 # Media server
+│   ├── media/                     # Media server (Ubuntu)
 │   │   ├── bootstrap.sh
 │   │   └── bootstrap/
 │   │       ├── install.sh
-│   │       ├── configure.sh       # symlinks stacks/ for this host
 │   │       ├── links.sh
-│   │       └── lib.sh
+│   │       └── provision.sh
 │   │
-│   ├── phone/                 # Android phone (terminal client)
+│   ├── phone/                     # Android phone (terminal client)
 │   │   ├── README.md
 │   │   ├── bootstrap.sh
 │   │   ├── bootstrap/
-│   │   │   ├── install.sh
 │   │   │   ├── configure.sh
+│   │   │   ├── install.sh
 │   │   │   └── links.sh
 │   │   └── home/.ssh/
 │   │       └── config
 │   │
-│   ├── pi/                    # Raspberry Pi (Pi-hole)
+│   ├── pi/                        # Raspberry Pi (Pi-hole)
 │   │   ├── README.md
 │   │   ├── bootstrap.sh
 │   │   ├── bootstrap/
-│   │   │   ├── install.sh
 │   │   │   ├── configure.sh
-│   │   │   ├── links.sh
-│   │   │   └── lib.sh
-│   │   ├── pihole/
-│   │   │   ├── extracted/     # future: exported configs
-│   │   │   │   └── .keep
-│   │   │   └── scripts/
-│   │   │       ├── extract-config.sh   # SSH-based config pull
-│   │   │       └── restore-config.sh   # apply saved config locally
+│   │   │   ├── install.sh
+│   │   │   ├── lib.sh
+│   │   │   └── links.sh
+│   │   ├── pihole/scripts/
+│   │   │   ├── extract-config.sh
+│   │   │   └── restore-config.sh
 │   │   └── tailscale/
 │   │       ├── .env.example
 │   │       └── start.sh
 │   │
-│   ├── silver/                # Desktop (Ubuntu, silver PC)
+│   ├── silver/                    # Desktop (Ubuntu, silver PC)
 │   │   ├── README.md
 │   │   ├── bootstrap.sh
 │   │   ├── bootstrap/
 │   │   │   ├── install.sh
-│   │   │   ├── links.sh
-│   │   │   └── lib.sh
+│   │   │   └── links.sh
 │   │   ├── home/.local/bin/
 │   │   │   ├── font_install.sh
 │   │   │   ├── font_list.sh
@@ -226,55 +179,146 @@ dotfiles/
 │   │   │   ├── tmux-sample
 │   │   │   └── wallpaper_dynamic.sh
 │   │   └── home/.local/fbin/
-│   │       └── _gr                       # Zsh completion for `gr`
+│   │       └── _gr
 │   │
-│   ├── vps/                   # Internet-facing VPS
+│   ├── vps/                       # Internet-facing VPS (Ubuntu)
 │   │   ├── bootstrap.sh
 │   │   └── bootstrap/
 │   │       ├── install.sh
-│   │       ├── configure.sh       # symlinks stacks/ for this host
 │   │       ├── links.sh
-│   │       └── lib.sh
+│   │       └── provision.sh
 │   │
-│   └── work/                  # macOS workstation (work)
-│       ├── README.md
+│   └── work/                      # macOS workstation (work)
 │       ├── bootstrap.sh
 │       └── bootstrap/
-│           ├── install.sh
 │           ├── configure.sh
-│           ├── links.sh
-│           └── lib.sh
+│           ├── install.sh
+│           └── links.sh
 │
-├── install/                   # Install scripts (called by bootstrap.sh)
-│   ├── _claudeCode.sh
-│   ├── _fonts.sh
-│   ├── _hermesAgent.sh
-│   ├── _homebrew.sh              # macOS Homebrew installer
-│   ├── _oh-my-zsh.sh
-│   ├── _ollama.sh
-│   ├── _pihole.sh             # Pi-hole installer wrapper
-│   ├── _samba.post-install.sh
-│   ├── _tailscale.sh          # Tailscale (Linux + Termux)
-│   ├── _tmux.post-install.sh
-│   ├── _xiaomi_mimo.sh
-│   ├── arch/
-│   │   ├── bootstrap.sh
-│   │   ├── filesystem.sh
-│   │   ├── jdk8.sh
-│   │   └── podman.sh
-│   ├── docker/
-│   │   └── alacritty.sh
-│   └── ubuntu/
-│       ├── bootstrap.sh
-│       ├── docker.sh
-│       ├── filesystem.sh
-│       ├── hyperland.sh
-│       ├── i3wm.sh
-│       ├── nvidia.sh
-│       ├── snap.sh
-│       └── ufw.sh
+├── stacks/                        # Docker stacks — canonical, shared across hosts
+│   ├── calibre/                   # Ebook library (linuxserver/calibre-web)
+│   │   └── compose.yaml
+│   ├── dockge/                    # Dockge UI (louislam/dockge:1)
+│   │   └── compose.yaml
+│   ├── docs/                      # Documentation site (mkdocs/docsify)
+│   │   ├── .env.example
+│   │   ├── compose.yaml
+│   │   └── sync/
+│   │       ├── Dockerfile
+│   │       └── sync.py
+│   ├── gitea/                     # Gitea on VPS (gitea/gitea:latest)
+│   │   └── compose.yml
+│   ├── gitea_vps/                 # Gitea on VPS (standalone setup)
+│   │   ├── README.md
+│   │   ├── compose.yml
+│   │   ├── setup.sh
+│   │   └── setup/
+│   │       ├── .env.example
+│   │       └── init.sh
+│   ├── hermes/                    # Hermes Agent (nousresearch/hermes-agent)
+│   │   ├── .gitconfig
+│   │   └── compose.yaml
+│   ├── immich/                    # Photo/video management (immich-server)
+│   │   ├── .env.example
+│   │   ├── README.md
+│   │   └── compose.yaml
+│   ├── jekyll/                    # Jekyll static site (jekyll/jekyll)
+│   │   ├── compose.yaml
+│   │   ├── repos.txt
+│   │   ├── sync-repos.sh
+│   │   └── site/
+│   │       ├── _config.yml
+│   │       ├── index.md
+│   │       └── _layouts/
+│   │           └── default.html
+│   ├── jellyfin/                  # Media server (linuxserver/jellyfin)
+│   │   └── compose.yml
+│   ├── metube/                    # YouTube downloader (alexta69/metube)
+│   │   └── compose.yml
+│   ├── plex/                      # Media server (linuxserver/plex)
+│   │   └── docker-compose.yml
+│   ├── qbittorrent/               # Torrent client (hotio/qbittorrent)
+│   │   └── docker-compose.yml
+│   ├── static/                    # Static file server (nginx:alpine)
+│   │   └── compose.yaml
+│   ├── syncthing/                 # File sync (linuxserver/syncthing)
+│   │   └── compose.yml
+│   ├── tailscale/                 # Tailscale sidecar (tailscale/tailscale)
+│   │   ├── .env.example
+│   │   ├── README.md
+│   │   └── compose.yaml
+│   ├── traefik/                   # Reverse proxy (traefik:v3)
+│   │   ├── compose.yaml
+│   │   └── config/
+│   │       ├── traefik.yml
+│   │       ├── acme/
+│   │       └── dynamic/
+│   ├── vikunja/                   # Task management (vikunja/vikunja)
+│   │   ├── .env.example
+│   │   ├── compose.yml
+│   │   └── vikunja-init.sh
+│   └── whoami/                    # Test endpoint (traefik/whoami)
+│       └── compose.yaml
 │
-└── scripts/                   # Utility scripts
+└── scripts/                       # Utility & automation scripts
+    ├── git-queue                  # Git queue CLI tool
+    ├── git-queue-pre-push         # Pre-push hook
+    ├── install-skills.sh          # Agent skill installer
+    ├── install_list.sh
+    ├── stacks-up                  # Docker Compose orchestrator
+    │
+    ├── bootstrap/                 # Shared bootstrap helpers
+    │   ├── _env.source.sh
+    │   ├── _log.source.sh
+    │   ├── dockge
+    │   ├── docs
+    │   ├── env_install
+    │   ├── link                   # Safe symlink utility
+    │   ├── stacks-up
+    │   └── traefik
+    │
+    ├── dns/                       # Central DNS config & deployment
+    │   ├── apply-dns.sh
+    │   └── dns-config.example.yaml
+    │
+    ├── docker/                    # Docker CLI wrappers
+    │   ├── claude
+    │   ├── copilot
+    │   ├── docker-run_or_exec
+    │   └── hermes_local
+    │
+    ├── install/                   # Reusable install scripts (per-OS)
+    │   ├── _claudeCode.sh
+    │   ├── _fonts.sh
+    │   ├── _hermesAgent.sh
+    │   ├── _homebrew.sh
+    │   ├── _oh-my-zsh.sh
+    │   ├── _ollama.sh
+    │   ├── _pihole.sh
+    │   ├── _samba.post-install.sh
+    │   ├── _tailscale.sh
+    │   ├── _tmux.post-install.sh
+    │   ├── _xiaomi_mimo.sh
+    │   ├── arch/
+    │   │   ├── bootstrap.sh
+    │   │   ├── filesystem.sh
+    │   │   ├── jdk8.sh
+    │   │   └── podman.sh
+    │   ├── docker/
+    │   │   └── alacritty.sh
+    │   └── ubuntu/
+    │       ├── bootstrap.sh
+    │       ├── docker.sh
+    │       ├── filesystem.sh
+    │       ├── hyperland.sh
+    │       ├── i3wm.sh
+    │       ├── nvidia.sh
+    │       ├── snap.sh
+    │       └── ufw.sh
+    │
+    ├── router/                    # Router automation
+    │   └── update-dns.sh
+    │
     ├── termux/                    # Shared Termux scripts & config
     │   ├── README.md
     │   ├── termux.properties
@@ -282,36 +326,16 @@ dotfiles/
     │       ├── termux-ip
     │       ├── termux-notify
     │       └── termux-wake
-    ├── dns/                       # Central DNS config & deployment
-    │   ├── dns-config.example.yaml   ← template, copy to dns-config.yaml
-    │   ├── dns-config.yaml           ← real MACs (gitignored)
-    │   └── apply-dns.sh
-    ├── docker_claude/
-    │   └── claude
-    ├── docker_copilot_cli/
-    │   └── copilot
-    ├── docker_hermes/
-    │   └── hermes_local
-    ├── docker_run_or_exec/
-    │   └── docker-run_or_exec
-    ├── git-queue                 # Git queue CLI tool
-    ├── git-queue-pre-push        # Pre-push hook script
-    ├── install/
-    │   └── link
-    ├── install-skills.sh       # Agent skill installer
-    ├── install_list.sh
-    ├── router/
-    │   └── update-dns.sh       # Askey router DNS updater
-    ├── stacks-up               # Docker Compose orchestrator
-    └── vpn/
-        └── sshuttle.sh         # Temporary SSH VPN tunnel
+    │
+    └── vpn/                       # VPN utilities
+        └── sshuttle.sh
 ```
 
 ---
 
 ## Host Details
 
-### android
+### android_server
 
 | Item | Value |
 |------|-------|
@@ -322,9 +346,10 @@ dotfiles/
 | Shell | Zsh + Oh My Zsh + Powerlevel10k |
 | SSH port | 8022 |
 | Connectivity | Wi-Fi + Tailscale |
-| Purpose | Always-on Android server (SSH tunnel, tailnet node) |
-| DNS role | Secondary DNS (Dnsmasq) — fallback to Cloudflare when Pi-hole is unreachable |
-| DNS config | Auto-generated from `scripts/dns/dns-config.yaml` (template: `dns-config.example.yaml`) via `apply-dns.sh` |
+| Purpose | Always-on Android server (SSH tunnel, tailnet node, TTS bot) |
+| DNS role | Secondary DNS (Dnsmasq) |
+| TTS bot | Telegram → Termux TTS via `tts-bot/main.py` |
+| Services | `sshd`, `ttsd`, `tts-bot` (runit supervised) |
 
 ### phone
 
@@ -334,10 +359,11 @@ dotfiles/
 | OS | Android + Termux |
 | Package manager | `pkg` |
 | Shell | Zsh + Oh My Zsh |
-| Connectivity | Tailscale (no fixed IP, no DHCP reservation) |
+| Connectivity | Tailscale only (no fixed IP, no DHCP reservation) |
 | Purpose | Terminal client — SSH into homelab hosts |
 | Services | None (consumer device, no daemons) |
-| Notes | Shared scripts from `scripts/termux/` |
+| Scripts | Shared via `scripts/termux/` |
+| SSH | Client only — no sshd |
 
 ### media
 
@@ -347,7 +373,7 @@ dotfiles/
 | OS | Ubuntu |
 | Connectivity | Wired Ethernet + Tailscale |
 | Stacks | dockge, gitea, immich, jellyfin, metube, plex, qbittorrent, syncthing, traefik, whoami |
-| Symlinked via | `configure.sh` → `/dockge/stacks/<name>/` |
+| Symlinked via | `provision.sh` → `/dockge/stacks/<name>/` |
 
 ### pi
 
@@ -358,9 +384,8 @@ dotfiles/
 | Connectivity | Wired Ethernet + Tailscale |
 | Services | Pi-hole (DNS sinkhole, local DNS) |
 | DNS role | Primary DNS for the tailnet |
-| DNS records | Local records (hosts, CNAMEs) injected via `/etc/dnsmasq.d/99-homelab.conf` from `scripts/dns/dns-config.yaml` |
+| DNS records | Local records via `/etc/dnsmasq.d/` from `scripts/dns/dns-config.yaml` |
 | Status | Placeholder — Pi not yet on the same network |
-| Scripts | `extract-config.sh` (SSH pull), `restore-config.sh` (local apply) |
 
 ### silver
 
@@ -368,10 +393,11 @@ dotfiles/
 |------|-------|
 | Location | Home LAN |
 | OS | Ubuntu |
-| Desktop | HyperLand (primary), i3wm (legacy) |
 | Shell | Zsh + Oh My Zsh |
 | Connectivity | Wired Ethernet + Tailscale |
+| Desktop | HyperLand (primary), i3wm (legacy) |
 | Custom scripts | Network, wallpaper, terminal, Ollama, font management |
+| Note | Does not run Docker stacks — workstation only |
 
 ### vps
 
@@ -383,9 +409,7 @@ dotfiles/
 | Proxy | Traefik v3 (Docker provider + file provider) |
 | SSL | Let's Encrypt (ACME) |
 | Stacks | dockge, gitea, hermes, tailscale, traefik |
-| Hermes | Docker container, git identity mounted from stack |
-| Symlinked via | `configure.sh` → `/dockge/stacks/<name>/` |
-| Docker network | `proxy` (external, shared across stacks) |
+| Docker network | `proxy` (external, shared) |
 
 ### work
 
@@ -407,27 +431,49 @@ All Docker stacks live at `stacks/<name>/` in the repo root —
 
 ```
 /dockge/
-└── stacks/                    ← DOCKGE_STACKS_DIR=/opt/stacks
+└── stacks/
     ├── dockge/    → <repo>/stacks/dockge/   ← Dockge manages itself
     ├── gitea/     → <repo>/stacks/gitea/
     ├── traefik/   → <repo>/stacks/traefik/
     └── ...        ← only stacks the host needs
 ```
 
-Each host's `configure.sh` creates `/dockge/stacks/` and symlinks only the stacks
-it needs. Stacks that need per-host customization (domains, volume paths) use
-`.env` files created during bootstrap.
+Each host's bootstrap creates `/dockge/stacks/` and symlinks the stacks
+it needs. Per-host `.env` files (domains, volume paths) are created
+during bootstrap, sourced from the (private) `secrets/` repo.
+
+### Key Docker images
+
+| Stack | Image | Port | Notes |
+|-------|-------|------|-------|
+| calibre | linuxserver/calibre-web | — | eBook library |
+| dockge | louislam/dockge:1 | 5001 | Stack manager UI |
+| gitea | gitea/gitea | 3000 | Git server (SQLite) |
+| hermes | nousresearch/hermes-agent | — | AI agent |
+| immich | ghcr.io/immich-app/immich-server | 2283 | Photo/video mgmt |
+| jellyfin | linuxserver/jellyfin | 8096 | Media server |
+| metube | alexta69/metube | 8081 | YouTube downloader |
+| plex | linuxserver/plex | 32400 | Media server |
+| qbittorrent | hotio/qbittorrent | 8080 | Torrent client |
+| syncthing | linuxserver/syncthing | 8384 | File sync |
+| traefik | traefik:v3 | 80, 443 | Reverse proxy |
+| vikunja | vikunja/vikunja | 3456 | Task management |
+| whoami | traefik/whoami | — | Test endpoint |
 
 ---
 
 ## Notes
 
-- **`install/`** contains reusable install scripts. Each host's bootstrap scripts under `bootstrap/install.sh` reference them by path.
-- **All hosts except silver** follow a `bootstrap.sh` → `bootstrap/{install,configure,links,lib}.sh` pattern (silver omits `configure.sh`). Run `bash hosts/<name>/bootstrap.sh` for the full setup.
-- **`scripts/`** contains Docker wrappers (Claude, Copilot CLI, Hermes), the `link` utility for symlinks, the git-queue CLI tool, plus VPN (`vpn/sshuttle.sh`), router DNS (`router/update-dns.sh`), stack orchestration (`stacks-up`), and agent skill installer (`install-skills.sh`).
-- **`stacks-up`** auto-detects `stacks/` at repo root; falls back to legacy `hosts/*/dockge/` layout. Accepts explicit args like `stacks/` or `/dockge/stacks/`.
-- **`dotfiles/`** only covers config files currently in active use.
-- **`projects/`**, **`bootstrap/`**, and backup/restore scripts do not exist yet.
-- **`.git-queue/`** is the coordination system for multi-agent edits. See `docs/agent-queue-design.md` and `CLAUDE.md`.
-- **Docs** are evolving: `networking.md`, `repository-structure.md`, `stacks.md`, `agent-queue-design.md`, `install-list.md`, and `router/askey-rtf8115vw.md` exist alongside this file.
-- **`docs/future/`** contains pre-feasibility research for infrastructure projects (Gitea, queue, etc.). These are not implementation specs — they inform future decisions.
+- **228 tracked files** across all sections.
+- **No untracked files, no deleted files.** Working tree is clean.
+- All install scripts live under `scripts/install/` — no top-level `install/` directory.
+- `scripts/bootstrap/` contains shared helpers used by host bootstrap scripts.
+- `scripts/docker/` contains Docker CLI wrappers (Claude, Copilot, Hermes).
+- `scripts/dns/` feeds all hosts from a single `dns-config.{yaml,example.yaml}`.
+- `scripts/termux/` contains scripts shared between `android_server` and `phone`.
+- `agents/skills/` defines agent skills (grill-me, handoff, to-prd).
+- `.git-queue/` is the coordination system for multi-agent edits. See `docs/agent-queue-design.md`.
+- `docs/future/` contains pre-feasibility research. Not implementation specs.
+- `docs/improvements/` contains past review feedback docs.
+- **`stacks/vikunja/`** and **`stacks/gitea_vps/`** are new — single-image stacks with init scripts.
+- The `phone` host is the only consumer-only device: no services, no daemons, no DNS role.
