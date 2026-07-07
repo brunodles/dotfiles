@@ -40,6 +40,11 @@ dotfiles/
 │   ├── current-state.md            # ← this file
 │   ├── install-list.md
 │   ├── networking.md
+│   ├── networking/                 # Tailscale architecture
+│   │   ├── README.md
+│   │   ├── tailscale.md
+│   │   ├── remote-access.md
+│   │   └── decisions.md
 │   ├── repository-structure.md
 │   ├── stacks.md
 │   ├── future/
@@ -475,5 +480,6 @@ during bootstrap, sourced from the (private) `secrets/` repo.
 - `.git-queue/` is the coordination system for multi-agent edits. See `docs/agent-queue-design.md`.
 - `docs/future/` contains pre-feasibility research. Not implementation specs.
 - `docs/improvements/` contains past review feedback docs.
+- `docs/networking/` contains Tailscale architecture, setup, and ADR decisions.
 - **`stacks/vikunja/`** and **`stacks/gitea_vps/`** are new — single-image stacks with init scripts.
 - The `phone` host is the only consumer-only device: no services, no daemons, no DNS role.
