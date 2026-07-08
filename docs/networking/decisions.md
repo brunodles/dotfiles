@@ -18,12 +18,12 @@ some admin-only (Hermes dashboard, monitoring).
 |---------|-------|:---------------:|
 | `VPS_NET` | Inter-container communication on VPS | ❌ None |
 | `Proxy` | Services exposed via reverse proxy | 🌐 Port 80/443 (Traefik) |
-| `Tailscale` | Services exposed via private tunnel | 🚇 Tailscale only |
+| `WireGuard` | VPN tunnel for remote access | 🚇 Port 51820/UDP |
 
 **Consequences:**
 - ✅ Containers can be on multiple networks (e.g. Gitea on VPS_NET + Proxy)
 - ✅ Traefik is the only container on Proxy that receives external connections
-- ✅ Dashboards and admin UIs stay off the public internet
+- ✅ Dashboards and admin UIs are reachable only via WireGuard
 - ⚠️ +1 network to manage vs the previous single `proxy` approach
 - ⚠️ Every stack needs explicit network assignment
 
@@ -33,105 +33,106 @@ some admin-only (Hermes dashboard, monitoring).
 |-------------|--------------|
 | Single `proxy` net | Every container visible to reverse proxy; no isolation |
 | Docker network per visibility | Too many networks, hard to manage |
-| No segmentation | Same as single proxy net |
 
 ---
 
-## ADR-002: Pi-hole as Tailscale gateway
+## ADR-002: Pi-hole as VPN gateway
 
 **Date:** 2026-07-06
 
-**Context:** The homelab needs a Tailscale node to act as subnet router so
-remote devices can reach Media Server, Android Server, and other LAN services.
+**Context:** The homelab needs a peer to relay traffic from the VPS WireGuard
+server to the homelab LAN, so remote devices can reach Media Server, Android
+Server, etc.
 
 **Candidates:**
 
-| Host | Can be subnet router? | Pros | Cons |
-|------|:--------------------:|------|------|
-| **Pi-hole** (chosen) | ✅ Yes (Linux) | Already runs 24/7, central DNS, low power | Subnet routing + DNS + Pi-hole is modest CPU |
-| Media Server | ✅ Yes (Linux) | More CPU/RAM, already serves content | Runs Docker stacks, restarts can drop TS |
-| Android Server | ❌ No (Android) | Always on, battery-backed | Cannot advertise routes or act as exit node |
+| Host | Can be WireGuard peer? | Pros | Cons |
+|------|:---------------------:|------|------|
+| **Pi-hole** (chosen) | ✅ Linux | Already runs 24/7, central DNS, low power | Subnet routing + DNS + Pi-hole is modest CPU |
+| Media Server | ✅ Linux | More CPU/RAM, already serves content | Runs Docker stacks, restarts can drop WG |
+| Android Server | ❌ Android | Always on | Cannot be WG peer (no kernel WG) |
 
-**Decision:** Pi-hole as Tailscale subnet router + MagicDNS resolver.
+**Decision:** Pi-hole as WireGuard site-to-site peer + subnet router.
 
 **Consequences:**
-- ✅ Pi-hole's DNS + Tailscale MagicDNS = seamless name resolution
-- ✅ Remote devices reach homelab LAN without installing TS on every device
 - ✅ Pi-hole is always on, rarely rebooted
-- ⚠️ Tailscale overhead on Pi-hole (~50-100MB RAM, negligible CPU)
-- ⚠️ Pi-hole must approve subnet routes in admin console manually
+- ✅ All homelab devices reachable via Pi-hole's subnet routing
+- ⚠️ Pi-hole needs `ip_forward=1` and iptables masquerade
+- ⚠️ Pi-hole restarts briefly drop the VPN tunnel
 
 ---
 
-## ADR-003: VPN over Funnel/proxy
+## ADR-003: WireGuard over Tailscale
 
 **Date:** 2026-07-06
 
-**Context:** Mobile access to homelab/VPS services from outside (4G, subway).
+**Context:** Secure remote access to homelab + VPS services from outside.
 
 **Options:**
 
-| Approach | App on phone? | Public attack surface | Latency |
-|----------|:-------------:|:--------------------:|:-------:|
-| **Tailscale VPN** (chosen) | ✅ Tailscale | ❌ None (zero ports) | Direct P2P |
-| Tailscale Funnel | ❌ Any browser | ⚠️ Public hostname | Direct P2P |
-| Cloudflare Tunnel + Access | ❌ Any browser | ✅ Auth'd via CF | Relayed via CF |
+| Approach | Open ports | Topology | Control |
+|----------|:----------:|:--------:|:-------:|
+| **WireGuard** (chosen) | 1 (51820/UDP) | Hub-and-spoke via VPS | Full |
+| Tailscale | 0 | P2P → fallback DERP relay | Delegated to TS Inc |
 
-**Decision:** Tailscale VPN on the phone.
+**Decision:** WireGuard on the VPS.
 
-**Consequences:**
-- ✅ Zero public ports on any service
-- ✅ Direct peer-to-peer (lowest possible latency)
-- ✅ Works on 4G, WiFi, hotel networks
-- ⚠️ Requires Tailscale app installed on phone
-- ⚠️ VPN must be toggled on (or always-on configured)
+**Rationale:**
+
+Both options resolve to the same effective topology when both peers are behind
+NAT/CGNAT (phone on 4G + homelab behind CGNAT):
+
+- WireGuard: phone → VPS (relay) → Pi-hole → homelab
+- Tailscale: phone → DERP relay → Pi-hole → homelab
+
+Tailscale's P2P advantage is neutralised when both sides have restrictive NAT.
+In practice the traffic goes through a relay either way — the difference is
+**who owns the relay**. With WireGuard the relay is your own VPS; with
+Tailscale it's Tailscale Inc (or a self-hosted DERP).
+
+Chosen WireGuard because:
+- ✅ Full control: you own the VPS, the keys, the config
+- ✅ Single port: 51820/UDP — easy to firewall, monitor, audit
+- ✅ No external dependency: even if Tailscale is down, your VPN works
+- ✅ Simpler threat model: no third-party control plane
+- ⚠️ Manual key management (trade-off for control)
 
 ---
 
-## ADR-004: VPS Tailscale as sidecar
+## ADR-004: WireGuard as Docker container
 
 **Date:** 2026-07-06
 
-**Context:** VPS containers on the `Tailscale` network need to be reachable
-from remote devices.
+**Context:** The VPS needs a WireGuard server.
 
-**Decision:** Run Tailscale as a Docker sidecar container (not on the host).
+**Decision:** Run WireGuard as a Docker container (`linuxserver/wireguard`)
+instead of on the host.
 
-```yaml
-services:
-  tailscale:
-    image: tailscale/tailscale:latest
-    container_name: ts-vps
-    hostname: vps
-    networks:
-      - vps_net
-      - tailscale
+**Consequences:**
+- ✅ Clean container-native networking — no host-level packages
+- ✅ Auto-generates server keys + peer configs on first run
+- ✅ Easy to update (just `docker compose pull && up -d`)
+- ✅ Container is on `vps_net` — automatically routes to other containers
+- ⚠️ Needs `NET_ADMIN` + `SYS_MODULE` capabilities + `/dev/net/tun`
+- ⚠️ Kernel module loads inside container (needs `SYS_MODULE`)
+
+---
+
+## ADR-005: Phone split-tunnel
+
+**Date:** 2026-07-06
+
+**Context:** Phone needs to access VPS/homelab services without routing all
+internet traffic through the VPS (which would waste bandwidth and add latency).
+
+**Decision:** AllowedIPs restricted to Docker + homelab subnets only.
+
+```ini
+AllowedIPs = 10.0.0.0/24, 172.16.0.0/12, 192.168.0.0/24
 ```
 
 **Consequences:**
-- ✅ Clean container-native networking — no host-level install
-- ✅ Easy to update (just `docker compose pull`), backup, restart
-- ✅ Auth key via env var, no manual login on deploy
-- ⚠️ Needs `NET_ADMIN` + `/dev/net/tun` capability
-- ⚠️ Auth key rotation requires compose restart
-
----
-
-## ADR-005: Phone always-on VPN
-
-**Date:** 2026-07-06
-
-**Context:** Phone needs to access homelab services spontaneously without
-manual steps (open browser → it just works).
-
-**Decision:** Tailscale app with split DNS enabled.
-
-- **Always-on:** VPN connects automatically when not on home WiFi
-- **Split DNS:** Only `*.ts.net` and LAN IPs route through the tunnel;
-  regular browsing uses 4G directly
-
-**Consequences:**
-- ✅ Browser just works — no app toggle needed for casual use
-- ✅ No battery penalty (WireGuard is efficient)
-- ✅ No latency on regular browsing
-- ⚠️ First-time setup needs to enable split DNS manually
+- ✅ Daily browsing uses 4G directly (no VPS bandwidth consumed)
+- ✅ No additional latency for YouTube, WhatsApp, etc.
+- ✅ VPS bandwidth reserved for actual homelab/VPS traffic
+- ⚠️ Adding a new Docker network requires updating AllowedIPs on the phone

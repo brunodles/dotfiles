@@ -1,0 +1,36 @@
+services:
+  wireguard:
+    image: linuxserver/wireguard:latest
+    container_name: wireguard
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Sao_Paulo
+      - SERVERURL=auto
+      - SERVERPORT=51820
+      - PEERS=phone,pihole
+      - PEERDNS=auto
+      - INTERNAL_SUBNET=10.0.0.0/24
+      - ALLOWEDIPS=0.0.0.0/0
+      # Custom AllowedIPs per peer
+      # Phone: routes Docker networks + homelab through the tunnel
+      - PEER_ALLOWEDIPS_phone=10.0.0.0/24, 172.16.0.0/12, 10.99.0.0/16, 192.168.0.0/24
+      # Pi-hole: only WG subnet + homelab subnet (VPS routes homelab through it)
+      - PEER_ALLOWEDIPS_pihole=10.0.0.0/24, 192.168.0.0/24
+    ports:
+      - "51820:51820/udp"
+    volumes:
+      - ./config:/config
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+      - net.ipv4.ip_forward=1
+    restart: unless-stopped
+    networks:
+      - vps_net
+
+networks:
+  vps_net:
+    external: true

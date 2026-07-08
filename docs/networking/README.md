@@ -8,42 +8,43 @@ Three isolated Docker networks, each with a distinct purpose.
 |---------|---------|:----------:|-------------------|
 | `VPS_NET` | Inter-container communication on the VPS | 🔒 VPS only | Gitea, databases, caches, agents |
 | `Proxy` | Public reverse proxy (port 80/443) | 🌐 Internet via Traefik | Traefik, Gitea web, Jekyll, Calibre |
-| `Tailscale` | Private tunnel via Tailscale | 🚇 Tailscale tailnet | Dashboards, admin UIs, monitoring |
+| `WireGuard` | VPN tunnel for remote access | 🚇 WireGuard clients | WireGuard server, dashboards |
 
 ## Topology
 
 ```
-┌─ VPS ─────────────────────────────────────────────────┐
-│                                                        │
-│  ┌──────┐    ┌────────────┐    ┌──────────────────┐   │
-│  │Proxy │◄───┤   Traefik  ├────┤   Tailscale      │   │
-│  │(pub) │    └────────────┘    │   (TS container)  │   │
-│  └──────┘          ▲           └────────┬─────────┘   │
-│                    │                    │             │
-│              ┌─────┴─────┐              │             │
-│              │  VPS_NET   │◄─────────────┘             │
-│              └─────┬─────┘                            │
-│                    │                                   │
-│         ┌──────────┼──────────┐                       │
-│         ▼          ▼          ▼                       │
-│    ┌────────┐ ┌────────┐ ┌────────┐                  │
-│    │ Gitea  │ │ Hermes │ │ Jekyll │  ...              │
-│    └────────┘ └────────┘ └────────┘                  │
-│                                                        │
-└────────────────────────────────────────────────────────┘
+┌─ VPS ──────────────────────────────────────────────────┐
+│                                                          │
+│  ┌────────┐    ┌──────────────┐    ┌─────────────────┐  │
+│  │ Proxy  │◄───┤   Traefik    ├────┤  WireGuard       │  │
+│  │ (pub)  │    │              │    │  (port 51820/UDP) │  │
+│  └────────┘    └──────────────┘    └────────┬─────────┘  │
+│                           ▲                 │            │
+│                     ┌─────┴─────┐           │            │
+│                     │  VPS_NET   │◄──────────┘            │
+│                     └─────┬─────┘                        │
+│                           │                               │
+│              ┌────────────┼────────────┐                  │
+│              ▼            ▼            ▼                  │
+│         ┌────────┐ ┌────────┐ ┌────────┐                 │
+│         │ Gitea  │ │ Hermes │ │ Jekyll │  ...            │
+│         └────────┘ └────────┘ └────────┘                 │
+│                                                          │
+└──────────────────────────────────────────────────────────┘
 
 ┌─ Homelab ───────────────────────────────────────────┐
 │                                                      │
 │  ┌──────────┐                                       │
-│  │  Pi-hole │◄── Tailscale Subnet Router ───┐       │
-│  │ (gateway)│                                │       │
-│  └──────────┘                                │       │
-│        │                                     │       │
-│   ┌────┴────┐    ┌───────────┐    ┌────────┐ │       │
-│   │  Media  │    │ Android   │    │ Phone  │─┘       │
-│   │  Server │    │ Server    │    │ (TS    │         │
-│   └─────────┘    └───────────┘    │  VPN)  │         │
-│                                    └────────┘        │
+│  │  Pi-hole │◄── WireGuard client (site-to-site) ─┐ │
+│  │ (gateway)│                                      │ │
+│  └──────────┘                                      │ │
+│        │         ┌───────────┐    ┌──────────┐     │ │
+│        ├─────────│   Media   │    │  Phone   │─────┘ │
+│        │         │   Server  │    │  (WG app)│       │
+│        │         └───────────┘    └──────────┘       │
+│        │                                              │
+│        └──── Android Server                           │
+│                                                      │
 └──────────────────────────────────────────────────────┘
 ```
 
@@ -51,39 +52,44 @@ Three isolated Docker networks, each with a distinct purpose.
 
 ### VPS_NET
 Every container on the VPS that needs to talk to other containers.
-- Databases (Postgres, SQLite shared volumes)
+- Databases (Postgres, SQLite)
 - Backend services (Gitea, Hermes agent)
-- The **minimum** network for any container to function
+- **WireGuard server** — needs VPS_NET to route to other containers
+- Minimum network for any container to function
 
 ### Proxy
-Only containers that need a public URL via `traefik.lab` or `*.vps`.
+Only containers that need a public URL via `*.vps`.
 - **Traefik** — always on Proxy (it is the proxy)
-- **Gitea** — ssh.gitea.vps, gitea.vps
+- **Gitea** — gitea.vps
 - **Jekyll** — docs.vps
 - **Calibre** — books.vps
 
 **Rule:** If it doesn't need a public hostname, it doesn't go on Proxy.
 
-### Tailscale
-Containers that should be accessible remotely but NOT publicly.
-- Hermes dashboard (`hermes.lab:9119`)
-- Admin UIs, monitoring, internal tools
-- Anything you want to reach from your phone on 4G
+### WireGuard
+No containers go on WireGuard. The WG server is on VPS_NET and routes traffic
+to other containers by their Docker IP. Remote peers connect to the WG server
+and reach containers transparently.
 
 ## Host connectivity
 
-| Host | Connects via | Role |
-|------|-------------|------|
-| **VPS** | Tailscale sidecar | Brings services on `Tailscale` net to remote devices |
-| **Pi-hole** | Tailscale (installed on host) | Subnet router: routes homelab LAN to tailnet |
-| **Phone (Android)** | Tailscale app (VPN) | Client: reaches VPS + homelab via tunnel |
+| Host | VPN role | Connects via |
+|------|----------|-------------|
+| **VPS** | WireGuard server (container) | Port 51820/UDP — single entry point |
+| **Pi-hole** | WireGuard client (host-level) | Site-to-site: connects to VPS, routes homelab LAN |
+| **Phone (Android)** | WireGuard client (app) | Connects to VPS, reaches VPS containers + homelab LAN through Pi-hole |
 
 ## Routing
 
 ```
-Phone (4G)
-  └─ Tailscale VPN ──┬─ Pi-hole (subnet) ── Media server (192.168.x.x:8096)
-                     │                     └─ Android server
-                     └─ VPS Tailscale ───── Hermes dashboard (9119)
-                                           └─ Gitea (optional, via TS)
+Phone (4G) → VPS:51820/UDP
+  └─ VPS WireGuard ──┬─ Pi-hole ── homelab LAN (192.168.0.0/24)
+                     │             └─ Media Server (192.168.0.x:8096)
+                     │             └─ Android Server (192.168.0.x)
+                     │
+                     └─ VPS_NET ─── Hermes (:9119)
+                                   Gitea (:3000)
+                                   Jekyll (:8080)
 ```
+
+All traffic routes through the VPS (hub-and-spoke). Single port open: 51820/UDP.

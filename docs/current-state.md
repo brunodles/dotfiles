@@ -40,11 +40,11 @@ dotfiles/
 │   ├── current-state.md            # ← this file
 │   ├── install-list.md
 │   ├── networking.md
-│   ├── networking/                 # Tailscale architecture
+│   ├── networking/                 # VPN architecture (WireGuard)
 │   │   ├── README.md
-│   │   ├── tailscale.md
+│   │   ├── decisions.md
 │   │   ├── remote-access.md
-│   │   └── decisions.md
+│   │   └── vpn.md
 │   ├── repository-structure.md
 │   ├── stacks.md
 │   ├── future/
@@ -262,6 +262,10 @@ dotfiles/
 │   │   ├── .env.example
 │   │   ├── compose.yml
 │   │   └── vikunja-init.sh
+│   ├── wireguard/                 # VPN server (linuxserver/wireguard)
+│   │   ├── .env.example
+│   │   ├── compose.yaml
+│   │   └── setup.sh
 │   └── whoami/                    # Test endpoint (traefik/whoami)
 │       └── compose.yaml
 │
@@ -410,10 +414,10 @@ dotfiles/
 |------|-------|
 | Location | Cloud (public IP) |
 | OS | Ubuntu (server) |
-| Connectivity | Public internet + Tailscale |
+| Connectivity | Public internet + WireGuard |
 | Proxy | Traefik v3 (Docker provider + file provider) |
 | SSL | Let's Encrypt (ACME) |
-| Stacks | dockge, gitea, hermes, tailscale, traefik |
+| Stacks | dockge, gitea, hermes, traefik, wireguard |
 | Docker network | `proxy` (external, shared) |
 
 ### work
@@ -423,7 +427,7 @@ dotfiles/
 | Location | Remote (workplace) |
 | OS | macOS |
 | Shell | Zsh + Oh My Zsh |
-| Connectivity | Tailscale |
+| Connectivity | WireGuard |
 
 ---
 
@@ -480,6 +484,6 @@ during bootstrap, sourced from the (private) `secrets/` repo.
 - `.git-queue/` is the coordination system for multi-agent edits. See `docs/agent-queue-design.md`.
 - `docs/future/` contains pre-feasibility research. Not implementation specs.
 - `docs/improvements/` contains past review feedback docs.
-- `docs/networking/` contains Tailscale architecture, setup, and ADR decisions.
-- **`stacks/vikunja/`** and **`stacks/gitea_vps/`** are new — single-image stacks with init scripts.
+- `docs/networking/` contains VPN architecture (WireGuard), setup, and ADR decisions.
+- **`stacks/vikunja/`**, **`stacks/gitea_vps/`**, and **`stacks/wireguard/`** are new — single-image stacks with init scripts.
 - The `phone` host is the only consumer-only device: no services, no daemons, no DNS role.

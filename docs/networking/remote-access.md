@@ -7,95 +7,105 @@ Accessing homelab + VPS services from outside (4G, work WiFi, etc.).
 ```
 Phone (4G)
   │
-  ├─ Tailscale VPN (always on) ──┬─ Pi-hole subnet ── Media Server (Jellyfin)
-  │  (WireGuard tunnel)          │                  └─ Android Server
-  │                              └─ VPS (TS sidecar) ─┴ Hermes dashboard
-  │                                                     Gitea (TS)
-  │
-  └─ Regular browsing → still uses 4G directly
-     (if split-DNS is configured)
+  └─ WireGuard tunnel (always-on) ── VPS:51820/UDP
+       │
+       ├─ VPS_NET ─── Hermes (:9119), Gitea (:3000), …
+       │
+       └─ Pi-hole (site-to-site) ── homelab LAN
+            Media Server (:8096), Android Server, Pi-hole admin
 ```
 
 ## Phone (Android)
 
-### 1. Install Tailscale
+### 1. Install WireGuard
 
 ```
-Play Store → Tailscale → Install
+Play Store → WireGuard → Install
 ```
 
-### 2. Sign in
+### 2. Add tunnel
 
-Open app → **Sign in** → browser opens → authenticate with the same account used
-for Pi-hole/VPS.
+On the VPS:
 
-### 3. Enable VPN
+```bash
+docker exec wireguard /app/show-peer phone
+```
 
-Toggle **Connected** to ON. The phone now participates in the tailnet.
+The command prints a QR code. In the WireGuard app:
+- Tap **+** → **Scan from QR code**
+- Point at the terminal
 
-### 4. Browse
+### 3. Customize AllowedIPs
+
+After scanning, tap the tunnel name → **Edit**. Check **AllowedIPs**:
+
+```diff
+- 10.0.0.2/32
++ 10.0.0.2/32, 172.16.0.0/12, 192.168.0.0/24
+```
+
+This tells the phone which traffic goes through the tunnel. Everything else
+uses 4G directly.
+
+### 4. Connect
+
+Toggle ON. The VPN icon appears in the status bar.
+
+### 5. Browse
 
 Open Chrome and go to:
 
 ```bash
-# Pi-hole (DNS admin)
-http://pi-hole.bruno-ts.ts.net/admin
+# VPS containers (Docker DNS — via VPS_NET)
+http://hermes:9119
+http://gitea:3000
 
-# Media Server (Jellyfin) — via Pi-hole subnet
-http://192.168.0.50:8096
-
-# Hermes dashboard — via VPS Tailscale
-http://vps.bruno-ts.ts.net:9119
+# Homelab services (via Pi-hole subnet routing)
+http://192.168.0.50:8096     # Media Server / Jellyfin
+http://192.168.0.5           # Pi-hole
+http://192.168.0.10          # Android Server
 ```
 
-Type the URL directly in the address bar. No app needed, no Termux, no proxy
-configuration. Tailscale VPN handles routing transparently.
+Works on 4G, work WiFi, hotel WiFi — any internet.
 
-## Browser access on desktop (Linux/Windows/Mac)
+## Desktop (laptop)
 
-Install Tailscale: https://tailscale.com/download
+Same flow:
 
-Same flow: install → sign in → browse. The desktop client shows which services
-are available in its **MagicDNS** list.
+1. Install WireGuard from https://www.wireguard.com/install/
+2. Scan QR or import conf file
+3. Connect
 
-## Split DNS (optional)
+## Adding a new device
 
-By default, Tailscale routes all traffic through the tunnel. If you want only
-tailnet traffic to use the VPN and keep regular browsing on 4G directly:
+```bash
+# On the VPS:
+docker stop wireguard
 
-1. Open Tailscale app → **Settings**
-2. **Use Tailscale DNS** → ON
-3. **Split DNS** → ON (routes only `*.ts.net` domains through the tunnel)
+# Edit /config/wg0.conf — add a new [Peer] block:
+# [Peer]
+# # laptop
+# PublicKey = <new-key>
+# PresharedKey = <new-psk>
+# AllowedIPs = 10.0.0.4/32
 
-This means:
-- `http://pi-hole.bruno-ts.ts.net` → goes through VPN → resolved by MagicDNS
-- `https://google.com` → goes through 4G directly (no latency)
+docker start wireguard
+```
 
-## Without Tailscale (fallback)
+Or use the linuxserver/wireguard `PEERS` env var to auto-generate.
 
-If Tailscale is down or not installed:
+## Battery and performance
 
-| Service | Alternative | Requires |
-|---------|-------------|----------|
-| Jellyfin | `jellyfin.vps` (public) | Traefik + Proxy net + auth |
-| Hermes | Not available | Tailscale only |
-| Gitea | `gitea.vps` (public) | Traefik + Proxy net |
+- WireGuard uses the kernel module on Android (no battery drain)
+- Throughput is limited by the VPS bandwidth (upload speed)
+- Hub-and-spoke: every packet routes through the VPS
+- Expect 20-50ms added latency (phone → VPS → homelab vs direct)
 
-The fallback is intentionally limited — most services are Tailscale-only for
-security.
+## Security
 
-## Decision record
-
-### Why VPN over Funnel/Cloudflare
-
-| Option | App needed? | Security | Latency |
-|--------|:-----------:|:--------:|:-------:|
-| **Tailscale VPN** (chosen) | ✅ Tailscale app | 🔒 Zero-trust, no public ports | Direct peer-to-peer |
-| Tailscale Funnel | ❌ Any browser | ⚠️ Public by default | Direct |
-| Cloudflare Tunnel + Access | ❌ Any browser | 🟡 CF handles auth | VPS relay |
-
-Tailscale VPN was chosen because:
-- No public attack surface (no ports open)
-- Direct peer-to-peer connections (no relay latency)
-- Works everywhere (4G, work WiFi, hotel)
-- Zero-trust model — device must be authorized in the tailnet
+- **Single open port:** 51820/UDP on the VPS
+- **No public DNS:** services are not exposed to the internet
+- **Per-device keys:** revoke a device by removing its [Peer] block
+- **No middleman:** the VPS is your relay, you own it
+- **Split tunnel:** phone traffic to the internet is NOT routed through the VPN
+  (only Docker + homelab ranges)
