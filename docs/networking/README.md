@@ -33,7 +33,7 @@ Three isolated Docker networks, each with a distinct purpose.
 └──────────────────────────────────────────────────────────┘
 
 ┌─ Homelab ───────────────────────────────────────────┐
-│                                                      │
+│                                                     │
 │  ┌──────────┐                                       │
 │  │  Pi-hole │◄── WireGuard client (site-to-site) ─┐ │
 │  │ (gateway)│                                      │ │
