@@ -9,23 +9,15 @@ services:
       RUN_USER: "git"
       USER_GID: "1000"
       USER_UID: "1000"
-
-      # ── Skip web installer (managed by gitea-setup) ──
       INSTALL_LOCK: "true"
-
-      # ── Only admin-created users ────────────────────
       DISABLE_REGISTRATION: "true"
-
-      # ── HTTP-only (no SSH) ──────────────────────────
       DISABLE_SSH: "true"
       START_SSH_SERVER: "false"
-
-      # ── Domain / URL ────────────────────────────────
-      DOMAIN: gitea.lab
-      ROOT_URL: http://gitea.lab/
+      DOMAIN: gitea.vps
+      ROOT_URL: http://gitea.vps/
       GITEA__server__PROTOCOL: http
-      GITEA__server__DOMAIN: gitea.lab
-      GITEA__server__ROOT_URL: http://gitea.lab/
+      GITEA__server__DOMAIN: gitea.vps
+      GITEA__server__ROOT_URL: http://gitea.vps/
 
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:3000/"]
