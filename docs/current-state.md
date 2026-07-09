@@ -245,7 +245,10 @@ dotfiles/
 │   ├── qbittorrent/               # Torrent client (hotio/qbittorrent)
 │   │   └── docker-compose.yml
 │   ├── static/                    # Static file server (nginx:alpine)
-│   │   └── compose.yaml
+│   │   ├── compose.yaml
+│   │   ├── nginx.conf
+│   │   └── html/
+│   │       └── index.html
 │   ├── syncthing/                 # File sync (linuxserver/syncthing)
 │   │   └── compose.yml
 │   ├── tailscale/                 # Tailscale sidecar (tailscale/tailscale)
