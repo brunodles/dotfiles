@@ -41,7 +41,7 @@ pkg install -y \
   openssl-tool \
   ripgrep \
   fzf \
-  dnsmasq \
+  make \
   man \
   which \
   yq
@@ -107,6 +107,30 @@ sv up sshd 2>/dev/null || true
 # 9. Set up Dnsmasq DNS forwarder
 # ──────────────────────────────────────────────
 info "Configuring Dnsmasq DNS forwarder..."
+
+# Ensure dnsmasq binary is available
+if ! command -v dnsmasq &>/dev/null; then
+  info "  dnsmasq not found, trying package install..."
+  if ! pkg install -y dnsmasq 2>/dev/null; then
+    info "  Not in Termux repos, building from source..."
+    DNSMASQ_VERSION="2.93"
+    BUILDDIR=$(mktemp -d)
+    cd "$BUILDDIR"
+    if curl -sL "https://thekelleys.org.uk/dnsmasq/dnsmasq-${DNSMASQ_VERSION}.tar.gz" | tar xz; then
+      cd "dnsmasq-${DNSMASQ_VERSION}"
+      NPROC=$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 1)
+      make -j "$NPROC" CC=clang 2>&1 || make CC=clang 2>&1
+      cp src/dnsmasq "$PREFIX/bin/dnsmasq"
+      chmod +x "$PREFIX/bin/dnsmasq"
+      rm -rf "$BUILDDIR"
+      ok "  dnsmasq ${DNSMASQ_VERSION} built and installed from source"
+    else
+      rm -rf "$BUILDDIR"
+      warn "  Failed to download dnsmasq source"
+      warn "  DNS forwarder will not be available until dnsmasq is manually installed"
+    fi
+  fi
+fi
 
 SVDIR="$PREFIX/var/service"
 if [[ -d "$SVDIR/dnsmasq" ]]; then
