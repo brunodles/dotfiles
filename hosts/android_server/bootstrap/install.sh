@@ -41,8 +41,10 @@ pkg install -y \
   openssl-tool \
   ripgrep \
   fzf \
+  dnsmasq \
   man \
-  which
+  which \
+  yq
 
 # ──────────────────────────────────────────────
 # 3. Oh My Zsh + plugins + theme
@@ -100,6 +102,33 @@ fi
 
 sv-enable sshd 2>/dev/null || true
 sv up sshd 2>/dev/null || true
+
+# ──────────────────────────────────────────────
+# 9. Set up Dnsmasq DNS forwarder
+# ──────────────────────────────────────────────
+info "Configuring Dnsmasq DNS forwarder..."
+
+SVDIR="$PREFIX/var/service"
+if [[ -d "$SVDIR/dnsmasq" ]]; then
+  info "  Dnsmasq service directory already exists at $SVDIR/dnsmasq"
+else
+  info "  Creating Dnsmasq service directory..."
+  mkdir -p "$SVDIR/dnsmasq/log"
+  cat > "$SVDIR/dnsmasq/run" << 'EOF'
+#!/data/data/com.termux/files/usr/bin/bash
+exec dnsmasq -k 2>&1
+EOF
+  chmod +x "$SVDIR/dnsmasq/run"
+
+  cat > "$SVDIR/dnsmasq/log/run" << 'EOF'
+#!/data/data/com.termux/files/usr/bin/bash
+exec svlogd -tt "$PREFIX/var/log/dnsmasq"
+EOF
+  chmod +x "$SVDIR/dnsmasq/log/run"
+fi
+
+sv-enable dnsmasq 2>/dev/null || true
+sv up dnsmasq 2>/dev/null || true
 
 # ──────────────────────────────────────────────
 # 10. Generate SSH key pair (if missing)
