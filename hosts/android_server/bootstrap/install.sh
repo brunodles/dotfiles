@@ -112,21 +112,34 @@ info "Configuring Dnsmasq DNS forwarder..."
 if ! command -v dnsmasq &>/dev/null; then
   info "  dnsmasq not found, trying package install..."
   if ! pkg install -y dnsmasq 2>/dev/null; then
-    info "  Not in Termux repos, building from source..."
-    DNSMASQ_VERSION="2.93"
-    BUILDDIR=$(mktemp -d)
-    cd "$BUILDDIR"
-    if curl -sL "https://thekelleys.org.uk/dnsmasq/dnsmasq-${DNSMASQ_VERSION}.tar.gz" | tar xz; then
-      cd "dnsmasq-${DNSMASQ_VERSION}"
-      NPROC=$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 1)
-      make -j "$NPROC" CC=clang 2>&1 || make CC=clang 2>&1
-      cp src/dnsmasq "$PREFIX/bin/dnsmasq"
+    info "  Not in Termux repos, downloading musl-linked binary from Alpine..."
+
+    DNSMASQ_DIR="$PREFIX/libexec/dnsmasq"
+    ALPINE_REPO="https://dl-cdn.alpinelinux.org/alpine/v3.20/main/aarch64"
+    mkdir -p "$DNSMASQ_DIR"
+
+    if curl -sL --max-time 60 \
+      "${ALPINE_REPO}/dnsmasq-2.90-r3.apk" -o /tmp/dnsmasq.apk && \
+      curl -sL --max-time 60 \
+      "${ALPINE_REPO}/musl-1.2.5-r3.apk" -o /tmp/musl.apk; then
+
+      # Extract dnsmasq binary and musl loader
+      tar xzf /tmp/dnsmasq.apk -C "$DNSMASQ_DIR" --strip-components=2 usr/sbin/dnsmasq 2>/dev/null
+      tar xzf /tmp/musl.apk -C "$DNSMASQ_DIR" --strip-components=1 lib/ld-musl-aarch64.so.1 2>/dev/null
+      ln -sf ld-musl-aarch64.so.1 "$DNSMASQ_DIR/libc.musl-aarch64.so.1"
+      chmod +x "$DNSMASQ_DIR/dnsmasq" "$DNSMASQ_DIR/ld-musl-aarch64.so.1"
+      rm -f /tmp/dnsmasq.apk /tmp/musl.apk
+
+      # Create wrapper script that invokes via musl loader
+      cat > "$PREFIX/bin/dnsmasq" << 'EOWRAPPER'
+#!/data/data/com.termux/files/usr/bin/bash
+exec /data/data/com.termux/files/usr/libexec/dnsmasq/ld-musl-aarch64.so.1 \
+  /data/data/com.termux/files/usr/libexec/dnsmasq/dnsmasq "$@"
+EOWRAPPER
       chmod +x "$PREFIX/bin/dnsmasq"
-      rm -rf "$BUILDDIR"
-      ok "  dnsmasq ${DNSMASQ_VERSION} built and installed from source"
+      ok "  dnsmasq 2.90 (musl binary) installed"
     else
-      rm -rf "$BUILDDIR"
-      warn "  Failed to download dnsmasq source"
+      warn "  Failed to download Alpine packages"
       warn "  DNS forwarder will not be available until dnsmasq is manually installed"
     fi
   fi
