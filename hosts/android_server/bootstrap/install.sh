@@ -23,6 +23,13 @@ info "Upgrading packages..."
 pkg upgrade -y
 
 # ──────────────────────────────────────────────
+# 1b. Add root repository (for root-required packages)
+# ──────────────────────────────────────────────
+info "Installing root-repo..."
+pkg install -y root-repo
+pkg update -y
+
+# ──────────────────────────────────────────────
 # 2. Install base packages
 # ──────────────────────────────────────────────
 info "Installing base packages..."
@@ -44,7 +51,8 @@ pkg install -y \
   make \
   man \
   which \
-  yq
+  yq \
+  dnsmasq
 
 # ──────────────────────────────────────────────
 # 3. Oh My Zsh + plugins + theme
@@ -107,43 +115,6 @@ sv up sshd 2>/dev/null || true
 # 9. Set up Dnsmasq DNS forwarder
 # ──────────────────────────────────────────────
 info "Configuring Dnsmasq DNS forwarder..."
-
-# Ensure dnsmasq binary is available
-if ! command -v dnsmasq &>/dev/null; then
-  info "  dnsmasq not found, trying package install..."
-  if ! pkg install -y dnsmasq 2>/dev/null; then
-    info "  Not in Termux repos, downloading musl-linked binary from Alpine..."
-
-    DNSMASQ_DIR="$PREFIX/libexec/dnsmasq"
-    ALPINE_REPO="https://dl-cdn.alpinelinux.org/alpine/v3.20/main/aarch64"
-    mkdir -p "$DNSMASQ_DIR"
-
-    if curl -sL --max-time 60 \
-      "${ALPINE_REPO}/dnsmasq-2.90-r3.apk" -o /tmp/dnsmasq.apk && \
-      curl -sL --max-time 60 \
-      "${ALPINE_REPO}/musl-1.2.5-r3.apk" -o /tmp/musl.apk; then
-
-      # Extract dnsmasq binary and musl loader
-      tar xzf /tmp/dnsmasq.apk -C "$DNSMASQ_DIR" --strip-components=2 usr/sbin/dnsmasq 2>/dev/null
-      tar xzf /tmp/musl.apk -C "$DNSMASQ_DIR" --strip-components=1 lib/ld-musl-aarch64.so.1 2>/dev/null
-      ln -sf ld-musl-aarch64.so.1 "$DNSMASQ_DIR/libc.musl-aarch64.so.1"
-      chmod +x "$DNSMASQ_DIR/dnsmasq" "$DNSMASQ_DIR/ld-musl-aarch64.so.1"
-      rm -f /tmp/dnsmasq.apk /tmp/musl.apk
-
-      # Create wrapper script that invokes via musl loader
-      cat > "$PREFIX/bin/dnsmasq" << 'EOWRAPPER'
-#!/data/data/com.termux/files/usr/bin/bash
-exec /data/data/com.termux/files/usr/libexec/dnsmasq/ld-musl-aarch64.so.1 \
-  /data/data/com.termux/files/usr/libexec/dnsmasq/dnsmasq "$@"
-EOWRAPPER
-      chmod +x "$PREFIX/bin/dnsmasq"
-      ok "  dnsmasq 2.90 (musl binary) installed"
-    else
-      warn "  Failed to download Alpine packages"
-      warn "  DNS forwarder will not be available until dnsmasq is manually installed"
-    fi
-  fi
-fi
 
 SVDIR="$PREFIX/var/service"
 if [[ -d "$SVDIR/dnsmasq" ]]; then
