@@ -136,10 +136,11 @@ dotfiles/
 │   │
 │   ├── media/                     # Media server (Ubuntu)
 │   │   ├── bootstrap.sh
-│   │   └── bootstrap/
-│   │       ├── install.sh
-│   │       ├── links.sh
-│   │       └── provision.sh
+│   │   ├── bootstrap/
+│   │   │   ├── install.sh
+│   │   │   ├── links.sh
+│   │   │   └── provision.sh
+│   │   └── storage.md             # HDD mount and disk setup
 │   │
 │   ├── phone/                     # Android phone (terminal client)
 │   │   ├── README.md
