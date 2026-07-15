@@ -49,8 +49,9 @@ dotfiles/
 │   ├── stacks.md
 │   ├── future/
 │   │   ├── agent-queue-feasibility.md
+│   │   ├── appflowy-container-plan.md  # AppFlowy stack (Notion alternative)
 │   │   ├── docs-pipeline.md
-│   │   ├── figma-container-plan.md  # Penpot stack + Figma feasibility
+│   │   ├── figma-container-plan.md     # Penpot stack + Figma feasibility
 │   │   ├── gitea-hermes-infra.md
 │   │   ├── gitea-stack-plan.md
 │   │   ├── system-env-bootstrap.md
