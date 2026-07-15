@@ -50,6 +50,7 @@ dotfiles/
 │   ├── future/
 │   │   ├── agent-queue-feasibility.md
 │   │   ├── docs-pipeline.md
+│   │   ├── figma-container-plan.md  # Penpot stack + Figma feasibility
 │   │   ├── gitea-hermes-infra.md
 │   │   ├── gitea-stack-plan.md
 │   │   ├── system-env-bootstrap.md
