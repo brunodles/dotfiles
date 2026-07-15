@@ -242,6 +242,9 @@ dotfiles/
 │   │   └── compose.yml
 │   ├── metube/                    # YouTube downloader (alexta69/metube)
 │   │   └── compose.yml
+│   ├── penpot/                    # Open-source design platform (penpotapp)
+│   │   ├── .env.example
+│   │   └── compose.yaml
 │   ├── plex/                      # Media server (linuxserver/plex)
 │   │   └── docker-compose.yml
 │   ├── qbittorrent/               # Torrent client (hotio/qbittorrent)
@@ -467,6 +470,7 @@ during bootstrap, sourced from the (private) `secrets/` repo.
 | immich | ghcr.io/immich-app/immich-server | 2283 | Photo/video mgmt |
 | jellyfin | linuxserver/jellyfin | 8096 | Media server |
 | metube | alexta69/metube | 8081 | YouTube downloader |
+| penpot | penpotapp/frontend | 8080 | Design platform (via Traefik) |
 | plex | linuxserver/plex | 32400 | Media server |
 | qbittorrent | hotio/qbittorrent | 8080 | Torrent client |
 | syncthing | linuxserver/syncthing | 8384 | File sync |
